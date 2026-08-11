@@ -18,12 +18,12 @@ import {
   FolderOpen,
   ChevronDown,
   TrendingUp,
-  MapPin,
-  Phone,
-  Globe,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Link from "next/link";
 
 export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -59,41 +59,49 @@ export default function Home() {
       name: "Portal Umum",
       icon: BookOpen,
       description: "Informasi umum dan layanan publik",
+      href: "/portal-umum",
     },
     {
       name: "Brankas Fungsi",
       icon: Archive,
       description: "Dokumen dan arsip fungsi",
+      href: "/brankas-fungsi",
     },
     {
       name: "Dokumentasi Kegiatan",
       icon: FileText,
       description: "Rekam jejak kegiatan kantor",
+      href: "/dokumentasi-kegiatan",
     },
     {
       name: "SE2026 Archive Hub",
       icon: Package,
       description: "Arsip surat edaran 2026",
+      href: "/se2026-archive-hub",
     },
     {
       name: "Aplikasi Daniel",
       icon: Laptop,
       description: "Sistem aplikasi internal",
+      href: "/aplikasi-daniel",
     },
     {
       name: "Monev Anggaran",
       icon: DollarSign,
       description: "Monitoring evaluasi anggaran",
+      href: "/monev-anggaran",
     },
     {
       name: "SAKIP 2026",
       icon: BarChart3,
       description: "Sistem Akuntabilitas Kinerja",
+      href: "/sakip-2026",
     },
     {
       name: "ZI 2026",
       icon: Award,
       description: "Zona Integritas",
+      href: "/zi-2026",
     },
   ];
 
@@ -178,31 +186,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "translate-y-0 opacity-100"
-            : "-translate-y-full opacity-0"
-        }`}
-      >
-        <div className="bg-[#111111] shadow-lg backdrop-blur-sm border-b-4 border-[#337ab7]">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center justify-center gap-4">
-              <Image
-                src="/logos/logo-bps.png"
-                alt="Logo BPS"
-                width={40}
-                height={40}
-                className="object-contain"
-                style={{ width: 'auto', height: '40px' }}
-              />
-              <span className="text-white font-semibold text-sm md:text-base">
-                Badan Pusat Statistik Kabupaten Kepulauan Seribu
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar isScrolled={isScrolled} />
 
       <header
         id="main-header"
@@ -364,8 +348,9 @@ export default function Home() {
             {mainMenuItems.map((item, index) => {
               const Icon = item.icon;
               return (
-                <div
+                <Link
                   key={index}
+                  href={item.href}
                   className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
                 >
                   <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
@@ -379,7 +364,7 @@ export default function Home() {
                       {item.description}
                     </p>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -433,77 +418,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-[#111111] py-12 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#A87932] via-[#D83F3F] to-[#A87932]"></div>
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#A87932] rounded-full blur-3xl"></div>
-        </div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/logos/logo-bps.png"
-              alt="Logo BPS"
-              width={80}
-              height={80}
-              className="object-contain opacity-90"
-              style={{ width: 'auto', height: '80px' }}
-            />
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 text-white max-w-5xl mx-auto mb-8">
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-                <MapPin className="w-5 h-5 text-[#A87932]" />
-                <h3 className="font-bold text-[#A87932]">Alamat Kantor</h3>
-              </div>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                Jl. Pulau Tidung Besar RT 002/RW 003
-                <br />
-                Kelurahan Pulau Tidung
-                <br />
-                Kecamatan Kepulauan Seribu Selatan
-                <br />
-                Kabupaten Administrasi Kepulauan Seribu
-                <br />
-                DKI Jakarta
-              </p>
-            </div>
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-                <Phone className="w-5 h-5 text-[#A87932]" />
-                <h3 className="font-bold text-[#A87932]">Kantor Penghubung</h3>
-              </div>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                Gedung BPS Provinsi DKI Jakarta
-                <br />
-                Jl. Salemba Tengah No. 39
-                <br />
-                Jakarta Pusat 10440
-              </p>
-            </div>
-            <div className="text-center md:text-left">
-              <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-                <Globe className="w-5 h-5 text-[#A87932]" />
-                <h3 className="font-bold text-[#A87932]">Website</h3>
-              </div>
-              <a
-                href="https://kepulauanseribukab.bps.go.id"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-[#A87932] transition-colors"
-              >
-                kepulauanseribukab.bps.go.id
-              </a>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-6">
-            <p className="text-center text-gray-400 text-sm">
-              © 2026 BPS Kabupaten Kepulauan Seribu. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
