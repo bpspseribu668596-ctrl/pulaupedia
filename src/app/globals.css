@@ -6,11 +6,16 @@
   --bps-gray: #333333;
   --bps-white: #FFFFFF;
   --bps-gold: #A87932;
+  --bps-blue: #0072BC;
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+* {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -23,4 +28,17 @@ body {
   background-image: 
     radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 8px 8px;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
 }

@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pulau Pedia - BPS Kepulauan Seribu",
   description: "Portal informasi dan layanan BPS Kepulauan Seribu",
+  icons: {
+    icon: "/logos/logo-bps.png",
+    apple: "/logos/logo-bps.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
