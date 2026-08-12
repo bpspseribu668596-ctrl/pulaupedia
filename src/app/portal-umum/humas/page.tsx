@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, FileText, ExternalLink, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PortalSidebar from "@/components/PortalSidebar";
 
 export default function HumasPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -103,6 +104,9 @@ export default function HumasPage() {
 
       <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-16 flex-1">
         <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-8">
+            <PortalSidebar />
+            <div className="flex-1 min-w-0">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
@@ -175,6 +179,8 @@ export default function HumasPage() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
             </div>
           </div>
         </div>

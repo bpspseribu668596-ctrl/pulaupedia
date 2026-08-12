@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, FolderOpen, BarChart3, DollarSign, Package, Megaphone, Award, ShoppingCart, Users, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, BarChart3, DollarSign, Package, Megaphone, Award, ShoppingCart, Users, FileSpreadsheet } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -144,7 +144,7 @@ export default function PortalUmumPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {portalCards.map((portal, index) => {
               const Icon = portal.icon;
               return (
@@ -168,7 +168,6 @@ export default function PortalUmumPage() {
               );
             })}
           </div>
-
         </div>
       </section>
 
