@@ -62,32 +62,30 @@ export default function Navbar({ isScrolled }: NavbarProps) {
                 <span>Beranda</span>
               </Link>
 
-              <div className="relative">
-                <button
-                  onMouseEnter={() => setOpenDropdown(true)}
-                  onMouseLeave={() => setOpenDropdown(false)}
-                  className="flex items-center gap-2 text-white hover:text-[#337ab7] transition-colors font-semibold"
-                >
+              <div
+                className="relative"
+                onMouseEnter={() => setOpenDropdown(true)}
+                onMouseLeave={() => setOpenDropdown(false)}
+              >
+                <button className="flex items-center gap-2 text-white hover:text-[#337ab7] transition-colors font-semibold">
                   <Folder className="w-4 h-4" />
                   <span>Portal</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown ? "rotate-180" : ""}`} />
                 </button>
 
                 {openDropdown && (
-                  <div
-                    onMouseEnter={() => setOpenDropdown(true)}
-                    onMouseLeave={() => setOpenDropdown(false)}
-                    className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-50"
-                  >
-                    {portalMenuItems.map((item, index) => (
-                      <Link
-                        key={index}
-                        href={item.href}
-                        className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+                  <div className="absolute top-full right-0 pt-2 z-50">
+                    <div className="w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2">
+                      {portalMenuItems.map((item, index) => (
+                        <Link
+                          key={index}
+                          href={item.href}
+                          className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
