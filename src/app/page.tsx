@@ -11,11 +11,6 @@ import {
   DollarSign,
   BarChart3,
   Award,
-  Mail,
-  Database,
-  FileSpreadsheet,
-  Users,
-  FolderOpen,
   ChevronDown,
   TrendingUp,
   ChevronLeft,
@@ -105,29 +100,17 @@ export default function Home() {
     },
   ];
 
-  const serviceCategories = {
-    "Layanan Digital": [
-      { name: "WebMail", icon: Mail },
-      { name: "SiMAS", icon: Database },
-      { name: "SILPA", icon: FileSpreadsheet },
-    ],
-    "Sistem Kepegawaian": [
-      { name: "Siap", icon: Users },
-      { name: "SIAP Dev", icon: Users },
-      { name: "Manajemen SDM", icon: Users },
-    ],
-    "Data & Monitoring": [
-      { name: "Simiskin", icon: Database },
-      { name: "WBS", icon: BarChart3 },
-      { name: "SIK", icon: FolderOpen },
-    ],
-    "Manajemen Kinerja": [
-      { name: "SAKIP", icon: BarChart3 },
-      { name: "ZI", icon: Award },
-      { name: "e-Monev", icon: TrendingUp },
-      { name: "SPAK", icon: FileText },
-    ],
-  };
+  const serviceCategories = [
+    { title: "Zona Integritas BPS", name: "ZI APP", logo: "/logos/zi.png", link: "https://penilaianzi.web.bps.go.id/penilaianzi/penilaian" },
+    { title: "Sistem Informasi Layanan Statistik", name: "SILASTIK", logo: "/logos/silastik.png", link: "https://silastik.bps.go.id/v3/index.php/site/login/" },
+    { title: "Sistem Informasi Kinerja Organisasi", name: "SINERGI", logo: "/logos/sinergi.png", link: "https://sinergi.web.bps.go.id/" },
+    { title: "Rekomendasi Kegiatan Statistik Online", name: "ROMANTIK", logo: "/logos/romantik.png", link: "https://romantik.web.bps.go.id/" },
+    { title: "General Online Job Assistant for Great Service", name: "GOJAGS", logo: "/logos/gojags.png", link: "https://gojags.web.bps.go.id/" },
+    { title: "Pelayanan Statistik Terpadu", name: "PST", logo: "/logos/pst.png", link: "https://pst.bps.go.id/" },
+    { title: "Pejabat Pengelola Informasi dan Dokumentasi", name: "PPID", logo: "/logos/ppid.png", link: "https://ppid.bps.go.id/?mfd=3101" },
+    { title: "Learning Management System", name: "LMS", logo: "/logos/lms.png", link: "https://lms.bps.go.id/" },
+    { title: "Perpustakaan BPS", name: "PERPUSTAKAAN", logo: "/logos/perpus.png", link: "https://perpustakaan.bps.go.id/apps/" },
+  ];
 
   const topEmployees = [
     {
@@ -383,37 +366,46 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="max-w-6xl mx-auto space-y-8">
-            {Object.entries(serviceCategories).map(
-              ([category, services], idx) => (
-                <div key={idx}>
-                  <h3 className="text-xl font-bold text-[#0072BC] mb-4 flex items-center gap-2">
-                    <div className="w-1 h-6 bg-[#D83F3F] rounded"></div>
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {services.map((service, index) => {
-                      const Icon = service.icon;
-                      return (
-                        <div
-                          key={index}
-                          className="group bg-white hover:bg-[#0072BC] border-2 border-gray-100 hover:border-[#0072BC] rounded-lg p-4 cursor-pointer transition-all hover:scale-105 hover:shadow-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-[#0072BC]/10 group-hover:bg-white/20 p-2 rounded-lg transition-all">
-                              <Icon className="w-5 h-5 text-[#0072BC] group-hover:text-white transition-colors" />
-                            </div>
-                            <span className="text-[#111111] group-hover:text-white font-semibold text-sm transition-colors">
-                              {service.name}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-            )}
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {serviceCategories.map((service, index) => {
+                return (
+                  <a
+                    key={index}
+                    href={service.link}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-6 flex flex-col items-center justify-between min-h-[280px]"
+                  >
+                    <div className="text-center mb-4">
+                      <h3 className="text-sm font-bold text-[#111111] leading-tight">
+                        {service.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex-1 flex items-center justify-center mb-4">
+                      <div className="relative w-24 h-24">
+                        <Image
+                          src={service.logo}
+                          alt={service.name}
+                          fill
+                          className="object-contain"
+                          style={{ objectFit: "contain" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="w-px h-12 bg-gray-300 mb-4"></div>
+
+                    <div className="w-full">
+                      <div className="bg-white border-2 border-[#0072BC] hover:bg-[#0072BC] rounded-lg py-2 px-4 text-center transition-all group">
+                        <span className="text-[#0072BC] group-hover:text-white font-bold text-sm uppercase transition-colors">
+                          {service.name}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
