@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Calendar, Camera, FileText, Users, Award, BookOpen } from "lucide-react";
+import { ChevronDown, FileText, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-export default function DokumentasiKegiatanPage() {
+export default function BMNPersediaanPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -40,54 +40,30 @@ export default function DokumentasiKegiatanPage() {
     }
   };
 
-  const kegiatanCards = [
+  const documents = [
     {
-      name: "Kegiatan 2024",
-      icon: Calendar,
-      description: "Dokumentasi kegiatan tahun 2024",
-      link: "https://drive.google.com/drive/folders/kegiatan-2024",
+      title: "Identifikasi Kebutuhan ATK 2026",
+      link: "https://drive.google.com/drive/folders/atk-2026",
     },
     {
-      name: "Kegiatan 2025",
-      icon: Calendar,
-      description: "Dokumentasi kegiatan tahun 2025",
-      link: "https://drive.google.com/drive/folders/kegiatan-2025",
+      title: "Lampiran KMK",
+      link: "https://drive.google.com/drive/folders/lampiran-kmk",
     },
     {
-      name: "Kegiatan 2026",
-      icon: Calendar,
-      description: "Dokumentasi kegiatan tahun 2026",
-      link: "https://drive.google.com/drive/folders/kegiatan-2026",
+      title: "Penetapan Status Penggunaan BMN Bangunan dan Selain Tanah dan-atau Bangunan pada BPS",
+      link: "https://drive.google.com/drive/folders/penetapan-bmn",
     },
     {
-      name: "Foto Kegiatan",
-      icon: Camera,
-      description: "Galeri foto dokumentasi",
-      link: "https://drive.google.com/drive/folders/foto-kegiatan",
+      title: "PSP Kendaraan Operasional Roda 4 dan 2_2012",
+      link: "https://drive.google.com/drive/folders/psp-kendaraan-2012",
     },
     {
-      name: "Laporan",
-      icon: FileText,
-      description: "Laporan kegiatan dan evaluasi",
-      link: "https://drive.google.com/drive/folders/laporan",
+      title: "PSP Pulau Seribu 2024",
+      link: "https://drive.google.com/drive/folders/psp-2024",
     },
     {
-      name: "Rapat",
-      icon: Users,
-      description: "Dokumentasi rapat dan pertemuan",
-      link: "https://drive.google.com/drive/folders/rapat",
-    },
-    {
-      name: "Penghargaan",
-      icon: Award,
-      description: "Dokumentasi penghargaan",
-      link: "https://drive.google.com/drive/folders/penghargaan",
-    },
-    {
-      name: "Pelatihan",
-      icon: BookOpen,
-      description: "Dokumentasi pelatihan pegawai",
-      link: "https://drive.google.com/drive/folders/pelatihan",
+      title: "SK PSP No. 338 Tgl.28 Mei'24 di Wilayah Provinsi DKI Jakarta",
+      link: "https://drive.google.com/drive/folders/sk-psp-338",
     },
   ];
 
@@ -116,10 +92,10 @@ export default function DokumentasiKegiatanPage() {
             }`}
           >
             <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
-              DOKUMENTASI KEGIATAN
+              BMN & PERSEDIAAN
             </h1>
             <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
-              Rekam Jejak Kegiatan Kantor BPS Kepulauan Seribu
+              Barang Milik Negara dan Persediaan
             </p>
           </div>
         </div>
@@ -134,42 +110,38 @@ export default function DokumentasiKegiatanPage() {
 
       <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-16 flex-1">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-              Dokumentasi Kegiatan
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Pilih kategori untuk mengakses dokumentasi kegiatan yang tersimpan di Google Drive
-            </p>
-          </div>
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
+                Dokumen BMN & Persediaan
+              </h2>
+              <p className="text-gray-600">
+                Pilih dokumen untuk mengakses file yang tersimpan di Google Drive
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {kegiatanCards.map((kegiatan, index) => {
-              const Icon = kegiatan.icon;
-              return (
+            <div className="space-y-4">
+              {documents.map((doc, index) => (
                 <a
                   key={index}
-                  href={kegiatan.link}
+                  href={doc.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
+                  className="group flex items-center justify-between bg-white border-2 border-gray-200 hover:border-[#0072BC] rounded-lg p-6 transition-all hover:shadow-lg"
                 >
-                  <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-white text-base md:text-lg font-bold mb-2">
-                      {kegiatan.name}
+                  <div className="flex items-center gap-4">
+                    <div className="bg-[#0072BC]/10 p-3 rounded-lg group-hover:bg-[#0072BC]/20 transition-all">
+                      <FileText className="w-6 h-6 text-[#0072BC]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[#111111] group-hover:text-[#0072BC] transition-colors">
+                      {doc.title}
                     </h3>
-                    <p className="text-white/80 text-xs leading-relaxed">
-                      {kegiatan.description}
-                    </p>
                   </div>
+                  <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-[#0072BC] transition-colors" />
                 </a>
-              );
-            })}
+              ))}
+            </div>
           </div>
-
         </div>
       </section>
 
