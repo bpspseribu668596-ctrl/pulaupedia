@@ -75,12 +75,12 @@ export default function Navbar({ isScrolled }: NavbarProps) {
 
                 {openDropdown && (
                   <div className="absolute top-full right-0 pt-2 z-50">
-                    <div className="w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2">
+                    <div className="w-64 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
                       {portalMenuItems.map((item, index) => (
                         <Link
                           key={index}
                           href={item.href}
-                          className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors"
+                          className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors duration-200"
                         >
                           {item.name}
                         </Link>
