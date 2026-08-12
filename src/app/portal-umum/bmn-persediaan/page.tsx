@@ -43,27 +43,27 @@ export default function BMNPersediaanPage() {
   const documents = [
     {
       title: "Identifikasi Kebutuhan ATK 2026",
-      link: "https://drive.google.com/drive/folders/atk-2026",
+      link: "https://docs.google.com/spreadsheets/d/1SCAEUF2GU7e4x6TIUaJoAzt5ST7qobU06iMzhoRKCCc/edit?usp=sharing",
     },
     {
       title: "Lampiran KMK",
-      link: "https://drive.google.com/drive/folders/lampiran-kmk",
+      link: "https://drive.google.com/file/d/1Nalxe48cjtSiBpt26-kI06wi4yyIA0LK/view?usp=sharing",
     },
     {
       title: "Penetapan Status Penggunaan BMN Bangunan dan Selain Tanah dan-atau Bangunan pada BPS",
-      link: "https://drive.google.com/drive/folders/penetapan-bmn",
+      link: "https://drive.google.com/file/d/1SDleCEbGFKn1jT_Kz6ngu-9Zb_72PdD0/view?usp=drive_link",
     },
     {
       title: "PSP Kendaraan Operasional Roda 4 dan 2_2012",
-      link: "https://drive.google.com/drive/folders/psp-kendaraan-2012",
+      link: "https://drive.google.com/file/d/19uOGbjq1NKQQsBuArWzLsNgHKm3aYutF/view?usp=drive_link",
     },
     {
       title: "PSP Pulau Seribu 2024",
-      link: "https://drive.google.com/drive/folders/psp-2024",
+      link: "https://drive.google.com/file/d/1_hTwRvEEfqzIheHkoj8q40JjABcLQvFp/view?usp=drive_link",
     },
     {
       title: "SK PSP No. 338 Tgl.28 Mei'24 di Wilayah Provinsi DKI Jakarta",
-      link: "https://drive.google.com/drive/folders/sk-psp-338",
+      link: "https://drive.google.com/file/d/1DxuAJ0Q5rSSqhNP2kr5W0D6AW4tv2Poq/view?usp=drive_link",
     },
   ];
 

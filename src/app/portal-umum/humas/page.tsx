@@ -54,8 +54,8 @@ export default function HumasPage() {
       title: "Foto Kegiatan",
       hasDropdown: true,
       items: [
-        { name: "Tahun 2024", link: "https://drive.google.com/drive/folders/foto-2024" },
-        { name: "Tahun 2025", link: "https://drive.google.com/drive/folders/foto-2025" },
+        { name: "Tahun 2024", link: "https://drive.google.com/drive/folders/1KZCMDx_xr683WppTxLfa4usJpVYTMpgO?usp=sharing" },
+        { name: "Tahun 2025", link: "https://drive.google.com/drive/folders/1B58_QpN4CInHyeH6hPxoUtprBIVklBph?usp=sharing" },
       ],
     },
   ];

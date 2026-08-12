@@ -43,11 +43,11 @@ export default function PengadaanPage() {
   const documents = [
     {
       title: "Pelatihan Sakernas Agustus 2024",
-      link: "https://drive.google.com/drive/folders/pelatihan-sakernas-2024",
+      link: "https://drive.google.com/drive/folders/14fZrahleLeoCrfDQKKLsY-gbnUbPmdNo?usp=drive_link",
     },
     {
       title: "Pengadaan Jasa Keamanan dan Kebersihan 2024",
-      link: "https://drive.google.com/drive/folders/jasa-keamanan-kebersihan-2024",
+      link: "https://drive.google.com/drive/folders/1ZrYEmhYJPfJu5bUzimOpB8LnMBAU-jr2?usp=drive_link",
     },
   ];
 

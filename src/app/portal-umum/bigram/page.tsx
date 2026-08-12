@@ -43,11 +43,11 @@ export default function BigramPage() {
   const documents = [
     {
       title: "KK RPD, Revisi dan Matriks Mitra 2025",
-      link: "https://drive.google.com/drive/folders/kk-rpd",
+      link: "https://docs.google.com/spreadsheets/d/1M6rp9hU0CUowVN363sD_zlN_oy1R3JDjC3pEXkwiHOA/edit?usp=sharing",
     },
     {
       title: "DIPA dan POK",
-      link: "https://drive.google.com/drive/folders/dipa-pok",
+      link: "https://drive.google.com/drive/folders/1QXFRoIYq4RKRFwonJ99fQuSgURJupK3X",
     },
     {
       title: "E-Monev Bappenas",

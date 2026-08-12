@@ -46,19 +46,19 @@ export default function KeuanganPage() {
       title: "Kelengkapan Pengajuan Anggaran",
       hasDropdown: true,
       items: [
-        { name: "Kelengkapan Pengajuan Anggaran TA2025", link: "https://drive.google.com/drive/folders/kelengkapan-anggaran-ta2025" },
-        { name: "SK", link: "https://drive.google.com/drive/folders/sk" },
-        { name: "KAK", link: "https://drive.google.com/drive/folders/kak" },
-        { name: "Form Permintaan", link: "https://drive.google.com/drive/folders/form-permintaan" },
+        { name: "Kelengkapan Pengajuan Anggaran TA2025", link: "https://docs.google.com/document/d/13iIYdPxVliFH4QpkSZzBklj6fVfSWT0vIfyuPUgYdSg/edit?usp=drive_link" },
+        { name: "SK", link: "https://drive.google.com/drive/folders/1XWtoIsFJ71RjWIyEq0bDEPgRcqZigNp1?usp=sharing" },
+        { name: "KAK", link: "https://drive.google.com/drive/folders/1ywN3EKvIrD_0WNGZhpWCfb9yD9dOL4Xx?usp=sharing" },
+        { name: "Form Permintaan", link: "https://drive.google.com/drive/folders/1mXhUitreD4IkCEJyJYmmM7qqKCM4_J8z?usp=sharing" },
       ],
     },
     {
       title: "Kop Surat",
-      link: "https://drive.google.com/drive/folders/kop-surat",
+      link: "https://docs.google.com/document/d/1aFuAOrguDtiIQTyYUQvxUiNiXjuWhC-4/edit?usp=sharing&ouid=100656661374328625415&rtpof=true&sd=true",
     },
     {
       title: "Draft Notula",
-      link: "https://drive.google.com/drive/folders/draft-notula",
+      link: "https://docs.google.com/document/d/1lj_S3IWI_XbzKzY6_iij1Ux9Qy1GpquS/edit?usp=sharing&ouid=100656661374328625415&rtpof=true&sd=true",
     },
     {
       title: "Juknis Akuntansi Laporan Keuangan",

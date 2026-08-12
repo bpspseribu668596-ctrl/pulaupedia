@@ -43,23 +43,23 @@ export default function KepegawaianPage() {
   const documents = [
     {
       title: "Nomor Surat dan Nomor SK",
-      link: "https://drive.google.com/drive/folders/nomor-surat-sk",
+      link: "https://docs.google.com/spreadsheets/d/1ka8xRpj1eTGDaO-9DRwMQ0u3WIi2ieDTYRdAAdRtDXg/edit?pli=1&gid=0#gid=0",
     },
     {
       title: "Rekap Perjalanan Dinas",
-      link: "https://drive.google.com/drive/folders/rekap-perjalanan-dinas",
+      link: "https://docs.google.com/spreadsheets/d/1GSxAsD7MxE0iMBKMDzDlHQUA5hObz7XR1THVQhAAayE/edit?usp=sharing",
     },
     {
       title: "Laporan FWA Pegawai 24-27 Maret '25",
-      link: "https://drive.google.com/drive/folders/laporan-fwa",
+      link: "https://drive.google.com/drive/folders/11h_2tkHKrkMxzfabOsbr6-hXFERvgp6x?usp=sharing",
     },
     {
       title: "Aturan Kepegawaian",
-      link: "https://drive.google.com/drive/folders/aturan-kepegawaian",
+      link: "https://drive.google.com/drive/folders/1RkF3WYZNNMXHQ81yB4W_1mKMSsOzbysU?usp=sharing",
     },
     {
       title: "Penetapan Angka Kredit (PAK)",
-      link: "https://drive.google.com/drive/folders/pak",
+      link: "http://s.bps.go.id/PAK_Pegawai",
     },
   ];
 

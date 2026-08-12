@@ -55,6 +55,10 @@ export default function ZonaIntegritasPage() {
     },
   ];
 
+  const handleButtonClick = () => {
+    window.open("https://www.google.com/url?q=https%3A%2F%2Fheylink.me%2FZI_P1000_2025%2F&sa=D&sntz=1&usg=AOvVaw0VnKixwDwSDnSLGG1GRqNb", "_blank");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar isScrolled={isScrolled} />
@@ -128,6 +132,16 @@ export default function ZonaIntegritasPage() {
                   <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-[#0072BC] transition-colors" />
                 </a>
               ))}
+            </div>
+
+            {/* Tombol baru dengan fungsi navigasi */}
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleButtonClick}
+                className="bg-[#0072BC] hover:bg-[#005a94] text-white font-semibold py-3 px-8 rounded-lg transition-all hover:shadow-lg transform hover:scale-105 cursor-pointer"
+              >
+                ZI 2024
+              </button>
             </div>
           </div>
         </div>

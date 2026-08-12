@@ -43,11 +43,11 @@ export default function SAKIPPage() {
   const documents = [
     {
       title: "SAKIP 2024",
-      link: "https://drive.google.com/drive/folders/sakip-2024",
+      link: "https://s.bps.go.id/Dokumen-SAKIP2024",
     },
     {
       title: "SAKIP 2025",
-      link: "https://drive.google.com/drive/folders/sakip-2025",
+      link: "https://drive.bps.go.id/s/WG5br3FbGjnd3nn",
     },
   ];
 
