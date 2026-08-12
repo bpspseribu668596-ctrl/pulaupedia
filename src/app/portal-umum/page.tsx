@@ -126,7 +126,7 @@ export default function PortalUmumPage() {
         </div>
         <button
           onClick={scrollToContent}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer hover:scale-110 transition-transform"
+          className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20 animate-bounce cursor-pointer hover:scale-110 transition-transform"
           aria-label="Scroll to Content"
         >
           <ChevronDown className="text-white w-8 h-8 drop-shadow-lg" />
@@ -169,20 +169,6 @@ export default function PortalUmumPage() {
             })}
           </div>
 
-          <div className="mt-12 max-w-4xl mx-auto">
-            <div className="bg-blue-50 border-l-4 border-[#0072BC] rounded-lg p-6">
-              <div className="flex items-start gap-3">
-                <FolderOpen className="w-6 h-6 text-[#0072BC] mt-1" />
-                <div>
-                  <h4 className="font-bold text-[#111111] mb-2">Informasi Akses</h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    Setiap card akan mengarahkan Anda ke folder Google Drive yang berisi dokumen dan informasi sesuai kategori. 
-                    Pastikan Anda memiliki akses ke folder tersebut.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
