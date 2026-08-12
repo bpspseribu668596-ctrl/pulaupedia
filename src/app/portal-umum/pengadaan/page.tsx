@@ -57,7 +57,7 @@ export default function PengadaanPage() {
 
       <header
         id="main-header"
-        className="relative py-32 md:py-40 border-b-4 border-[#D83F3F] overflow-hidden"
+        className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -67,7 +67,7 @@ export default function PengadaanPage() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-10 w-full">
           <div
             className={`text-center transition-all duration-1000 ${
               isVisible

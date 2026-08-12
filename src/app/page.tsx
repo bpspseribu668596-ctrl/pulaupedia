@@ -137,7 +137,7 @@ export default function Home() {
 
       <header
         id="main-header"
-        className="relative py-32 md:py-40 border-b-4 border-[#D83F3F] overflow-hidden"
+        className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -147,7 +147,7 @@ export default function Home() {
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 relative z-10 w-full">
           <div
             className={`text-center transition-all duration-1000 ${
               isVisible
@@ -164,9 +164,14 @@ export default function Home() {
           </div>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            const portalSection = document.getElementById("portal-pulau-pedia");
+            if (portalSection) {
+              portalSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }}
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer hover:scale-110 transition-transform"
-          aria-label="Lihat Pengumuman"
+          aria-label="Scroll ke Portal Pulau Pedia"
         >
           <ChevronDown className="text-white w-8 h-8 drop-shadow-lg" />
         </button>
@@ -209,7 +214,7 @@ export default function Home() {
         </div>
       )}
 
-      <section className="bg-[#D83F3F] py-16 relative overflow-hidden">
+      <section id="portal-pulau-pedia" className="bg-[#D83F3F] py-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
