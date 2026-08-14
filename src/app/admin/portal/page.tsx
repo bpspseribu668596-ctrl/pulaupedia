@@ -106,6 +106,8 @@ export default function AdminPortalPediaPage() {
     setIsSaving(true);
     setSaveMessage("");
     try {
+      // Simulasi penyimpanan ke database
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSaveMessage("Portal Pulau Pedia berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -139,73 +141,11 @@ export default function AdminPortalPediaPage() {
       )}
 
       <div className="grid gap-6">
-        {/* Section Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Section Settings</CardTitle>
-            <CardDescription>Pengaturan tampilan section Portal Pulau Pedia</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <Label htmlFor="sectionColor">Warna Section</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="sectionColor"
-                  type="color"
-                  value={formData.sectionColor}
-                  onChange={(e) => handleInputChange("sectionColor", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.sectionColor}
-                    onChange={(e) => handleInputChange("sectionColor", e.target.value)}
-                    placeholder="#D83F3F"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-              <div 
-                className="h-12 rounded"
-                style={{ backgroundColor: formData.sectionColor }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="mobileColumns">Kolom Mobile</Label>
-                <Input
-                  id="mobileColumns"
-                  type="number"
-                  value={formData.mobileColumns}
-                  onChange={(e) => handleInputChange("mobileColumns", parseInt(e.target.value) || 1)}
-                  min="1"
-                  max="4"
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <Label htmlFor="desktopColumns">Kolom Desktop</Label>
-                <Input
-                  id="desktopColumns"
-                  type="number"
-                  value={formData.desktopColumns}
-                  onChange={(e) => handleInputChange("desktopColumns", parseInt(e.target.value) || 4)}
-                  min="1"
-                  max="8"
-                  className="mt-2"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Menu Items */}
         <Card>
           <CardHeader>
             <CardTitle>Portal Menu Items</CardTitle>
-            <CardDescription>Kelola 8 menu utama Portal Pulau Pedia (Mobile: 2 kolom, Desktop: 4 kolom)</CardDescription>
+            <CardDescription>Kelola 8 menu utama Portal Pulau Pedia</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
@@ -255,6 +195,10 @@ export default function AdminPortalPediaPage() {
                             <option key={name} value={name}>{name}</option>
                           ))}
                         </select>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Preview:</span>
+                          {IconComponent && <IconComponent className="w-5 h-5" />}
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -327,48 +271,6 @@ export default function AdminPortalPediaPage() {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-            <CardDescription>Pratinjau Portal Pulau Pedia section</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div style={{ backgroundColor: formData.sectionColor }} className="p-8 rounded-lg">
-              <div className="text-center mb-8">
-                <h2 className="text-white text-3xl font-bold mb-2">Portal Pulau Pedia</h2>
-                <p className="text-white/90">Akses cepat ke berbagai portal dan layanan informasi</p>
-              </div>
-              
-              <div className={`grid gap-6 max-w-6xl mx-auto`} style={{
-                gridTemplateColumns: `repeat(${Math.min(formData.desktopColumns, formData.menuItems.length)}, minmax(0, 1fr))`
-              }}>
-                {formData.menuItems.slice(0, 8).map((item) => {
-                  const IconComponent = iconMap[item.icon];
-                  return (
-                    <div
-                      key={item.id}
-                      className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
-                    >
-                      <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
-                        {IconComponent && <IconComponent className="w-8 h-8 text-white" />}
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-white text-base font-bold mb-2">
-                          {item.name}
-                        </h3>
-                        <p className="text-white/80 text-xs leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </CardContent>
         </Card>
 

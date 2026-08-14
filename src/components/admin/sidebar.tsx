@@ -69,48 +69,46 @@ const data = {
       title: "Portal Umum",
       url: "/admin/portal-umum",
       icon: Layout,
-      children: [
-        {
-          title: "Informasi Umum dan Layanan Publik",
-          url: "/admin/portal-umum-sections",
-          icon: FileText,
-        },
-        {
-          title: "Brankas Fungsi",
-          url: "/admin/brankas-fungsi",
-          icon: Archive,
-        },
-        {
-          title: "Dokumentasi Kegiatan",
-          url: "/admin/dokumentasi-kegiatan",
-          icon: Calendar,
-        },
-        {
-          title: "SE2026 Archive Hub",
-          url: "/admin/se-2026-archive",
-          icon: Archive,
-        },
-        {
-          title: "Aplikasi Daniel",
-          url: "/admin/aplikasi-daniel",
-          icon: Package,
-        },
-        {
-          title: "Monev Anggaran",
-          url: "/admin/monev-anggaran",
-          icon: BarChart3,
-        },
-        {
-          title: "SAKIP 2026",
-          url: "/admin/sakip-2026",
-          icon: FileText,
-        },
-        {
-          title: "ZI 2026",
-          url: "/admin/zi-2026",
-          icon: Award,
-        },
-      ],
+    },
+    {
+      title: "Informasi Umum dan Layanan Publik",
+      url: "/admin/portal-umum-sections",
+      icon: FileText,
+    },
+    {
+      title: "Brankas Fungsi",
+      url: "/admin/brankas-fungsi",
+      icon: Archive,
+    },
+    {
+      title: "Dokumentasi Kegiatan",
+      url: "/admin/dokumentasi-kegiatan",
+      icon: Calendar,
+    },
+    {
+      title: "SE2026 Archive Hub",
+      url: "/admin/se-2026-archive",
+      icon: Archive,
+    },
+    {
+      title: "Aplikasi Daniel",
+      url: "/admin/aplikasi-daniel",
+      icon: Package,
+    },
+    {
+      title: "Monev Anggaran",
+      url: "/admin/monev-anggaran",
+      icon: BarChart3,
+    },
+    {
+      title: "SAKIP 2026",
+      url: "/admin/sakip-2026",
+      icon: FileText,
+    },
+    {
+      title: "ZI 2026",
+      url: "/admin/zi-2026",
+      icon: Award,
     },
     {
       title: "Services",
