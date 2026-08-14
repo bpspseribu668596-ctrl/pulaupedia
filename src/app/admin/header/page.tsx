@@ -12,22 +12,12 @@ interface HeaderData {
   title: string;
   subtitle: string;
   backgroundImage: string;
-  overlayOpacity: number;
-  overlayColor: string;
-  animationDuration: number;
-  chevronEnabled: boolean;
-  headerHeight: string;
 }
 
 const defaultData: HeaderData = {
   title: "PULAU PEDIA",
   subtitle: "Portal Informasi dan Layanan Digital BPS Kepulauan Seribu",
   backgroundImage: "/images/Pulau_Yu,_Kepulauan_Seribu,_Provinsi_DKI_Jakarta.jpg",
-  overlayOpacity: 0.7,
-  overlayColor: "#333333",
-  animationDuration: 1,
-  chevronEnabled: true,
-  headerHeight: "30vh",
 };
 
 export default function AdminHeaderPage() {
@@ -35,7 +25,7 @@ export default function AdminHeaderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
-  const handleInputChange = (field: keyof HeaderData, value: any) => {
+  const handleInputChange = (field: keyof HeaderData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -48,7 +38,7 @@ export default function AdminHeaderPage() {
     try {
       // Simulasi penyimpanan ke database
       await new Promise(resolve => setTimeout(resolve, 1000));
-      setSaveMessage("Header Hero berhasil diperbarui!");
+      setSaveMessage("Header berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error: " + (error instanceof Error ? error.message : "Unknown error"));
