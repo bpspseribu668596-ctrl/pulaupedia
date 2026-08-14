@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, RotateCcw, Plus, Trash2 } from "lucide-react";
+import { Save, Plus, Trash2 } from "lucide-react";
 
 interface ServiceItem {
   id: string;
@@ -39,7 +39,6 @@ const defaultData: ServicesData = {
 export default function AdminServicesPage() {
   const [formData, setFormData] = useState<ServicesData>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
   const [newService, setNewService] = useState({ title: "", name: "", logo: "", link: "" });
 
   const handleServiceChange = (id: string, field: keyof ServiceItem, value: string) => {
@@ -71,21 +70,13 @@ export default function AdminServicesPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    setSaveMessage("");
     try {
-      setSaveMessage("BPS Services berhasil diperbarui!");
-      setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
-      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+      // Simulasi penyimpanan ke database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Tidak ada notifikasi
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleReset = () => {
-    setFormData(defaultData);
-    setNewService({ title: "", name: "", logo: "", link: "" });
-    setSaveMessage("");
   };
 
   return (
@@ -95,55 +86,7 @@ export default function AdminServicesPage() {
         <p className="text-muted-foreground mt-2">Kelola layanan dan aplikasi web BPS</p>
       </div>
 
-      {saveMessage && (
-        <div className={`p-4 rounded-lg ${
-          saveMessage.includes("berhasil") 
-            ? "bg-green-50 border border-green-200 text-green-800" 
-            : "bg-red-50 border border-red-200 text-red-800"
-        }`}>
-          {saveMessage}
-        </div>
-      )}
-
       <div className="grid gap-6">
-        {/* Background Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Background Settings</CardTitle>
-            <CardDescription>Pengaturan background untuk section layanan</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="bgColor">Background Gradient</Label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  <Button
-                    variant={formData.backgroundColor === "from-gray-50 to-white" ? "default" : "outline"}
-                    onClick={() => setFormData(prev => ({ ...prev, backgroundColor: "from-gray-50 to-white" }))}
-                    className="text-xs"
-                  >
-                    Gray → White
-                  </Button>
-                  <Button
-                    variant={formData.backgroundColor === "from-white to-gray-50" ? "default" : "outline"}
-                    onClick={() => setFormData(prev => ({ ...prev, backgroundColor: "from-white to-gray-50" }))}
-                    className="text-xs"
-                  >
-                    White → Gray
-                  </Button>
-                  <Button
-                    variant={formData.backgroundColor === "from-blue-50 to-white" ? "default" : "outline"}
-                    onClick={() => setFormData(prev => ({ ...prev, backgroundColor: "from-blue-50 to-white" }))}
-                    className="text-xs"
-                  >
-                    Blue → White
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Services Section */}
         <Card>
           <CardHeader>
@@ -189,6 +132,9 @@ export default function AdminServicesPage() {
                             src={service.logo} 
                             alt={service.name}
                             className="h-12 w-12 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
                           />
                         </div>
                       )}
@@ -314,14 +260,6 @@ export default function AdminServicesPage() {
 
         {/* Action Buttons */}
         <div className="flex gap-4 justify-end pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset to Default
-          </Button>
           <Button
             onClick={handleSave}
             disabled={isSaving}
