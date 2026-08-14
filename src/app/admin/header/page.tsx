@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, RotateCcw, Image as ImageIcon } from "lucide-react";
 
-interface HeroData {
+interface HeaderData {
   title: string;
   subtitle: string;
   backgroundImage: string;
@@ -16,10 +16,10 @@ interface HeroData {
   overlayColor: string;
   animationDuration: number;
   chevronEnabled: boolean;
-  heroHeight: string;
+  headerHeight: string;
 }
 
-const defaultData: HeroData = {
+const defaultData: HeaderData = {
   title: "PULAU PEDIA",
   subtitle: "Portal Informasi dan Layanan Digital BPS Kepulauan Seribu",
   backgroundImage: "/images/Pulau_Yu,_Kepulauan_Seribu,_Provinsi_DKI_Jakarta.jpg",
@@ -27,15 +27,15 @@ const defaultData: HeroData = {
   overlayColor: "#333333",
   animationDuration: 1,
   chevronEnabled: true,
-  heroHeight: "30vh",
+  headerHeight: "30vh",
 };
 
-export default function AdminHeroPage() {
-  const [formData, setFormData] = useState<HeroData>(defaultData);
+export default function AdminHeaderPage() {
+  const [formData, setFormData] = useState<HeaderData>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
-  const handleInputChange = (field: keyof HeroData, value: any) => {
+  const handleInputChange = (field: keyof HeaderData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -65,8 +65,8 @@ export default function AdminHeroPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Header Hero</h1>
-        <p className="text-muted-foreground mt-2">Kelola konten dan pengaturan hero banner</p>
+        <h1 className="text-3xl font-bold tracking-tight">Header Settings</h1>
+        <p className="text-muted-foreground mt-2">Atur tampilan header halaman utama</p>
       </div>
 
       {saveMessage && (
@@ -84,7 +84,7 @@ export default function AdminHeroPage() {
         <Card>
           <CardHeader>
             <CardTitle>Konten Teks</CardTitle>
-            <CardDescription>Judul dan subtitle yang ditampilkan di hero</CardDescription>
+            <CardDescription>Judul dan subtitle yang ditampilkan di header</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -118,7 +118,7 @@ export default function AdminHeroPage() {
               <ImageIcon className="w-5 h-5" />
               Background Image
             </CardTitle>
-            <CardDescription>Gambar latar belakang untuk hero section</CardDescription>
+            <CardDescription>Gambar latar belakang untuk header section</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

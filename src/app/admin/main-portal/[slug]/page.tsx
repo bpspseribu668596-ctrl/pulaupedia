@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, ArrowLeft, X } from "lucide-react";
+import { Plus, ArrowLeft, X, ChevronRight } from "lucide-react";
 
 interface PortalItem {
   id: string;
   title: string;
+  slug: string;
   url: string;
 }
 
@@ -25,28 +26,42 @@ export default function PortalSlugPage() {
 
   const defaultPortalData: PortalData = {
     "portal-umum": [
-      { id: "1", title: "BIGRAM", url: "http://localhost:3000/portal-umum/bigram" },
-      { id: "2", title: "Profil", url: "http://localhost:3000/portal-umum/profil" },
+      { id: "1", title: "BIGRAM", slug: "bigram", url: "http://localhost:3000/portal-umum/bigram" },
+      { id: "2", title: "Profil", slug: "profil", url: "http://localhost:3000/portal-umum/profil" },
     ],
-    "brankas-fungsi": [],
-    "dokumentasi-kegiatan": [],
-    "se2026-archive-hub": [],
-    "aplikasi-daniel": [],
-    "monev-anggaran": [],
-    "sakip-2026": [],
-    "zi-2026": [],
+    "brankas-fungsi": [
+      { id: "1", title: "Arsip Fungsi", slug: "arsip-fungsi", url: "http://localhost:3000/brankas-fungsi/arsip" },
+    ],
+    "dokumentasi-kegiatan": [
+      { id: "1", title: "Laporan Kegiatan", slug: "laporan-kegiatan", url: "http://localhost:3000/dokumentasi-kegiatan/laporan" },
+    ],
+    "se2026-archive-hub": [
+      { id: "1", title: "Arsip SE 2026", slug: "arsip-se", url: "http://localhost:3000/se2026-archive-hub/arsip" },
+    ],
+    "aplikasi-daniel": [
+      { id: "1", title: "Dashboard", slug: "dashboard", url: "http://localhost:3000/aplikasi-daniel/dashboard" },
+    ],
+    "monev-anggaran": [
+      { id: "1", title: "Monitoring", slug: "monitoring", url: "http://localhost:3000/monev-anggaran/monitoring" },
+    ],
+    "sakip-2026": [
+      { id: "1", title: "Laporan SAKIP", slug: "laporan-sakip", url: "http://localhost:3000/sakip-2026/laporan" },
+    ],
+    "zi-2026": [
+      { id: "1", title: "Zona Integritas", slug: "zona-integritas", url: "http://localhost:3000/zi-2026/zona" },
+    ],
   };
 
   const [items, setItems] = useState<PortalItem[]>(defaultPortalData[slug] || []);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<PortalItem | null>(null);
-  const [newItem, setNewItem] = useState({ title: "", url: "" });
+  const [newItem, setNewItem] = useState({ title: "", slug: "", url: "" });
 
   const handleAddItem = () => {
-    if (newItem.title && newItem.url) {
+    if (newItem.title && newItem.slug && newItem.url) {
       setItems([...items, { id: Date.now().toString(), ...newItem }]);
-      setNewItem({ title: "", url: "" });
+      setNewItem({ title: "", slug: "", url: "" });
       setShowAddDialog(false);
     }
   };
@@ -57,7 +72,7 @@ export default function PortalSlugPage() {
   };
 
   const handleUpdateItem = () => {
-    if (editingItem && editingItem.title && editingItem.url) {
+    if (editingItem && editingItem.title && editingItem.slug && editingItem.url) {
       setItems(items.map(item => item.id === editingItem.id ? editingItem : item));
       setEditingItem(null);
       setShowEditDialog(false);
@@ -68,6 +83,10 @@ export default function PortalSlugPage() {
     setItems(items.filter(item => item.id !== id));
     setEditingItem(null);
     setShowEditDialog(false);
+  };
+
+  const handleManageSubItems = (itemSlug: string) => {
+    router.push(`/admin/main-portal/${slug}/${itemSlug}`);
   };
 
   return (
@@ -89,21 +108,33 @@ export default function PortalSlugPage() {
       </div>
 
       <div className="space-y-4">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <Card key={item.id}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">/{item.slug}</p>
                   <p className="text-sm text-muted-foreground break-all">{item.url}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenEditDialog(item)}
-                >
-                  Edit
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenEditDialog(item)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => handleManageSubItems(item.slug)}
+                  >
+                    Cards
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -136,7 +167,7 @@ export default function PortalSlugPage() {
               <button
                 onClick={() => {
                   setShowAddDialog(false);
-                  setNewItem({ title: "", url: "" });
+                  setNewItem({ title: "", slug: "", url: "" });
                 }}
                 className="rounded-md hover:bg-muted p-1"
               >
@@ -150,6 +181,15 @@ export default function PortalSlugPage() {
                   value={newItem.title}
                   onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
                   placeholder="Contoh: BIGRAM"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Slug</Label>
+                <Input
+                  value={newItem.slug}
+                  onChange={(e) => setNewItem({ ...newItem, slug: e.target.value })}
+                  placeholder="Contoh: bigram"
                   className="mt-1"
                 />
               </div>
@@ -170,7 +210,7 @@ export default function PortalSlugPage() {
                   variant="outline"
                   onClick={() => {
                     setShowAddDialog(false);
-                    setNewItem({ title: "", url: "" });
+                    setNewItem({ title: "", slug: "", url: "" });
                   }}
                 >
                   Batal
@@ -202,6 +242,14 @@ export default function PortalSlugPage() {
                 <Input
                   value={editingItem.title}
                   onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Slug</Label>
+                <Input
+                  value={editingItem.slug}
+                  onChange={(e) => setEditingItem({ ...editingItem, slug: e.target.value })}
                   className="mt-1"
                 />
               </div>
