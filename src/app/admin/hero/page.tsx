@@ -46,6 +46,8 @@ export default function AdminHeroPage() {
     setIsSaving(true);
     setSaveMessage("");
     try {
+      // Simulasi penyimpanan ke database
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSaveMessage("Header Hero berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -132,197 +134,24 @@ export default function AdminHeroPage() {
             </div>
             {formData.backgroundImage && (
               <div className="p-4 bg-muted rounded-lg text-center">
-                <p className="text-sm text-muted-foreground mb-3">Preview:</p>
+                <p className="text-sm text-muted-foreground mb-3">Preview Gambar:</p>
                 <img 
                   src={formData.backgroundImage} 
                   alt="Background Preview" 
                   className="h-40 mx-auto rounded object-cover w-full"
-                  onError={() => <span className="text-muted-foreground">Image not found</span>}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      const errorMsg = document.createElement('p');
+                      errorMsg.className = 'text-muted-foreground';
+                      errorMsg.textContent = 'Image not found';
+                      parent.appendChild(errorMsg);
+                    }
+                  }}
                 />
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Overlay Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Dark Overlay</CardTitle>
-            <CardDescription>Pengaturan overlay gelap di atas gambar background</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="overlayOpacity">Opacity: {(formData.overlayOpacity * 100).toFixed(0)}%</Label>
-              </div>
-              <input
-                id="overlayOpacity"
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={formData.overlayOpacity}
-                onChange={(e) => handleInputChange("overlayOpacity", parseFloat(e.target.value))}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">Kontrol tingkat kegelapan overlay (0 = transparan, 1 = penuh)</p>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="overlayColor">Warna Overlay</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="overlayColor"
-                  type="color"
-                  value={formData.overlayColor}
-                  onChange={(e) => handleInputChange("overlayColor", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.overlayColor}
-                    onChange={(e) => handleInputChange("overlayColor", e.target.value)}
-                    placeholder="#333333"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-lg border bg-muted overflow-hidden">
-              <p className="text-sm text-muted-foreground mb-3">Preview Overlay:</p>
-              <div 
-                className="h-32 rounded flex items-center justify-center relative overflow-hidden"
-                style={{
-                  backgroundImage: `url('${formData.backgroundImage}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              >
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    backgroundColor: formData.overlayColor,
-                    opacity: formData.overlayOpacity,
-                  }}
-                />
-                <p className="relative text-white text-sm font-semibold text-center">Sample Text</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Animation Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Animasi</CardTitle>
-            <CardDescription>Pengaturan animasi fade-in dan chevron</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="animationDuration">Durasi Fade-in: {formData.animationDuration}s</Label>
-              <input
-                id="animationDuration"
-                type="range"
-                min="0.2"
-                max="3"
-                step="0.1"
-                value={formData.animationDuration}
-                onChange={(e) => handleInputChange("animationDuration", parseFloat(e.target.value))}
-                className="w-full mt-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Kecepatan animasi fade-in saat halaman dimuat</p>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-              <Label htmlFor="chevronEnabled" className="flex items-center gap-2 cursor-pointer">
-                <input
-                  id="chevronEnabled"
-                  type="checkbox"
-                  checked={formData.chevronEnabled}
-                  onChange={(e) => handleInputChange("chevronEnabled", e.target.checked)}
-                  className="cursor-pointer"
-                />
-                Tampilkan Animated Chevron Button
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Hero Height */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tinggi Hero</CardTitle>
-            <CardDescription>Atur tinggi section hero</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant={formData.heroHeight === "25vh" ? "default" : "outline"}
-                onClick={() => handleInputChange("heroHeight", "25vh")}
-                className="text-xs"
-              >
-                Kecil (25vh)
-              </Button>
-              <Button
-                variant={formData.heroHeight === "30vh" ? "default" : "outline"}
-                onClick={() => handleInputChange("heroHeight", "30vh")}
-                className="text-xs"
-              >
-                Normal (30vh)
-              </Button>
-              <Button
-                variant={formData.heroHeight === "40vh" ? "default" : "outline"}
-                onClick={() => handleInputChange("heroHeight", "40vh")}
-                className="text-xs"
-              >
-                Besar (40vh)
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Live Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-            <CardDescription>Pratinjau hero section</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div 
-              className="relative flex items-center justify-center border-4 border-[#D83F3F] rounded-lg overflow-hidden"
-              style={{ height: formData.heroHeight }}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: `url('${formData.backgroundImage}')`,
-                }}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundColor: formData.overlayColor,
-                  opacity: formData.overlayOpacity,
-                }}
-              />
-              <div 
-                className="relative z-10 text-center transition-all"
-                style={{
-                  opacity: 1,
-                  transform: 'translateY(0)',
-                  transitionDuration: `${formData.animationDuration}s`,
-                }}
-              >
-                <h1 className="text-white text-4xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
-                  {formData.title}
-                </h1>
-                <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg px-4">
-                  {formData.subtitle}
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 

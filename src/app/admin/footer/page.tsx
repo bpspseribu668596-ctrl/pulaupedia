@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Globe, Save, RotateCcw } from "lucide-react";
+import { MapPin, Globe, Save, RotateCcw } from "lucide-react";
 
 interface FooterData {
   logoUrl: string;
@@ -52,6 +52,8 @@ export default function AdminFooterPage() {
     setIsSaving(true);
     setSaveMessage("");
     try {
+      // Simulasi penyimpanan ke database
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSaveMessage("Footer berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -109,7 +111,16 @@ export default function AdminFooterPage() {
                     src={formData.logoUrl} 
                     alt="Logo Preview" 
                     className="h-20 mx-auto"
-                    onError={() => <span className="text-muted-foreground">Image not found</span>}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        const errorMsg = document.createElement('p');
+                        errorMsg.className = 'text-muted-foreground';
+                        errorMsg.textContent = 'Image not found';
+                        parent.appendChild(errorMsg);
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -237,69 +248,6 @@ export default function AdminFooterPage() {
           </CardContent>
         </Card>
 
-        {/* Gradient Colors Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Warna Gradient Border Top</CardTitle>
-            <CardDescription>Pilih warna untuk gradient border atas footer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="gradientColor1">Warna Pertama</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="gradientColor1"
-                  type="color"
-                  value={formData.gradientColor1}
-                  onChange={(e) => handleInputChange("gradientColor1", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.gradientColor1}
-                    onChange={(e) => handleInputChange("gradientColor1", e.target.value)}
-                    placeholder="#A87932"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="gradientColor2">Warna Kedua</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="gradientColor2"
-                  type="color"
-                  value={formData.gradientColor2}
-                  onChange={(e) => handleInputChange("gradientColor2", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.gradientColor2}
-                    onChange={(e) => handleInputChange("gradientColor2", e.target.value)}
-                    placeholder="#D83F3F"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted border border-input">
-              <p className="text-sm text-muted-foreground mb-2">Preview Gradient:</p>
-              <div 
-                className="h-8 rounded w-full"
-                style={{
-                  background: `linear-gradient(to right, ${formData.gradientColor1}, ${formData.gradientColor2})`
-                }}
-              ></div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Action Buttons */}
         <div className="flex gap-4 justify-end pt-6 border-t">
           <Button
@@ -323,4 +271,3 @@ export default function AdminFooterPage() {
     </div>
   );
 }
-

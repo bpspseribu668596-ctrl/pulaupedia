@@ -8,6 +8,14 @@ import {
   LayoutDashboard,
   Image,
   Bell,
+  Grid3x3,
+  Layout,
+  FileText,
+  Archive,
+  Calendar,
+  Award,
+  BarChart3,
+  ChevronDown,
 } from "lucide-react";
 
 import { NavMain } from "@/components/admin/nav-main";
@@ -31,22 +39,16 @@ const data = {
       title: "Dashboard",
       url: "/admin",
       icon: LayoutDashboard,
-      isActive: true,
-    },
-    {
-      title: "Home Page",
-      url: "/admin/home",
-      icon: Home,
-    },
-    {
-      title: "Hero",
-      url: "/admin/hero",
-      icon: Image,
     },
     {
       title: "Announcement",
       url: "/admin/announcement",
       icon: Bell,
+    },
+    {
+      title: "Hero/Header",
+      url: "/admin/hero",
+      icon: Image,
     },
     {
       title: "Navbar",
@@ -57,6 +59,58 @@ const data = {
       title: "Footer",
       url: "/admin/footer",
       icon: Settings,
+    },
+    {
+      title: "Portal/Section",
+      url: "/admin/portal",
+      icon: Grid3x3,
+    },
+    {
+      title: "Portal Umum",
+      url: "/admin/portal-umum",
+      icon: Layout,
+      children: [
+        {
+          title: "Informasi Umum dan Layanan Publik",
+          url: "/admin/portal-umum-sections",
+          icon: FileText,
+        },
+        {
+          title: "Brankas Fungsi",
+          url: "/admin/brankas-fungsi",
+          icon: Archive,
+        },
+        {
+          title: "Dokumentasi Kegiatan",
+          url: "/admin/dokumentasi-kegiatan",
+          icon: Calendar,
+        },
+        {
+          title: "SE2026 Archive Hub",
+          url: "/admin/se-2026-archive",
+          icon: Archive,
+        },
+        {
+          title: "Aplikasi Daniel",
+          url: "/admin/aplikasi-daniel",
+          icon: Package,
+        },
+        {
+          title: "Monev Anggaran",
+          url: "/admin/monev-anggaran",
+          icon: BarChart3,
+        },
+        {
+          title: "SAKIP 2026",
+          url: "/admin/sakip-2026",
+          icon: FileText,
+        },
+        {
+          title: "ZI 2026",
+          url: "/admin/zi-2026",
+          icon: Award,
+        },
+      ],
     },
     {
       title: "Services",

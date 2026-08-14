@@ -87,6 +87,8 @@ export default function AdminNavbarPage() {
     setIsSaving(true);
     setSaveMessage("");
     try {
+      // Simulasi penyimpanan ke database
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSaveMessage("Navbar berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -145,7 +147,16 @@ export default function AdminNavbarPage() {
                     src={formData.logoUrl} 
                     alt="Logo Preview" 
                     className="h-10 mx-auto"
-                    onError={() => <span className="text-muted-foreground">Image not found</span>}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        const errorMsg = document.createElement('p');
+                        errorMsg.className = 'text-muted-foreground';
+                        errorMsg.textContent = 'Image not found';
+                        parent.appendChild(errorMsg);
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -181,177 +192,6 @@ export default function AdminNavbarPage() {
                 placeholder="/"
                 className="mt-2"
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Portal Menu Items Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Portal Menu Items</CardTitle>
-            <CardDescription>Kelola item menu dropdown Portal (maksimal 8 item)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {formData.portalMenuItems.map((item) => (
-                <div key={item.id} className="p-4 border rounded-lg space-y-3 bg-muted/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs">Nama Menu</Label>
-                      <Input
-                        value={item.name}
-                        onChange={(e) => handleMenuItemChange(item.id, "name", e.target.value)}
-                        className="mt-1"
-                        placeholder="Portal Umum"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Link/Path</Label>
-                      <Input
-                        value={item.href}
-                        onChange={(e) => handleMenuItemChange(item.id, "href", e.target.value)}
-                        className="mt-1"
-                        placeholder="/portal-umum"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleRemoveMenuItem(item.id)}
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Hapus
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            {formData.portalMenuItems.length < 8 && (
-              <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">Nama Menu Baru</Label>
-                    <Input
-                      value={newMenuItem.name}
-                      onChange={(e) => setNewMenuItem(prev => ({ ...prev, name: e.target.value }))}
-                      className="mt-1"
-                      placeholder="Nama menu"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Link/Path</Label>
-                    <Input
-                      value={newMenuItem.href}
-                      onChange={(e) => setNewMenuItem(prev => ({ ...prev, href: e.target.value }))}
-                      className="mt-1"
-                      placeholder="/path"
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={handleAddMenuItem}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tambah Menu
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Colors Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Warna Navbar</CardTitle>
-            <CardDescription>Pilih warna untuk navbar</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="darkColor">Warna Background (Dark)</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="darkColor"
-                  type="color"
-                  value={formData.darkColor}
-                  onChange={(e) => handleInputChange("darkColor", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.darkColor}
-                    onChange={(e) => handleInputChange("darkColor", e.target.value)}
-                    placeholder="#111111"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="accentColor">Warna Accent/Hover</Label>
-              <div className="flex items-center gap-4">
-                <input
-                  id="accentColor"
-                  type="color"
-                  value={formData.accentColor}
-                  onChange={(e) => handleInputChange("accentColor", e.target.value)}
-                  className="w-20 h-20 rounded cursor-pointer border-2 border-input"
-                />
-                <div className="flex-1">
-                  <Input
-                    value={formData.accentColor}
-                    onChange={(e) => handleInputChange("accentColor", e.target.value)}
-                    placeholder="#337ab7"
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Format: #RRGGBB</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted border border-input">
-              <p className="text-sm text-muted-foreground mb-3">Preview Navbar:</p>
-              <div 
-                className="rounded h-16 flex items-center px-4 gap-4"
-                style={{ backgroundColor: formData.darkColor }}
-              >
-                <div className="text-white text-sm font-semibold">Logo</div>
-                <div className="text-white text-sm">Beranda</div>
-                <div className="text-white text-sm">Portal</div>
-                <div 
-                  className="ml-auto px-3 py-1 rounded text-white text-xs"
-                  style={{ backgroundColor: formData.accentColor }}
-                >
-                  Hover Color
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Scroll Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pengaturan Scroll</CardTitle>
-            <CardDescription>Konfigurasi behavior navbar saat user scroll</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <Label htmlFor="scrollThreshold">Scroll Threshold (pixel)</Label>
-              <Input
-                id="scrollThreshold"
-                type="number"
-                value={formData.scrollThreshold}
-                onChange={(e) => handleInputChange("scrollThreshold", parseInt(e.target.value) || 0)}
-                className="mt-2"
-                min="0"
-                max="500"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Navbar akan tampil setelah user scroll X pixel ke bawah</p>
             </div>
           </CardContent>
         </Card>
