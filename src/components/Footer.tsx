@@ -3,9 +3,28 @@ import Link from "next/link";
 import { MapPin, Phone, Globe } from "lucide-react";
 
 export default function Footer() {
+  const footerData = {
+    logoUrl: "/logos/logo-bps.png",
+    address1Title: "Alamat Kantor",
+    address1Content: "Jl. Ikan Betok Putih Rt. 004 Rw. 05 Pulau Pramuka Kecamatan Kepulauan Seribu Utara 14530",
+    address2Title: "Kantor Penghubung",
+    address2Content: "Jl. Cempaka Putih Tengah XIV Rt. 008 Rw. 05 No. 10B Kelurahan Cempaka Putih Timur, Kecamatan Cempaka Putih, Jakarta Pusat 10510",
+    websiteTitle: "Website",
+    websiteUrl: "https://kepulauanseribukab.bps.go.id",
+    websiteText: "kepulauanseribukab.bps.go.id",
+    copyrightText: "© 2026 BPS Kabupaten Kepulauan Seribu. All rights reserved.",
+    gradientColor1: "#A87932",
+    gradientColor2: "#D83F3F",
+  };
+
   return (
     <footer className="bg-[#111111] py-12 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#A87932] via-[#D83F3F] to-[#A87932]"></div>
+      <div
+        className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r"
+        style={{
+          backgroundImage: `linear-gradient(to right, ${footerData.gradientColor1}, ${footerData.gradientColor2})`
+        }}
+      ></div>
       <div className="absolute inset-0 opacity-5">
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#A87932] rounded-full blur-3xl"></div>
       </div>
@@ -13,7 +32,7 @@ export default function Footer() {
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-4">
             <Image
-              src="/logos/logo-bps.png"
+              src={footerData.logoUrl}
               alt="Logo BPS"
               width={80}
               height={80}
@@ -29,41 +48,52 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-8 text-white max-w-5xl mx-auto mb-8">
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <MapPin className="w-5 h-5 text-[#A87932]" />
-              <h3 className="font-bold text-[#A87932]">Alamat Kantor</h3>
+              <MapPin className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
+                {footerData.address1Title}
+              </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Jl. Ikan Betok Putih Rt. 004 Rw. 05 Pulau Pramuka Kecamatan Kepulauan Seribu Utara 14530
+              {footerData.address1Content}
             </p>
           </div>
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <Phone className="w-5 h-5 text-[#A87932]" />
-              <h3 className="font-bold text-[#A87932]">Kantor Penghubung</h3>
+              <Phone className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
+                {footerData.address2Title}
+              </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Jl. Cempaka Putih Tengah XIV Rt. 008 Rw. 05 No. 10B Kelurahan Cempaka Putih Timur, Kecamatan Cempaka Putih, Jakarta Pusat 10510
+              {footerData.address2Content}
             </p>
           </div>
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <Globe className="w-5 h-5 text-[#A87932]" />
-              <h3 className="font-bold text-[#A87932]">Website</h3>
+              <Globe className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
+                {footerData.websiteTitle}
+              </h3>
             </div>
             <a
-              href="https://kepulauanseribukab.bps.go.id"
+              href={footerData.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-gray-300 hover:text-[#A87932] transition-colors"
+              className="text-sm text-gray-300 transition-colors"
+              style={{ 
+                color: "inherit"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = footerData.gradientColor1}
+              onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
             >
-              kepulauanseribukab.bps.go.id
+              {footerData.websiteText}
             </a>
           </div>
         </div>
 
         <div className="border-t border-gray-800 pt-6">
           <p className="text-center text-gray-400 text-sm">
-            © 2026 BPS Kabupaten Kepulauan Seribu. All rights reserved.
+            {footerData.copyrightText}
           </p>
         </div>
       </div>
