@@ -61,14 +61,9 @@ const data = {
       icon: Settings,
     },
     {
-      title: "Portal/Section",
-      url: "/admin/portal",
+      title: "Main Portal",
+      url: "/admin/main-portal",
       icon: Grid3x3,
-    },
-    {
-      title: "Portal Umum",
-      url: "/admin/portal-umum",
-      icon: Layout,
     },
     {
       title: "Informasi Umum dan Layanan Publik",
