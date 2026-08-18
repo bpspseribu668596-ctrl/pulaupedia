@@ -1,0 +1,160 @@
+-- ============================================================================
+-- Database: pulau_pedia3101
+-- ============================================================================
+
+CREATE DATABASE IF NOT EXISTS pulau_pedia3101;
+USE pulau_pedia3101;
+
+-- ============================================================================
+-- Table: headers
+-- Untuk menyimpan konfigurasi header halaman utama
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS headers (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL DEFAULT 'PULAU PEDIA',
+  subtitle TEXT NOT NULL DEFAULT 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
+  backgroundImage VARCHAR(500) NOT NULL DEFAULT 'uploads/headers/default.jpg',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default data
+INSERT INTO headers (id, title, subtitle, backgroundImage) VALUES
+(1, 'PULAU PEDIA', 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu', 'uploads/headers/default.jpg')
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: services
+-- Untuk menyimpan data layanan/aplikasi BPS
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS services (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  logo VARCHAR(500) NOT NULL,
+  link VARCHAR(500) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default services
+INSERT INTO services (title, name, logo, link) VALUES
+('Zona Integritas BPS', 'ZI APP', 'uploads/services/zi.png', 'https://penilaianzi.web.bps.go.id/penilaianzi/penilaian'),
+('Sistem Informasi Layanan Statistik', 'SILASTIK', 'uploads/services/silastik.png', 'https://silastik.bps.go.id/v3/index.php/site/login/'),
+('Sistem Informasi Kinerja Organisasi', 'SINERGI', 'uploads/services/sinergi.png', 'https://sinergi.web.bps.go.id/'),
+('Rekomendasi Kegiatan Statistik Online', 'ROMANTIK', 'uploads/services/romantik.png', 'https://romantik.web.bps.go.id/'),
+('General Online Job Assistant for Great Service', 'GOJAGS', 'uploads/services/gojags.png', 'https://gojags.web.bps.go.id/'),
+('Pelayanan Statistik Terpadu', 'PST', 'uploads/services/pst.png', 'https://pst.bps.go.id/'),
+('Pejabat Pengelola Informasi dan Dokumentasi', 'PPID', 'uploads/services/ppid.png', 'https://ppid.bps.go.id/?mfd=3101'),
+('Learning Management System', 'LMS', 'uploads/services/lms.png', 'https://lms.bps.go.id/'),
+('Perpustakaan BPS', 'PERPUSTAKAAN', 'uploads/services/perpus.png', 'https://perpustakaan.bps.go.id/apps/');
+
+-- ============================================================================
+-- Table: announcements
+-- Untuk menyimpan pengumuman
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS announcements (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  icon VARCHAR(50) DEFAULT 'megaphone',
+  isActive BOOLEAN DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- Table: navbar_config
+-- Untuk menyimpan konfigurasi navbar
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS navbar_config (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  logo VARCHAR(500) DEFAULT 'uploads/navbar/logo.png',
+  logoAlt VARCHAR(100) DEFAULT 'Pulau Pedia Logo',
+  brandName VARCHAR(100) DEFAULT 'PULAU PEDIA',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default navbar config
+INSERT INTO navbar_config (id, logo, logoAlt, brandName) VALUES
+(1, 'uploads/navbar/logo.png', 'Pulau Pedia Logo', 'PULAU PEDIA')
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: footer_config
+-- Untuk menyimpan konfigurasi footer
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS footer_config (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  companyName VARCHAR(255) DEFAULT 'BPS Kepulauan Seribu',
+  companyAddress TEXT,
+  phone VARCHAR(20),
+  email VARCHAR(100),
+  logo VARCHAR(500) DEFAULT 'uploads/footer/logo.png',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default footer config
+INSERT INTO footer_config (id, companyName, companyAddress, phone, email, logo) VALUES
+(1, 'BPS Kepulauan Seribu', 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta', '+62-21-XXXXXX', 'info@kepulauanseribu.bps.go.id', 'uploads/footer/logo.png')
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: main_portal_items
+-- Untuk menyimpan menu utama di halaman depan
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS main_portal_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(50) NOT NULL,
+  href VARCHAR(500) NOT NULL,
+  sortOrder INT DEFAULT 0,
+  isActive BOOLEAN DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default main portal items
+INSERT INTO main_portal_items (name, description, icon, href, sortOrder) VALUES
+('Portal Umum', 'Informasi umum dan layanan publik', 'BookOpen', '/portal-umum', 1),
+('Brankas Fungsi', 'Dokumen dan arsip fungsi', 'Archive', '/brankas-fungsi', 2),
+('Dokumentasi Kegiatan', 'Rekam jejak kegiatan kantor', 'FileText', '/dokumentasi-kegiatan', 3),
+('SE2026 Archive Hub', 'Arsip surat edaran 2026', 'Package', '/se2026-archive-hub', 4),
+('Aplikasi Daniel', 'Sistem aplikasi internal', 'Laptop', '/aplikasi-daniel', 5),
+('Monev Anggaran', 'Monitoring evaluasi anggaran', 'DollarSign', '/monev-anggaran', 6),
+('SAKIP 2026', 'Sistem Akuntabilitas Kinerja', 'BarChart3', '/sakip-2026', 7),
+('ZI 2026', 'Zona Integritas', 'Award', '/zi-2026', 8);
+
+-- ============================================================================
+-- Table: portal_umum_content
+-- Untuk menyimpan konten portal umum dengan slug
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS portal_umum_content (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  slug VARCHAR(100) NOT NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(50),
+  href VARCHAR(500),
+  isActive BOOLEAN DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default portal umum content
+INSERT INTO portal_umum_content (slug, title, description, icon) VALUES
+('bigram', 'BIGRAM', 'Biro Informasi Geospasial dan Analisis', 'BarChart3'),
+('bmn-persediaan', 'BMN Persediaan', 'Barang Milik Negara dan Persediaan', 'Package'),
+('humas', 'Humas', 'Hubungan Masyarakat', 'Megaphone'),
+('kepegawaian', 'Kepegawaian', 'Manajemen Sumber Daya Manusia', 'Users'),
+('keuangan', 'Keuangan', 'Divisi Keuangan', 'DollarSign'),
+('pengadaan', 'Pengadaan', 'Pengadaan Barang dan Jasa', 'ShoppingCart'),
+('sakip', 'SAKIP', 'Sistem Akuntabilitas Kinerja Instansi Pemerintah', 'BarChart3'),
+('zona-integritas', 'Zona Integritas', 'Zona Integritas BPS', 'Award');
+
+-- ============================================================================
+-- Selesai - Database Setup Selesai
+-- ============================================================================

@@ -61,7 +61,7 @@ export default function MainPortalPage() {
 
   const handleAddCard = () => {
     if (newCard.title && newCard.slug && newCard.description) {
-      setCards([...cards, { id: Date.now().toString(), ...newCard as PortalCard }]);
+      setCards([...cards, { id: Date.now().toString(), title: newCard.title || '', slug: newCard.slug || '', description: newCard.description || '', icon: newCard.icon || 'BookOpen' }]);
       setNewCard({ title: "", slug: "", description: "", icon: "BookOpen" });
       setShowAddDialog(false);
     }
