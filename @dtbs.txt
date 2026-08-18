@@ -63,31 +63,53 @@ ON DUPLICATE KEY UPDATE updatedAt = NOW();
 
 -- ============================================================================
 -- Table: services
--- Untuk menyimpan data layanan/aplikasi BPS
+-- Untuk menyimpan data layanan/aplikasi BPS dan header section
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS services (
   id INT PRIMARY KEY AUTO_INCREMENT,
   title VARCHAR(255) NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  logo VARCHAR(500) NOT NULL,
-  link VARCHAR(500) NOT NULL,
+  name VARCHAR(100),
+  logo VARCHAR(500),
+  link VARCHAR(500),
   sortOrder INT NOT NULL DEFAULT 0,
   isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  type VARCHAR(50) NOT NULL DEFAULT 'service',
+  description TEXT,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Insert header section
+INSERT INTO services (title, name, logo, link, sortOrder, isActive, type, description) VALUES
+('BPS Services Web-App', 'Header', 'N/A', 'N/A', 0, TRUE, 'header', 'Kumpulan layanan dan aplikasi digital untuk mendukung operasional BPS Kepulauan Seribu')
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
 -- Insert default services
-INSERT INTO services (title, name, logo, link, sortOrder, isActive) VALUES
-('Zona Integritas BPS', 'ZI APP', 'uploads/services/zi.png', 'https://penilaianzi.web.bps.go.id/penilaianzi/penilaian', 1, TRUE),
-('Sistem Informasi Layanan Statistik', 'SILASTIK', 'uploads/services/silastik.png', 'https://silastik.bps.go.id/v3/index.php/site/login/', 2, TRUE),
-('Sistem Informasi Kinerja Organisasi', 'SINERGI', 'uploads/services/sinergi.png', 'https://sinergi.web.bps.go.id/', 3, TRUE),
-('Rekomendasi Kegiatan Statistik Online', 'ROMANTIK', 'uploads/services/romantik.png', 'https://romantik.web.bps.go.id/', 4, TRUE),
-('General Online Job Assistant for Great Service', 'GOJAGS', 'uploads/services/gojags.png', 'https://gojags.web.bps.go.id/', 5, TRUE),
-('Pelayanan Statistik Terpadu', 'PST', 'uploads/services/pst.png', 'https://pst.bps.go.id/', 6, TRUE),
-('Pejabat Pengelola Informasi dan Dokumentasi', 'PPID', 'uploads/services/ppid.png', 'https://ppid.bps.go.id/?mfd=3101', 7, TRUE),
-('Learning Management System', 'LMS', 'uploads/services/lms.png', 'https://lms.bps.go.id/', 8, TRUE),
-('Perpustakaan BPS', 'PERPUSTAKAAN', 'uploads/services/perpus.png', 'https://perpustakaan.bps.go.id/apps/', 9, TRUE);
+INSERT INTO services (title, name, logo, link, sortOrder, isActive, type, description) VALUES
+('Zona Integritas BPS', 'ZI APP', 'uploads/services/zi.png', 'https://penilaianzi.web.bps.go.id/penilaianzi/penilaian', 1, TRUE, 'service', NULL),
+('Sistem Informasi Layanan Statistik', 'SILASTIK', 'uploads/services/silastik.png', 'https://silastik.bps.go.id/v3/index.php/site/login/', 2, TRUE, 'service', NULL),
+('Sistem Informasi Kinerja Organisasi', 'SINERGI', 'uploads/services/sinergi.png', 'https://sinergi.web.bps.go.id/', 3, TRUE, 'service', NULL),
+('Rekomendasi Kegiatan Statistik Online', 'ROMANTIK', 'uploads/services/romantik.png', 'https://romantik.web.bps.go.id/', 4, TRUE, 'service', NULL),
+('General Online Job Assistant for Great Service', 'GOJAGS', 'uploads/services/gojags.png', 'https://gojags.web.bps.go.id/', 5, TRUE, 'service', NULL),
+('Pelayanan Statistik Terpadu', 'PST', 'uploads/services/pst.png', 'https://pst.bps.go.id/', 6, TRUE, 'service', NULL),
+('Pejabat Pengelola Informasi dan Dokumentasi', 'PPID', 'uploads/services/ppid.png', 'https://ppid.bps.go.id/?mfd=3101', 7, TRUE, 'service', NULL),
+('Learning Management System', 'LMS', 'uploads/services/lms.png', 'https://lms.bps.go.id/', 8, TRUE, 'service', NULL),
+('Perpustakaan BPS', 'PERPUSTAKAAN', 'uploads/services/perpus.png', 'https://perpustakaan.bps.go.id/apps/', 9, TRUE, 'service', NULL)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: announcements
+-- Untuk menyimpan data pengumuman/announcement
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS announcements (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  image VARCHAR(500),
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- ============================================================================
 -- Selesai - Database Setup Selesai

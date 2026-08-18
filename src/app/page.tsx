@@ -303,11 +303,33 @@ export default function Home() {
 
 function AnnouncementModalComponent() {
   const [showModal, setShowModal] = useState(false);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const modalTimer = setTimeout(() => setShowModal(true), 3000);
-    return () => clearTimeout(modalTimer);
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await fetch('/api/announcements');
+        if (response.ok) {
+          const data = await response.json();
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        console.error('Error fetching announcements:', error);
+      }
+    };
+
+    fetchAnnouncements();
   }, []);
+
+  useEffect(() => {
+    const modalTimer = setTimeout(() => {
+      if (announcements.length > 0) {
+        setShowModal(true);
+      }
+    }, 3000);
+    return () => clearTimeout(modalTimer);
+  }, [announcements]);
 
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "";
@@ -324,7 +346,17 @@ function AnnouncementModalComponent() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  if (!showModal) return null;
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? announcements.length - 1 : prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev === announcements.length - 1 ? 0 : prev + 1));
+  };
+
+  if (!showModal || announcements.length === 0) return null;
+
+  const currentAnnouncement = announcements[currentIndex];
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -351,13 +383,45 @@ function AnnouncementModalComponent() {
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-gray-50 to-white">
-          <div className="bg-gray-100 rounded-full p-6 mb-4">
-            <Megaphone className="w-10 h-10 text-gray-300" />
+        <div className="flex-1 flex flex-col items-center justify-between p-6 text-center bg-gradient-to-b from-gray-50 to-white overflow-y-auto">
+          {currentAnnouncement.image && (
+            <div className="w-full aspect-[4/5] rounded-lg overflow-hidden mb-4">
+              <img
+                src={`/api/${currentAnnouncement.image}`}
+                alt={currentAnnouncement.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          <div className="flex-1 flex flex-col justify-center">
+            <h3 className="text-base font-bold text-gray-800 mb-2 line-clamp-2">
+              {currentAnnouncement.title}
+            </h3>
+            <p className="text-xs text-gray-600 leading-relaxed line-clamp-4">
+              {currentAnnouncement.content}
+            </p>
           </div>
-          <p className="text-gray-400 font-medium">
-            Belum ada pengumuman
-          </p>
+
+          {announcements.length > 1 && (
+            <div className="flex gap-2 mt-3 w-full">
+              <button
+                onClick={goToPrevious}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded transition-colors text-xs font-medium"
+              >
+                Sebelumnya
+              </button>
+              <span className="flex items-center px-2 text-xs text-gray-500">
+                {currentIndex + 1}/{announcements.length}
+              </span>
+              <button
+                onClick={goToNext}
+                className="flex-1 bg-[#D83F3F] hover:bg-[#c23333] text-white py-2 rounded transition-colors text-xs font-medium"
+              >
+                Berikutnya
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
