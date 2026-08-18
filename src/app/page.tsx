@@ -26,14 +26,8 @@ interface HeaderData {
   backgroundImage: string;
 }
 
-const defaultHeaderData: HeaderData = {
-  title: 'PULAU PEDIA',
-  subtitle: 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
-  backgroundImage: 'uploads/headers/default.jpg',
-};
-
 export default function Home() {
-  const [headerData, setHeaderData] = useState<HeaderData>(defaultHeaderData);
+  const [headerData, setHeaderData] = useState<HeaderData | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [serviceCategories, setServiceCategories] = useState<any[]>([]);
@@ -150,12 +144,14 @@ export default function Home() {
         id="main-header"
         className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/api/${headerData.backgroundImage}')`,
-          }}
-        />
+        {headerData?.backgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+            }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
         <div className="container mx-auto px-4 relative z-10 w-full">
           <div
@@ -166,10 +162,10 @@ export default function Home() {
             }`}
           >
             <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
-              {headerData.title}
+              {headerData?.title ?? 'Judul tidak tersedia'}
             </h1>
             <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
-              {headerData.subtitle}
+              {headerData?.subtitle ?? 'Subjudul tidak tersedia'}
             </p>
           </div>
         </div>
@@ -256,14 +252,20 @@ export default function Home() {
 
                     <div className="flex-1 flex items-center justify-center mb-4">
                       <a href={service.link} className="relative w-24 h-24 cursor-pointer">
-                        <Image
-                          src={`/api/${service.logo}`}
-                          alt={service.name}
-                          fill
-                          sizes="96px"
-                          className="object-contain"
-                          style={{ objectFit: "contain" }}
-                        />
+                        {service.logo ? (
+                          <Image
+                            src={`/api/${service.logo}`}
+                            alt={service.name}
+                            fill
+                            sizes="96px"
+                            className="object-contain"
+                            style={{ objectFit: "contain" }}
+                          />
+                        ) : (
+                          <div className="w-24 h-24 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
+                            <span className="text-gray-400 text-xs text-center leading-tight">Gambar<br/>tidak tersedia</span>
+                          </div>
+                        )}
                       </a>
                     </div>
 

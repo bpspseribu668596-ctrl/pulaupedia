@@ -14,16 +14,8 @@ interface FooterConfig {
   logo: string;
 }
 
-const defaultFooter: FooterConfig = {
-  companyName: 'BPS Kepulauan Seribu',
-  companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
-  phone: '+62-21-XXXXXX',
-  email: 'info@kepulauanseribu.bps.go.id',
-  logo: 'uploads/footer/logo.png',
-};
-
 export default function Footer() {
-  const [footerConfig, setFooterConfig] = useState<FooterConfig>(defaultFooter);
+  const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
 
   useEffect(() => {
     const fetchFooterConfig = async () => {
@@ -58,16 +50,22 @@ export default function Footer() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-4">
-            <Image
-              src={`/api/${footerConfig.logo}`}
-              alt="Logo BPS"
-              width={80}
-              height={80}
-              className="object-contain opacity-90"
-              style={{ width: "auto", height: "80px" }}
-            />
+            {footerConfig?.logo ? (
+              <Image
+                src={`/api/${footerConfig.logo}`}
+                alt="Logo BPS"
+                width={80}
+                height={80}
+                className="object-contain opacity-90"
+                style={{ width: "auto", height: "80px" }}
+              />
+            ) : (
+              <div className="w-20 h-20 flex items-center justify-center rounded bg-white/10">
+                <span className="text-white/50 text-xs text-center leading-tight">Logo<br/>tidak tersedia</span>
+              </div>
+            )}
             <span className="text-white font-bold text-xl md:text-2xl uppercase">
-              {footerConfig.companyName}
+              {footerConfig?.companyName ?? 'BPS Kepulauan Seribu'}
             </span>
           </Link>
         </div>
@@ -81,7 +79,7 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {footerConfig.companyAddress}
+              {footerConfig?.companyAddress ?? 'Alamat tidak tersedia'}
             </p>
           </div>
           <div className="text-center md:text-left">
@@ -92,7 +90,7 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {footerConfig.phone}
+              {footerConfig?.phone ?? 'Nomor tidak tersedia'}
             </p>
           </div>
           <div className="text-center md:text-left">
@@ -102,23 +100,25 @@ export default function Footer() {
                 Email
               </h3>
             </div>
-            <a
-              href={`mailto:${footerConfig.email}`}
-              className="text-sm text-gray-300 transition-colors"
-              style={{ 
-                color: "inherit"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = gradientColor1}
-              onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
-            >
-              {footerConfig.email}
-            </a>
+            {footerConfig?.email ? (
+              <a
+                href={`mailto:${footerConfig.email}`}
+                className="text-sm text-gray-300 transition-colors"
+                style={{ color: "inherit" }}
+                onMouseEnter={(e) => e.currentTarget.style.color = gradientColor1}
+                onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
+              >
+                {footerConfig.email}
+              </a>
+            ) : (
+              <p className="text-sm text-gray-300">Email tidak tersedia</p>
+            )}
           </div>
         </div>
 
         <div className="border-t border-gray-800 pt-6">
           <p className="text-center text-gray-400 text-sm">
-            © 2026 {footerConfig.companyName}. All rights reserved.
+            © 2026 {footerConfig?.companyName ?? 'BPS Kepulauan Seribu'}. All rights reserved.
           </p>
         </div>
       </div>

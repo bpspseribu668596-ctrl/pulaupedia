@@ -16,15 +16,9 @@ interface NavbarConfig {
   brandName: string;
 }
 
-const defaultNavbar: NavbarConfig = {
-  logo: 'uploads/navbar/logo.png',
-  logoAlt: 'Pulau Pedia Logo',
-  brandName: 'PULAU PEDIA',
-};
-
 export default function Navbar({ isScrolled }: NavbarProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
-  const [navbarConfig, setNavbarConfig] = useState<NavbarConfig>(defaultNavbar);
+  const [navbarConfig, setNavbarConfig] = useState<NavbarConfig | null>(null);
 
   useEffect(() => {
     const fetchNavbarConfig = async () => {
@@ -65,20 +59,26 @@ export default function Navbar({ isScrolled }: NavbarProps) {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-4">
-              <Image
-                src={`/api/${navbarConfig.logo}`}
-                alt={navbarConfig.logoAlt}
-                width={40}
-                height={40}
-                className="object-contain"
-                style={{ width: "auto", height: "40px" }}
-              />
+              {navbarConfig?.logo ? (
+                <Image
+                  src={`/api/${navbarConfig.logo}`}
+                  alt={navbarConfig.logoAlt ?? 'Logo'}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  style={{ width: "auto", height: "40px" }}
+                />
+              ) : (
+                <div className="w-10 h-10 flex items-center justify-center rounded bg-white/10">
+                  <span className="text-white/50 text-xs">Logo</span>
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight">
                   BADAN PUSAT STATISTIK
                 </span>
                 <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight">
-                  {navbarConfig.brandName}
+                  {navbarConfig?.brandName ?? 'PULAU PEDIA'}
                 </span>
               </div>
             </Link>

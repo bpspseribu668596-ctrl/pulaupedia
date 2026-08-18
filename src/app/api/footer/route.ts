@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+const STORAGE_DIR = join(process.cwd(), 'storage', 'uploads');
+
+function resolveLogoPath(logo: string | null | undefined): string | null {
+  if (!logo) return null;
+  const filepath = join(STORAGE_DIR, logo.replace(/^uploads\//, ''));
+  return existsSync(filepath) ? logo : null;
+}
 
 interface FooterRow extends RowDataPacket {
   id: number;
@@ -24,11 +34,14 @@ export async function GET() {
         companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
         phone: '+62-21-XXXXXX',
         email: 'info@kepulauanseribu.bps.go.id',
-        logo: 'uploads/footer/logo.png',
+        logo: null,
       });
     }
 
-    return NextResponse.json(rows[0]);
+    return NextResponse.json({
+      ...rows[0],
+      logo: resolveLogoPath(rows[0].logo),
+    });
   } catch (error) {
     console.error('Error fetching footer:', error);
     return NextResponse.json(
@@ -38,7 +51,7 @@ export async function GET() {
         companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
         phone: '+62-21-XXXXXX',
         email: 'info@kepulauanseribu.bps.go.id',
-        logo: 'uploads/footer/logo.png',
+        logo: null,
       },
       { status: 200 }
     );

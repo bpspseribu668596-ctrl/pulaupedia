@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+const STORAGE_DIR = join(process.cwd(), 'storage', 'uploads');
+
+function resolveImagePath(imagePath: string | null | undefined): string | null {
+  if (!imagePath) return null;
+  const filepath = join(STORAGE_DIR, imagePath.replace(/^uploads\//, ''));
+  return existsSync(filepath) ? imagePath : null;
+}
 
 interface HeaderRow extends RowDataPacket {
   id: number;
@@ -20,11 +30,14 @@ export async function GET() {
         id: 1,
         title: 'PULAU PEDIA',
         subtitle: 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
-        backgroundImage: 'uploads/headers/default.jpg',
+        backgroundImage: null,
       });
     }
 
-    return NextResponse.json(rows[0]);
+    return NextResponse.json({
+      ...rows[0],
+      backgroundImage: resolveImagePath(rows[0].backgroundImage),
+    });
   } catch (error) {
     console.error('Error fetching header:', error);
     return NextResponse.json(
@@ -32,7 +45,7 @@ export async function GET() {
         id: 1,
         title: 'PULAU PEDIA',
         subtitle: 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
-        backgroundImage: 'uploads/headers/default.jpg',
+        backgroundImage: null,
       },
       { status: 200 }
     );

@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+const STORAGE_DIR = join(process.cwd(), 'storage', 'uploads');
+
+function resolveLogoPath(logo: string | null | undefined): string | null {
+  if (!logo) return null;
+  const filepath = join(STORAGE_DIR, logo.replace(/^uploads\//, ''));
+  return existsSync(filepath) ? logo : null;
+}
 
 interface ServiceRow extends RowDataPacket {
   id: number;
@@ -24,7 +34,10 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    return NextResponse.json(rows);
+    return NextResponse.json(rows.map((row) => ({
+      ...row,
+      logo: resolveLogoPath(row.logo),
+    })));
   } catch (error) {
     console.error('Error fetching services:', error);
     return NextResponse.json([], { status: 200 });

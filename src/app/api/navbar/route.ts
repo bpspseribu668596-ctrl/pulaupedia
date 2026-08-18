@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+const STORAGE_DIR = join(process.cwd(), 'storage', 'uploads');
+
+function resolveLogoPath(logo: string | null | undefined): string | null {
+  if (!logo) return null;
+  const filepath = join(STORAGE_DIR, logo.replace(/^uploads\//, ''));
+  return existsSync(filepath) ? logo : null;
+}
 
 interface NavbarRow extends RowDataPacket {
   id: number;
@@ -18,19 +28,22 @@ export async function GET() {
     if (!rows || rows.length === 0) {
       return NextResponse.json({
         id: 1,
-        logo: 'uploads/navbar/logo.png',
+        logo: null,
         logoAlt: 'Pulau Pedia Logo',
         brandName: 'PULAU PEDIA',
       });
     }
 
-    return NextResponse.json(rows[0]);
+    return NextResponse.json({
+      ...rows[0],
+      logo: resolveLogoPath(rows[0].logo),
+    });
   } catch (error) {
     console.error('Error fetching navbar:', error);
     return NextResponse.json(
       {
         id: 1,
-        logo: 'uploads/navbar/logo.png',
+        logo: null,
         logoAlt: 'Pulau Pedia Logo',
         brandName: 'PULAU PEDIA',
       },
