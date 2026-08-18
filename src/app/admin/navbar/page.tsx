@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, RotateCcw, Image as ImageIcon } from "lucide-react";
+import { Save, Edit2, RotateCcw, X } from "lucide-react";
 
 interface NavbarConfig {
   id?: number;
@@ -21,12 +21,14 @@ const defaultData: NavbarConfig = {
 };
 
 export default function AdminNavbarPage() {
-  const [formData, setFormData] = useState<NavbarConfig>(defaultData);
+  const [navbarData, setNavbarData] = useState<NavbarConfig>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [fileInputKey, setFileInputKey] = useState(0);
+  
+  const [showDialog, setShowDialog] = useState(false);
+  const [formData, setFormData] = useState<NavbarConfig>(defaultData);
 
   useEffect(() => {
     fetchNavbarConfig();
@@ -37,7 +39,7 @@ export default function AdminNavbarPage() {
       const response = await fetch('/api/navbar');
       if (response.ok) {
         const data = await response.json();
-        setFormData(data);
+        setNavbarData(data);
       }
     } catch (error) {
       console.error('Error fetching navbar config:', error);
@@ -46,11 +48,13 @@ export default function AdminNavbarPage() {
     }
   };
 
-  const handleInputChange = (field: keyof NavbarConfig, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const openDialog = () => {
+    setFormData({ ...navbarData });
+    setShowDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +67,6 @@ export default function AdminNavbarPage() {
     }
 
     setIsUploading(true);
-    setSaveMessage("");
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
@@ -82,18 +85,19 @@ export default function AdminNavbarPage() {
         ...prev,
         logo: result.path,
       }));
-      setSaveMessage("Logo berhasil diupload!");
-      setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error: Gagal upload logo");
-      console.error('Upload error:', error);
     } finally {
       setIsUploading(false);
-      setFileInputKey(prev => prev + 1);
     }
   };
 
   const handleSave = async () => {
+    if (!formData.brandName || !formData.logoAlt) {
+      setSaveMessage("Error: Brand name dan logo alt harus diisi");
+      return;
+    }
+
     setIsSaving(true);
     setSaveMessage("");
     try {
@@ -110,15 +114,19 @@ export default function AdminNavbarPage() {
       }
 
       setSaveMessage("Navbar berhasil diperbarui!");
+      closeDialog();
+      fetchNavbarConfig();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Gagal menyimpan"));
+      setSaveMessage("Error: Gagal menyimpan navbar");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleReset = async () => {
+    if (!confirm('Apakah Anda yakin ingin reset ke default?')) return;
+
     setIsSaving(true);
     setSaveMessage("");
     try {
@@ -130,8 +138,8 @@ export default function AdminNavbarPage() {
         throw new Error('Reset failed');
       }
 
-      setFormData(defaultData);
       setSaveMessage("Navbar berhasil direset ke default!");
+      fetchNavbarConfig();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error: Gagal reset navbar");
@@ -170,121 +178,130 @@ export default function AdminNavbarPage() {
       )}
 
       <div className="grid gap-6">
-        {/* Logo Section */}
-        <Card>
+        {/* Navbar Preview Card */}
+        <Card className="overflow-hidden">
+          <div className="bg-white border-b p-4">
+            <div className="container mx-auto flex items-center gap-3">
+              <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-[#111111] text-white font-bold">
+                <img 
+                  src={`/api/${navbarData.logo}`}
+                  alt={navbarData.logoAlt}
+                  className="w-8 h-8 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold">{navbarData.brandName}</span>
+                <span className="text-xs text-muted-foreground">Admin</span>
+              </div>
+            </div>
+          </div>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5" />
-              Logo Navbar
-            </CardTitle>
-            <CardDescription>Upload logo baru untuk navbar</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Navbar Preview</CardTitle>
+                <CardDescription>Tampilan navbar dengan logo dan brand name</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={openDialog} size="sm" className="gap-2">
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button onClick={handleReset} variant="outline" size="sm" className="gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Reset
+                </Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2">
             <div>
-              <Label htmlFor="logoFile">Upload Logo</Label>
-              <div className="flex gap-2 mt-2">
+              <p className="text-sm font-semibold text-gray-600">Logo Path:</p>
+              <p className="text-xs text-gray-500">{navbarData.logo}</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Logo Alt Text:</p>
+              <p className="text-sm text-gray-700">{navbarData.logoAlt}</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Brand Name:</p>
+              <p className="text-lg font-bold">{navbarData.brandName}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Edit Dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Edit Navbar</CardTitle>
+              <button onClick={closeDialog} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label>Logo Brand Name</Label>
                 <Input
-                  key={fileInputKey}
-                  id="logoFile"
+                  value={formData.brandName}
+                  onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                  placeholder="PULAU PEDIA"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Logo Alt Text (untuk aksesibilitas)</Label>
+                <Input
+                  value={formData.logoAlt}
+                  onChange={(e) => setFormData({ ...formData, logoAlt: e.target.value })}
+                  placeholder="Pulau Pedia Logo"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Upload Logo</Label>
+                <Input
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
                   disabled={isUploading}
-                  className="flex-1"
+                  className="mt-1"
                 />
-                {isUploading && (
-                  <span className="text-sm text-muted-foreground pt-2">Uploading...</span>
+                <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, GIF, WebP (Recommended: 40x40px)</p>
+                {formData.logo && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">{formData.logo}</p>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                      <img
+                        src={`/api/${formData.logo}`}
+                        alt="Logo Preview"
+                        className="h-12 w-12 object-contain"
+                      />
+                      <span className="text-sm text-gray-600">Preview</span>
+                    </div>
+                  </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Format: JPG, PNG, GIF, WebP (Recommended: 40x40px)</p>
-            </div>
 
-            {formData.logo && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm">Logo Path (Otomatis)</Label>
-                  <Input
-                    value={formData.logo}
-                    readOnly
-                    className="mt-1 bg-gray-50 text-sm"
-                  />
-                </div>
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground mb-3">Preview Logo:</p>
-                  <img 
-                    src={`/api/${formData.logo}`}
-                    alt={formData.logoAlt}
-                    className="h-12 mx-auto rounded"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const parent = (e.target as HTMLImageElement).parentElement;
-                      if (parent) {
-                        const errorMsg = document.createElement('p');
-                        errorMsg.className = 'text-muted-foreground';
-                        errorMsg.textContent = 'Logo tidak ditemukan';
-                        parent.appendChild(errorMsg);
-                      }
-                    }}
-                  />
-                </div>
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2">
+                  <Save className="w-4 h-4" />
+                  Simpan Perubahan
+                </Button>
+                <Button variant="outline" onClick={closeDialog} className="flex-1">
+                  Batal
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Brand Info Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Informasi Brand</CardTitle>
-            <CardDescription>Konfigurasi logo alt text dan nama brand</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="logoAlt">Logo Alt Text</Label>
-              <Input
-                id="logoAlt"
-                value={formData.logoAlt}
-                onChange={(e) => handleInputChange("logoAlt", e.target.value)}
-                placeholder="Pulau Pedia Logo"
-                className="mt-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Teks alternatif untuk logo (untuk aksesibilitas)</p>
-            </div>
-            <div>
-              <Label htmlFor="brandName">Nama Brand</Label>
-              <Input
-                id="brandName"
-                value={formData.brandName}
-                onChange={(e) => handleInputChange("brandName", e.target.value)}
-                placeholder="PULAU PEDIA"
-                className="mt-2"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Nama yang ditampilkan di navbar (baris kedua logo)</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 justify-end pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            disabled={isSaving}
-            className="gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset to Default
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      )}
     </div>
   );
 }

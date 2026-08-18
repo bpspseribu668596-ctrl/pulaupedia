@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, RotateCcw, Image as ImageIcon, Upload } from "lucide-react";
+import { Save, Edit2, RotateCcw, X } from "lucide-react";
 
 interface HeaderData {
   id?: number;
@@ -22,12 +22,14 @@ const defaultData: HeaderData = {
 };
 
 export default function AdminHeaderPage() {
-  const [formData, setFormData] = useState<HeaderData>(defaultData);
+  const [headerData, setHeaderData] = useState<HeaderData>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [fileInputKey, setFileInputKey] = useState(0);
+  
+  const [showDialog, setShowDialog] = useState(false);
+  const [formData, setFormData] = useState<HeaderData>(defaultData);
 
   useEffect(() => {
     fetchHeaderData();
@@ -38,7 +40,7 @@ export default function AdminHeaderPage() {
       const response = await fetch('/api/header');
       if (response.ok) {
         const data = await response.json();
-        setFormData(data);
+        setHeaderData(data);
       }
     } catch (error) {
       console.error('Error fetching header:', error);
@@ -47,11 +49,13 @@ export default function AdminHeaderPage() {
     }
   };
 
-  const handleInputChange = (field: keyof HeaderData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const openDialog = () => {
+    setFormData({ ...headerData });
+    setShowDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +68,6 @@ export default function AdminHeaderPage() {
     }
 
     setIsUploading(true);
-    setSaveMessage("");
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
@@ -83,18 +86,19 @@ export default function AdminHeaderPage() {
         ...prev,
         backgroundImage: result.path,
       }));
-      setSaveMessage("Gambar berhasil diupload!");
-      setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error: Gagal upload gambar");
-      console.error('Upload error:', error);
     } finally {
       setIsUploading(false);
-      setFileInputKey(prev => prev + 1);
     }
   };
 
   const handleSave = async () => {
+    if (!formData.title || !formData.subtitle) {
+      setSaveMessage("Error: Title dan subtitle harus diisi");
+      return;
+    }
+
     setIsSaving(true);
     setSaveMessage("");
     try {
@@ -111,15 +115,19 @@ export default function AdminHeaderPage() {
       }
 
       setSaveMessage("Header berhasil diperbarui!");
+      closeDialog();
+      fetchHeaderData();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Gagal menyimpan"));
+      setSaveMessage("Error: Gagal menyimpan header");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleReset = async () => {
+    if (!confirm('Apakah Anda yakin ingin reset ke default?')) return;
+
     setIsSaving(true);
     setSaveMessage("");
     try {
@@ -131,8 +139,8 @@ export default function AdminHeaderPage() {
         throw new Error('Reset failed');
       }
 
-      setFormData(defaultData);
       setSaveMessage("Header berhasil direset ke default!");
+      fetchHeaderData();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       setSaveMessage("Error: Gagal reset header");
@@ -171,120 +179,127 @@ export default function AdminHeaderPage() {
       )}
 
       <div className="grid gap-6">
-        {/* Text Content */}
-        <Card>
+        {/* Header Preview Card */}
+        <Card className="overflow-hidden">
+          <div 
+            className="relative h-64 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-10">
+              <h2 className="text-white text-4xl md:text-5xl font-bold tracking-wide drop-shadow-2xl mb-4">
+                {headerData.title}
+              </h2>
+              <p className="text-white/90 text-lg max-w-2xl drop-shadow-lg">
+                {headerData.subtitle}
+              </p>
+            </div>
+          </div>
           <CardHeader>
-            <CardTitle>Konten Teks</CardTitle>
-            <CardDescription>Judul dan subtitle yang ditampilkan di header</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Header Preview</CardTitle>
+                <CardDescription>Tampilan header halaman utama</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={openDialog} size="sm" className="gap-2">
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button onClick={handleReset} variant="outline" size="sm" className="gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Reset
+                </Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2">
             <div>
-              <Label htmlFor="title">Judul (Title)</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="PULAU PEDIA"
-                className="mt-2 text-lg"
-              />
+              <p className="text-sm font-semibold text-gray-600">Judul:</p>
+              <p className="text-lg font-bold">{headerData.title}</p>
             </div>
             <div>
-              <Label htmlFor="subtitle">Subtitle</Label>
-              <Textarea
-                id="subtitle"
-                value={formData.subtitle}
-                onChange={(e) => handleInputChange("subtitle", e.target.value)}
-                rows={3}
-                placeholder="Portal Informasi dan Layanan Digital BPS Kepulauan Seribu"
-                className="mt-2"
-              />
+              <p className="text-sm font-semibold text-gray-600">Subtitle:</p>
+              <p className="text-gray-700">{headerData.subtitle}</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Background Image:</p>
+              <p className="text-xs text-gray-500">{headerData.backgroundImage}</p>
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Background Image */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5" />
-              Background Image
-            </CardTitle>
-            <CardDescription>Gambar latar belakang untuk header section</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="bgFile">Upload Gambar Baru</Label>
-              <div className="flex gap-2 mt-2">
+      {/* Edit Dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Edit Header</CardTitle>
+              <button onClick={closeDialog} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label>Judul (Title)</Label>
                 <Input
-                  key={fileInputKey}
-                  id="bgFile"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="PULAU PEDIA"
+                  className="mt-1 text-lg"
+                />
+              </div>
+
+              <div>
+                <Label>Subtitle</Label>
+                <Textarea
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="Portal Informasi dan Layanan Digital BPS Kepulauan Seribu"
+                  className="mt-1 min-h-[100px]"
+                />
+              </div>
+
+              <div>
+                <Label>Upload Background Image</Label>
+                <Input
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
                   disabled={isUploading}
-                  className="flex-1"
+                  className="mt-1"
                 />
-                {isUploading && (
-                  <span className="text-sm text-muted-foreground pt-2">Uploading...</span>
+                <p className="text-xs text-gray-500 mt-1">Format: JPG, PNG, GIF, WebP (Max: 5MB)</p>
+                {formData.backgroundImage && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">{formData.backgroundImage}</p>
+                    <div className="relative w-full h-40 rounded overflow-hidden">
+                      <img
+                        src={`/api/${formData.backgroundImage}`}
+                        alt="Background Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Format: JPG, PNG, GIF, WebP (Max recommended: 5MB)</p>
-            </div>
 
-            {formData.backgroundImage && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm">Path Gambar (Otomatis)</Label>
-                  <Input
-                    value={formData.backgroundImage}
-                    readOnly
-                    className="mt-1 bg-gray-50 text-sm"
-                  />
-                </div>
-                <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground mb-3">Preview Gambar:</p>
-                  <img 
-                    src={`/api/${formData.backgroundImage}`}
-                    alt="Background Preview" 
-                    className="h-40 mx-auto rounded object-cover w-full"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const parent = (e.target as HTMLImageElement).parentElement;
-                      if (parent) {
-                        const errorMsg = document.createElement('p');
-                        errorMsg.className = 'text-muted-foreground';
-                        errorMsg.textContent = 'Gambar tidak ditemukan';
-                        parent.appendChild(errorMsg);
-                      }
-                    }}
-                  />
-                </div>
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSave} disabled={isSaving} className="flex-1 gap-2">
+                  <Save className="w-4 h-4" />
+                  Simpan Perubahan
+                </Button>
+                <Button variant="outline" onClick={closeDialog} className="flex-1">
+                  Batal
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 justify-end pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            disabled={isSaving}
-            className="gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset to Default
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      )}
     </div>
   );
 }
