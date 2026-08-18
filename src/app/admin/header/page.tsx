@@ -244,7 +244,7 @@ export default function AdminHeaderPage() {
                 <div className="p-4 bg-muted rounded-lg text-center">
                   <p className="text-sm text-muted-foreground mb-3">Preview Gambar:</p>
                   <img 
-                    src={`/${formData.backgroundImage}`}
+                    src={`/api/${formData.backgroundImage}`}
                     alt="Background Preview" 
                     className="h-40 mx-auto rounded object-cover w-full"
                     onError={(e) => {

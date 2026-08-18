@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Home, Folder } from "lucide-react";
@@ -9,8 +9,38 @@ interface NavbarProps {
   isScrolled: boolean;
 }
 
+interface NavbarConfig {
+  id?: number;
+  logo: string;
+  logoAlt: string;
+  brandName: string;
+}
+
+const defaultNavbar: NavbarConfig = {
+  logo: 'uploads/navbar/logo.png',
+  logoAlt: 'Pulau Pedia Logo',
+  brandName: 'PULAU PEDIA',
+};
+
 export default function Navbar({ isScrolled }: NavbarProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [navbarConfig, setNavbarConfig] = useState<NavbarConfig>(defaultNavbar);
+
+  useEffect(() => {
+    const fetchNavbarConfig = async () => {
+      try {
+        const response = await fetch('/api/navbar');
+        if (response.ok) {
+          const data = await response.json();
+          setNavbarConfig(data);
+        }
+      } catch (error) {
+        console.error('Error fetching navbar config:', error);
+      }
+    };
+
+    fetchNavbarConfig();
+  }, []);
 
   const portalMenuItems = [
     { name: "Portal Umum", href: "/portal-umum" },
@@ -36,8 +66,8 @@ export default function Navbar({ isScrolled }: NavbarProps) {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-4">
               <Image
-                src="/logos/logo-bps.png"
-                alt="Logo BPS"
+                src={`/api/${navbarConfig.logo}`}
+                alt={navbarConfig.logoAlt}
                 width={40}
                 height={40}
                 className="object-contain"
@@ -48,7 +78,7 @@ export default function Navbar({ isScrolled }: NavbarProps) {
                   BADAN PUSAT STATISTIK
                 </span>
                 <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight">
-                  KABUPATEN KEPULAUAN SERIBU
+                  {navbarConfig.brandName}
                 </span>
               </div>
             </Link>

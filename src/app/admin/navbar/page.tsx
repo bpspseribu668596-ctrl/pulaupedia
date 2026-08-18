@@ -1,119 +1,167 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Home, Folder, Save, RotateCcw, Plus, Trash2 } from "lucide-react";
+import { Save, RotateCcw, Image as ImageIcon } from "lucide-react";
 
-interface NavbarMenuItem {
-  id: string;
-  name: string;
-  href: string;
+interface NavbarConfig {
+  id?: number;
+  logo: string;
+  logoAlt: string;
+  brandName: string;
 }
 
-interface NavbarData {
-  logoUrl: string;
-  institutionName: string;
-  homeLink: string;
-  portalMenuItems: NavbarMenuItem[];
-  darkColor: string;
-  accentColor: string;
-  scrollThreshold: number;
-}
-
-const defaultData: NavbarData = {
-  logoUrl: "/logos/logo-bps.png",
-  institutionName: "BADAN PUSAT STATISTIK\nKABUPATEN KEPULAUAN SERIBU",
-  homeLink: "/",
-  portalMenuItems: [
-    { id: "1", name: "Portal Umum", href: "/portal-umum" },
-    { id: "2", name: "Brankas Fungsi", href: "/brankas-fungsi" },
-    { id: "3", name: "Dokumentasi Kegiatan", href: "/dokumentasi-kegiatan" },
-    { id: "4", name: "SE2026 Archive Hub", href: "/se2026-archive-hub" },
-    { id: "5", name: "Aplikasi Daniel", href: "/aplikasi-daniel" },
-    { id: "6", name: "Monev Anggaran", href: "/monev-anggaran" },
-    { id: "7", name: "SAKIP 2026", href: "/sakip-2026" },
-    { id: "8", name: "ZI 2026", href: "/zi-2026" },
-  ],
-  darkColor: "#111111",
-  accentColor: "#337ab7",
-  scrollThreshold: 1,
+const defaultData: NavbarConfig = {
+  logo: 'uploads/navbar/logo.png',
+  logoAlt: 'Pulau Pedia Logo',
+  brandName: 'PULAU PEDIA',
 };
 
 export default function AdminNavbarPage() {
-  const [formData, setFormData] = useState<NavbarData>(defaultData);
+  const [formData, setFormData] = useState<NavbarConfig>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [newMenuItem, setNewMenuItem] = useState({ name: "", href: "" });
+  const [fileInputKey, setFileInputKey] = useState(0);
 
-  const handleInputChange = (field: keyof NavbarData, value: any) => {
+  useEffect(() => {
+    fetchNavbarConfig();
+  }, []);
+
+  const fetchNavbarConfig = async () => {
+    try {
+      const response = await fetch('/api/navbar');
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching navbar config:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof NavbarConfig, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleMenuItemChange = (id: string, field: "name" | "href", value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      portalMenuItems: prev.portalMenuItems.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      ),
-    }));
-  };
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleAddMenuItem = () => {
-    if (newMenuItem.name && newMenuItem.href) {
-      const id = Date.now().toString();
+    if (!file.type.startsWith('image/')) {
+      setSaveMessage("Error: Hanya file gambar yang diizinkan");
+      return;
+    }
+
+    setIsUploading(true);
+    setSaveMessage("");
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/uploads/navbar', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
       setFormData(prev => ({
         ...prev,
-        portalMenuItems: [...prev.portalMenuItems, { id, ...newMenuItem }],
+        logo: result.path,
       }));
-      setNewMenuItem({ name: "", href: "" });
+      setSaveMessage("Logo berhasil diupload!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal upload logo");
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+      setFileInputKey(prev => prev + 1);
     }
-  };
-
-  const handleRemoveMenuItem = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      portalMenuItems: prev.portalMenuItems.filter(item => item.id !== id),
-    }));
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      // Simulasi penyimpanan ke database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/navbar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Save failed');
+      }
+
       setSaveMessage("Navbar berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Gagal menyimpan"));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleReset = () => {
-    setFormData(defaultData);
-    setNewMenuItem({ name: "", href: "" });
+  const handleReset = async () => {
+    setIsSaving(true);
     setSaveMessage("");
+    try {
+      const response = await fetch('/api/navbar', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Reset failed');
+      }
+
+      setFormData(defaultData);
+      setSaveMessage("Navbar berhasil direset ke default!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal reset navbar");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Navbar Settings</h1>
+          <p className="text-muted-foreground mt-2">Atur tampilan navbar</p>
+        </div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Navbar Settings</h1>
-        <p className="text-muted-foreground mt-2">Kelola konten dan pengaturan navbar aplikasi</p>
+        <p className="text-muted-foreground mt-2">Atur tampilan navbar dengan logo dan nama brand</p>
       </div>
 
       {saveMessage && (
         <div className={`p-4 rounded-lg ${
-          saveMessage.includes("berhasil") 
+          saveMessage.includes("berhasil") || saveMessage.includes("direset")
             ? "bg-green-50 border border-green-200 text-green-800" 
             : "bg-red-50 border border-red-200 text-red-800"
         }`}>
@@ -125,73 +173,93 @@ export default function AdminNavbarPage() {
         {/* Logo Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Logo BPS</CardTitle>
-            <CardDescription>URL path untuk logo BPS yang ditampilkan di navbar</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5" />
+              Logo Navbar
+            </CardTitle>
+            <CardDescription>Upload logo baru untuk navbar</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="logoUrl">Logo URL Path</Label>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="logoFile">Upload Logo</Label>
+              <div className="flex gap-2 mt-2">
                 <Input
-                  id="logoUrl"
-                  value={formData.logoUrl}
-                  onChange={(e) => handleInputChange("logoUrl", e.target.value)}
-                  placeholder="/logos/logo-bps.png"
-                  className="mt-2"
+                  key={fileInputKey}
+                  id="logoFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  className="flex-1"
                 />
+                {isUploading && (
+                  <span className="text-sm text-muted-foreground pt-2">Uploading...</span>
+                )}
               </div>
-              {formData.logoUrl && (
+              <p className="text-xs text-muted-foreground mt-1">Format: JPG, PNG, GIF, WebP (Recommended: 40x40px)</p>
+            </div>
+
+            {formData.logo && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm">Logo Path (Otomatis)</Label>
+                  <Input
+                    value={formData.logo}
+                    readOnly
+                    className="mt-1 bg-gray-50 text-sm"
+                  />
+                </div>
                 <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+                  <p className="text-sm text-muted-foreground mb-3">Preview Logo:</p>
                   <img 
-                    src={formData.logoUrl} 
-                    alt="Logo Preview" 
-                    className="h-10 mx-auto"
+                    src={`/api/${formData.logo}`}
+                    alt={formData.logoAlt}
+                    className="h-12 mx-auto rounded"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                       const parent = (e.target as HTMLImageElement).parentElement;
                       if (parent) {
                         const errorMsg = document.createElement('p');
                         errorMsg.className = 'text-muted-foreground';
-                        errorMsg.textContent = 'Image not found';
+                        errorMsg.textContent = 'Logo tidak ditemukan';
                         parent.appendChild(errorMsg);
                       }
                     }}
                   />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Institution Info Section */}
+        {/* Brand Info Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Informasi Institusi</CardTitle>
-            <CardDescription>Nama institusi yang ditampilkan di navbar</CardDescription>
+            <CardTitle>Informasi Brand</CardTitle>
+            <CardDescription>Konfigurasi logo alt text dan nama brand</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="institutionName">Nama Institusi</Label>
-              <Textarea
-                id="institutionName"
-                value={formData.institutionName}
-                onChange={(e) => handleInputChange("institutionName", e.target.value)}
-                rows={3}
-                placeholder="BADAN PUSAT STATISTIK&#10;KABUPATEN KEPULAUAN SERIBU"
-                className="mt-2 font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Gunakan Enter untuk baris baru</p>
-            </div>
-            <div>
-              <Label htmlFor="homeLink">Home Link</Label>
+              <Label htmlFor="logoAlt">Logo Alt Text</Label>
               <Input
-                id="homeLink"
-                value={formData.homeLink}
-                onChange={(e) => handleInputChange("homeLink", e.target.value)}
-                placeholder="/"
+                id="logoAlt"
+                value={formData.logoAlt}
+                onChange={(e) => handleInputChange("logoAlt", e.target.value)}
+                placeholder="Pulau Pedia Logo"
                 className="mt-2"
               />
+              <p className="text-xs text-muted-foreground mt-1">Teks alternatif untuk logo (untuk aksesibilitas)</p>
+            </div>
+            <div>
+              <Label htmlFor="brandName">Nama Brand</Label>
+              <Input
+                id="brandName"
+                value={formData.brandName}
+                onChange={(e) => handleInputChange("brandName", e.target.value)}
+                placeholder="PULAU PEDIA"
+                className="mt-2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Nama yang ditampilkan di navbar (baris kedua logo)</p>
             </div>
           </CardContent>
         </Card>
@@ -201,6 +269,7 @@ export default function AdminNavbarPage() {
           <Button
             variant="outline"
             onClick={handleReset}
+            disabled={isSaving}
             className="gap-2"
           >
             <RotateCcw className="w-4 h-4" />

@@ -1,28 +1,55 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, Globe } from "lucide-react";
 
+interface FooterConfig {
+  id?: number;
+  companyName: string;
+  companyAddress: string;
+  phone: string;
+  email: string;
+  logo: string;
+}
+
+const defaultFooter: FooterConfig = {
+  companyName: 'BPS Kepulauan Seribu',
+  companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
+  phone: '+62-21-XXXXXX',
+  email: 'info@kepulauanseribu.bps.go.id',
+  logo: 'uploads/footer/logo.png',
+};
+
 export default function Footer() {
-  const footerData = {
-    logoUrl: "/logos/logo-bps.png",
-    address1Title: "Alamat Kantor",
-    address1Content: "Jl. Ikan Betok Putih Rt. 004 Rw. 05 Pulau Pramuka Kecamatan Kepulauan Seribu Utara 14530",
-    address2Title: "Kantor Penghubung",
-    address2Content: "Jl. Cempaka Putih Tengah XIV Rt. 008 Rw. 05 No. 10B Kelurahan Cempaka Putih Timur, Kecamatan Cempaka Putih, Jakarta Pusat 10510",
-    websiteTitle: "Website",
-    websiteUrl: "https://kepulauanseribukab.bps.go.id",
-    websiteText: "kepulauanseribukab.bps.go.id",
-    copyrightText: "© 2026 BPS Kabupaten Kepulauan Seribu. All rights reserved.",
-    gradientColor1: "#A87932",
-    gradientColor2: "#D83F3F",
-  };
+  const [footerConfig, setFooterConfig] = useState<FooterConfig>(defaultFooter);
+
+  useEffect(() => {
+    const fetchFooterConfig = async () => {
+      try {
+        const response = await fetch('/api/footer');
+        if (response.ok) {
+          const data = await response.json();
+          setFooterConfig(data);
+        }
+      } catch (error) {
+        console.error('Error fetching footer config:', error);
+      }
+    };
+
+    fetchFooterConfig();
+  }, []);
+
+  const gradientColor1 = "#A87932";
+  const gradientColor2 = "#D83F3F";
 
   return (
     <footer className="bg-[#111111] py-12 relative overflow-hidden">
       <div
         className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r"
         style={{
-          backgroundImage: `linear-gradient(to right, ${footerData.gradientColor1}, ${footerData.gradientColor2})`
+          backgroundImage: `linear-gradient(to right, ${gradientColor1}, ${gradientColor2})`
         }}
       ></div>
       <div className="absolute inset-0 opacity-5">
@@ -32,7 +59,7 @@ export default function Footer() {
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-4">
             <Image
-              src={footerData.logoUrl}
+              src={`/api/${footerConfig.logo}`}
               alt="Logo BPS"
               width={80}
               height={80}
@@ -40,7 +67,7 @@ export default function Footer() {
               style={{ width: "auto", height: "80px" }}
             />
             <span className="text-white font-bold text-xl md:text-2xl uppercase">
-              BADAN PUSAT STATISTIK
+              {footerConfig.companyName}
             </span>
           </Link>
         </div>
@@ -48,52 +75,50 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-8 text-white max-w-5xl mx-auto mb-8">
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <MapPin className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
-              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
-                {footerData.address1Title}
+              <MapPin className="w-5 h-5" style={{ color: gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: gradientColor1 }}>
+                Alamat Kantor
               </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {footerData.address1Content}
+              {footerConfig.companyAddress}
             </p>
           </div>
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <Phone className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
-              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
-                {footerData.address2Title}
+              <Phone className="w-5 h-5" style={{ color: gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: gradientColor1 }}>
+                Kontak
               </h3>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed">
-              {footerData.address2Content}
+              {footerConfig.phone}
             </p>
           </div>
           <div className="text-center md:text-left">
             <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
-              <Globe className="w-5 h-5" style={{ color: footerData.gradientColor1 }} />
-              <h3 className="font-bold" style={{ color: footerData.gradientColor1 }}>
-                {footerData.websiteTitle}
+              <Globe className="w-5 h-5" style={{ color: gradientColor1 }} />
+              <h3 className="font-bold" style={{ color: gradientColor1 }}>
+                Email
               </h3>
             </div>
             <a
-              href={footerData.websiteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`mailto:${footerConfig.email}`}
               className="text-sm text-gray-300 transition-colors"
               style={{ 
                 color: "inherit"
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = footerData.gradientColor1}
+              onMouseEnter={(e) => e.currentTarget.style.color = gradientColor1}
               onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
             >
-              {footerData.websiteText}
+              {footerConfig.email}
             </a>
           </div>
         </div>
 
         <div className="border-t border-gray-800 pt-6">
           <p className="text-center text-gray-400 text-sm">
-            {footerData.copyrightText}
+            © 2026 {footerConfig.companyName}. All rights reserved.
           </p>
         </div>
       </div>

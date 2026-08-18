@@ -151,7 +151,7 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/${headerData.backgroundImage}')`,
+            backgroundImage: `url('/api/${headerData.backgroundImage}')`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />

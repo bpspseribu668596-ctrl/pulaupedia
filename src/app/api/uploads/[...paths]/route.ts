@@ -16,20 +16,31 @@ const MIME_TYPES: Record<string, string> = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
+  { params }: { params: Promise<{ paths: string[] }> }
 ) {
-  const { filename } = await params;
+  const { paths } = await params;
+  
   try {
-    if (!filename || filename.includes('..')) {
+    if (!paths || paths.length === 0) {
       return NextResponse.json(
-        { error: 'Invalid filename' },
+        { error: 'Invalid path' },
         { status: 400 }
       );
     }
 
-    const filepath = join(STORAGE_DIR, filename);
+    const relativePath = paths.join('/');
+
+    if (relativePath.includes('..')) {
+      return NextResponse.json(
+        { error: 'Invalid path' },
+        { status: 400 }
+      );
+    }
+
+    const filepath = join(STORAGE_DIR, relativePath);
 
     if (!existsSync(filepath)) {
+      console.error('File not found:', filepath);
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
@@ -37,7 +48,7 @@ export async function GET(
     }
 
     const fileBuffer = await readFile(filepath);
-    const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase();
+    const ext = relativePath.substring(relativePath.lastIndexOf('.')).toLowerCase();
     const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
 
     return new NextResponse(fileBuffer, {

@@ -1,83 +1,172 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Globe, Save, RotateCcw } from "lucide-react";
+import { Save, RotateCcw, Image as ImageIcon } from "lucide-react";
 
-interface FooterData {
-  logoUrl: string;
-  address1Title: string;
-  address1Content: string;
-  address2Title: string;
-  address2Content: string;
-  websiteTitle: string;
-  websiteUrl: string;
-  websiteText: string;
-  copyrightText: string;
-  gradientColor1: string;
-  gradientColor2: string;
+interface FooterConfig {
+  id?: number;
+  companyName: string;
+  companyAddress: string;
+  phone: string;
+  email: string;
+  logo: string;
 }
 
-const defaultData: FooterData = {
-  logoUrl: "/logos/logo-bps.png",
-  address1Title: "Alamat Kantor",
-  address1Content: "Jl. Ikan Betok Putih Rt. 004 Rw. 05 Pulau Pramuka Kecamatan Kepulauan Seribu Utara 14530",
-  address2Title: "Kantor Penghubung",
-  address2Content: "Jl. Cempaka Putih Tengah XIV Rt. 008 Rw. 05 No. 10B Kelurahan Cempaka Putih Timur, Kecamatan Cempaka Putih, Jakarta Pusat 10510",
-  websiteTitle: "Website",
-  websiteUrl: "https://kepulauanseribukab.bps.go.id",
-  websiteText: "kepulauanseribukab.bps.go.id",
-  copyrightText: "© 2026 BPS Kabupaten Kepulauan Seribu. All rights reserved.",
-  gradientColor1: "#A87932",
-  gradientColor2: "#D83F3F",
+const defaultData: FooterConfig = {
+  companyName: 'BPS Kepulauan Seribu',
+  companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
+  phone: '+62-21-XXXXXX',
+  email: 'info@kepulauanseribu.bps.go.id',
+  logo: 'uploads/footer/logo.png',
 };
 
 export default function AdminFooterPage() {
-  const [formData, setFormData] = useState<FooterData>(defaultData);
+  const [formData, setFormData] = useState<FooterConfig>(defaultData);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [fileInputKey, setFileInputKey] = useState(0);
 
-  const handleInputChange = (field: keyof FooterData, value: string) => {
+  useEffect(() => {
+    fetchFooterConfig();
+  }, []);
+
+  const fetchFooterConfig = async () => {
+    try {
+      const response = await fetch('/api/footer');
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching footer config:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof FooterConfig, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setSaveMessage("Error: Hanya file gambar yang diizinkan");
+      return;
+    }
+
+    setIsUploading(true);
+    setSaveMessage("");
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/uploads/footer', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      setFormData(prev => ({
+        ...prev,
+        logo: result.path,
+      }));
+      setSaveMessage("Logo berhasil diupload!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal upload logo");
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+      setFileInputKey(prev => prev + 1);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      // Simulasi penyimpanan ke database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/footer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Save failed');
+      }
+
       setSaveMessage("Footer berhasil diperbarui!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Unknown error"));
+      setSaveMessage("Error: " + (error instanceof Error ? error.message : "Gagal menyimpan"));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleReset = () => {
-    setFormData(defaultData);
+  const handleReset = async () => {
+    setIsSaving(true);
     setSaveMessage("");
+    try {
+      const response = await fetch('/api/footer', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Reset failed');
+      }
+
+      setFormData(defaultData);
+      setSaveMessage("Footer berhasil direset ke default!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal reset footer");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Footer Settings</h1>
+          <p className="text-muted-foreground mt-2">Atur tampilan footer</p>
+        </div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Footer Settings</h1>
-        <p className="text-muted-foreground mt-2">Kelola konten dan pengaturan footer aplikasi</p>
+        <p className="text-muted-foreground mt-2">Atur konfigurasi footer dengan informasi perusahaan dan logo</p>
       </div>
 
       {saveMessage && (
         <div className={`p-4 rounded-lg ${
-          saveMessage.includes("berhasil") 
+          saveMessage.includes("berhasil") || saveMessage.includes("direset")
             ? "bg-green-50 border border-green-200 text-green-800" 
             : "bg-red-50 border border-red-200 text-red-800"
         }`}>
@@ -89,162 +178,114 @@ export default function AdminFooterPage() {
         {/* Logo Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Logo BPS</CardTitle>
-            <CardDescription>URL path untuk logo BPS yang ditampilkan di footer</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5" />
+              Logo Footer
+            </CardTitle>
+            <CardDescription>Upload logo untuk footer</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="logoUrl">Logo URL Path</Label>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="logoFile">Upload Logo</Label>
+              <div className="flex gap-2 mt-2">
                 <Input
-                  id="logoUrl"
-                  value={formData.logoUrl}
-                  onChange={(e) => handleInputChange("logoUrl", e.target.value)}
-                  placeholder="/logos/logo-bps.png"
-                  className="mt-2"
+                  key={fileInputKey}
+                  id="logoFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  className="flex-1"
                 />
+                {isUploading && (
+                  <span className="text-sm text-muted-foreground pt-2">Uploading...</span>
+                )}
               </div>
-              {formData.logoUrl && (
+              <p className="text-xs text-muted-foreground mt-1">Format: JPG, PNG, GIF, WebP (Recommended: 80x80px)</p>
+            </div>
+
+            {formData.logo && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm">Logo Path (Otomatis)</Label>
+                  <Input
+                    value={formData.logo}
+                    readOnly
+                    className="mt-1 bg-gray-50 text-sm"
+                  />
+                </div>
                 <div className="p-4 bg-muted rounded-lg text-center">
-                  <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+                  <p className="text-sm text-muted-foreground mb-3">Preview Logo:</p>
                   <img 
-                    src={formData.logoUrl} 
-                    alt="Logo Preview" 
-                    className="h-20 mx-auto"
+                    src={`/api/${formData.logo}`}
+                    alt="Footer Logo"
+                    className="h-20 mx-auto rounded"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                       const parent = (e.target as HTMLImageElement).parentElement;
                       if (parent) {
                         const errorMsg = document.createElement('p');
                         errorMsg.className = 'text-muted-foreground';
-                        errorMsg.textContent = 'Image not found';
+                        errorMsg.textContent = 'Logo tidak ditemukan';
                         parent.appendChild(errorMsg);
                       }
                     }}
                   />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Address 1 Section */}
+        {/* Company Info Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Alamat Kantor
-            </CardTitle>
-            <CardDescription>Informasi alamat kantor utama</CardDescription>
+            <CardTitle>Informasi Perusahaan</CardTitle>
+            <CardDescription>Konfigurasi data perusahaan yang ditampilkan di footer</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="address1Title">Judul</Label>
+              <Label htmlFor="companyName">Nama Perusahaan</Label>
               <Input
-                id="address1Title"
-                value={formData.address1Title}
-                onChange={(e) => handleInputChange("address1Title", e.target.value)}
+                id="companyName"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange("companyName", e.target.value)}
+                placeholder="BPS Kepulauan Seribu"
                 className="mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="address1Content">Konten Alamat</Label>
+              <Label htmlFor="companyAddress">Alamat Kantor</Label>
               <Textarea
-                id="address1Content"
-                value={formData.address1Content}
-                onChange={(e) => handleInputChange("address1Content", e.target.value)}
+                id="companyAddress"
+                value={formData.companyAddress}
+                onChange={(e) => handleInputChange("companyAddress", e.target.value)}
+                placeholder="Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta"
                 rows={3}
                 className="mt-2"
               />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Address 2 Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Kantor Penghubung
-            </CardTitle>
-            <CardDescription>Informasi kantor penghubung/cabang</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="address2Title">Judul</Label>
+              <Label htmlFor="phone">Nomor Telepon</Label>
               <Input
-                id="address2Title"
-                value={formData.address2Title}
-                onChange={(e) => handleInputChange("address2Title", e.target.value)}
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                placeholder="+62-21-XXXXXX"
                 className="mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="address2Content">Konten Alamat</Label>
-              <Textarea
-                id="address2Content"
-                value={formData.address2Content}
-                onChange={(e) => handleInputChange("address2Content", e.target.value)}
-                rows={3}
-                className="mt-2"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Website Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              Website
-            </CardTitle>
-            <CardDescription>Informasi website resmi</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="websiteTitle">Judul</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="websiteTitle"
-                value={formData.websiteTitle}
-                onChange={(e) => handleInputChange("websiteTitle", e.target.value)}
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                placeholder="info@kepulauanseribu.bps.go.id"
                 className="mt-2"
               />
             </div>
-            <div>
-              <Label htmlFor="websiteUrl">URL Website</Label>
-              <Input
-                id="websiteUrl"
-                value={formData.websiteUrl}
-                onChange={(e) => handleInputChange("websiteUrl", e.target.value)}
-                placeholder="https://..."
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="websiteText">Text yang Ditampilkan</Label>
-              <Input
-                id="websiteText"
-                value={formData.websiteText}
-                onChange={(e) => handleInputChange("websiteText", e.target.value)}
-                className="mt-2"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Copyright Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Copyright Text</CardTitle>
-            <CardDescription>Teks hak cipta yang ditampilkan di bawah footer</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={formData.copyrightText}
-              onChange={(e) => handleInputChange("copyrightText", e.target.value)}
-              rows={2}
-            />
           </CardContent>
         </Card>
 
@@ -253,6 +294,7 @@ export default function AdminFooterPage() {
           <Button
             variant="outline"
             onClick={handleReset}
+            disabled={isSaving}
             className="gap-2"
           >
             <RotateCcw className="w-4 h-4" />
