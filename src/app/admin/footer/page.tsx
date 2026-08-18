@@ -185,32 +185,86 @@ export default function AdminFooterPage() {
       <div className="grid gap-6">
         {/* Footer Preview Card */}
         <Card className="overflow-hidden">
-          <div className="bg-[#111111] text-white p-6">
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                {footerData.logo && (
-                  <img 
-                    src={`/api/${footerData.logo}`}
-                    alt="Footer Logo"
-                    className="h-20 mb-3 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
-                <h3 className="font-bold text-lg mb-2">{footerData.companyName}</h3>
-                <p className="text-sm text-gray-400">{footerData.companyAddress}</p>
-              </div>
-              <div>
-                <h4 className="font-bold mb-3">Kontak</h4>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-gray-400">Telepon:</span> {footerData.phone}</p>
-                  <p><span className="text-gray-400">Email:</span> {footerData.email}</p>
+          <div className="bg-[#111111] py-12 relative overflow-hidden">
+            <div
+              className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r"
+              style={{
+                backgroundImage: `linear-gradient(to right, #A87932, #D83F3F)`
+              }}
+            ></div>
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#A87932] rounded-full blur-3xl"></div>
+            </div>
+            <div className="container mx-auto px-4 relative z-10">
+              <div className="flex justify-center mb-8">
+                <div className="flex items-center gap-4">
+                  {footerData.logo ? (
+                    <img
+                      src={`/api/${footerData.logo}`}
+                      alt="Logo BPS"
+                      className="h-20 object-contain opacity-90"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 flex items-center justify-center rounded bg-white/10">
+                      <span className="text-white/50 text-xs text-center leading-tight">Logo<br/>tidak tersedia</span>
+                    </div>
+                  )}
+                  <span className="text-white font-bold text-xl md:text-2xl uppercase">
+                    {footerData.companyName}
+                  </span>
                 </div>
               </div>
-              <div className="text-right text-xs text-gray-400">
-                <p>© 2026 {footerData.companyName}</p>
-                <p className="mt-2">All rights reserved</p>
+
+              <div className="grid md:grid-cols-3 gap-8 text-white max-w-5xl mx-auto mb-8">
+                <div className="text-center md:text-left">
+                  <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
+                    <svg className="w-5 h-5" style={{ color: '#A87932' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <h3 className="font-bold" style={{ color: '#A87932' }}>
+                      Alamat Kantor
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    {footerData.companyAddress}
+                  </p>
+                </div>
+                <div className="text-center md:text-left">
+                  <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
+                    <svg className="w-5 h-5" style={{ color: '#A87932' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <h3 className="font-bold" style={{ color: '#A87932' }}>
+                      Kontak
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    {footerData.phone}
+                  </p>
+                </div>
+                <div className="text-center md:text-left">
+                  <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
+                    <svg className="w-5 h-5" style={{ color: '#A87932' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                    <h3 className="font-bold" style={{ color: '#A87932' }}>
+                      Email
+                    </h3>
+                  </div>
+                  <a
+                    href={`mailto:${footerData.email}`}
+                    className="text-sm text-gray-300 transition-colors hover:opacity-80"
+                  >
+                    {footerData.email}
+                  </a>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-6">
+                <p className="text-center text-gray-400 text-sm">
+                  © 2026 {footerData.companyName}. All rights reserved.
+                </p>
               </div>
             </div>
           </div>
