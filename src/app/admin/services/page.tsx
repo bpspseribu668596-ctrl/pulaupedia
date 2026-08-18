@@ -295,52 +295,75 @@ export default function AdminServicesPage() {
         </Card>
 
         {/* Services List */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Daftar Services</CardTitle>
-                <CardDescription>Total: {services.length} service</CardDescription>
-              </div>
-              <Button onClick={() => openDialog()} size="sm" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Tambah Service
-              </Button>
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">Daftar Services</h2>
+              <p className="text-sm text-gray-500">Total: {services.length} service</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-[500px] overflow-y-auto">
-              {services.map((service) => (
-                <div key={service.id} className="p-4 border rounded-lg bg-gray-50 flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{service.title}</p>
-                    <p className="text-xs text-gray-500">{service.name} • {service.link}</p>
+            <Button onClick={() => openDialog()} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Tambah Service
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {services.map((service) => (
+              <Card key={service.id} className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow">
+                <CardContent className="flex-1 p-4 flex flex-col">
+                  <div className="text-center mb-3">
+                    <h3 className="font-semibold text-sm line-clamp-2">{service.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{service.name}</p>
                   </div>
-                  <div className="flex gap-2">
+                  
+                  <div className="flex-1 flex items-center justify-center mb-3">
+                    <div className="w-20 h-20 relative">
+                      {service.logo ? (
+                        <img
+                          src={`/api/${service.logo}`}
+                          alt={service.name}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded border border-gray-200">
+                          <span className="text-gray-400 text-xs text-center">Gambar</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-gray-600 text-center truncate mb-3">{service.link}</p>
+                  
+                  <div className="flex gap-2 mt-auto">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => openDialog(service)}
+                      className="flex-1"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-3 h-3" />
                     </Button>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => handleDeleteService(service.id || 0)}
                       disabled={isSaving}
+                      className="flex-1"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
-                </div>
-              ))}
-              {services.length === 0 && (
-                <p className="text-center text-gray-400 py-8">Belum ada service</p>
-              )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {services.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-400">Belum ada service</p>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
 
       {/* Dialog Popup */}
