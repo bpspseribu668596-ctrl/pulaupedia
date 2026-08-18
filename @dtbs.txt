@@ -62,5 +62,33 @@ INSERT INTO footer_config (id, companyName, companyAddress, phone, email, logo) 
 ON DUPLICATE KEY UPDATE updatedAt = NOW();
 
 -- ============================================================================
+-- Table: services
+-- Untuk menyimpan data layanan/aplikasi BPS
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS services (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  logo VARCHAR(500) NOT NULL,
+  link VARCHAR(500) NOT NULL,
+  sortOrder INT NOT NULL DEFAULT 0,
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default services
+INSERT INTO services (title, name, logo, link, sortOrder, isActive) VALUES
+('Zona Integritas BPS', 'ZI APP', 'uploads/services/zi.png', 'https://penilaianzi.web.bps.go.id/penilaianzi/penilaian', 1, TRUE),
+('Sistem Informasi Layanan Statistik', 'SILASTIK', 'uploads/services/silastik.png', 'https://silastik.bps.go.id/v3/index.php/site/login/', 2, TRUE),
+('Sistem Informasi Kinerja Organisasi', 'SINERGI', 'uploads/services/sinergi.png', 'https://sinergi.web.bps.go.id/', 3, TRUE),
+('Rekomendasi Kegiatan Statistik Online', 'ROMANTIK', 'uploads/services/romantik.png', 'https://romantik.web.bps.go.id/', 4, TRUE),
+('General Online Job Assistant for Great Service', 'GOJAGS', 'uploads/services/gojags.png', 'https://gojags.web.bps.go.id/', 5, TRUE),
+('Pelayanan Statistik Terpadu', 'PST', 'uploads/services/pst.png', 'https://pst.bps.go.id/', 6, TRUE),
+('Pejabat Pengelola Informasi dan Dokumentasi', 'PPID', 'uploads/services/ppid.png', 'https://ppid.bps.go.id/?mfd=3101', 7, TRUE),
+('Learning Management System', 'LMS', 'uploads/services/lms.png', 'https://lms.bps.go.id/', 8, TRUE),
+('Perpustakaan BPS', 'PERPUSTAKAAN', 'uploads/services/perpus.png', 'https://perpustakaan.bps.go.id/apps/', 9, TRUE);
+
+-- ============================================================================
 -- Selesai - Database Setup Selesai
 -- ============================================================================

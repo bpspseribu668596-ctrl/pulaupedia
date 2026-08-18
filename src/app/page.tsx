@@ -36,6 +36,7 @@ export default function Home() {
   const [headerData, setHeaderData] = useState<HeaderData>(defaultHeaderData);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [serviceCategories, setServiceCategories] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchHeaderData = async () => {
@@ -50,7 +51,20 @@ export default function Home() {
       }
     };
 
+    const fetchServices = async () => {
+      try {
+        const response = await fetch('/api/services');
+        if (response.ok) {
+          const data = await response.json();
+          setServiceCategories(data);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      }
+    };
+
     fetchHeaderData();
+    fetchServices();
   }, []);
 
   useEffect(() => {
@@ -126,18 +140,6 @@ export default function Home() {
       description: "Zona Integritas",
       href: "/zi-2026",
     },
-  ];
-
-  const serviceCategories = [
-    { title: "Zona Integritas BPS", name: "ZI APP", logo: "/logos/zi.png", link: "https://penilaianzi.web.bps.go.id/penilaianzi/penilaian" },
-    { title: "Sistem Informasi Layanan Statistik", name: "SILASTIK", logo: "/logos/silastik.png", link: "https://silastik.bps.go.id/v3/index.php/site/login/" },
-    { title: "Sistem Informasi Kinerja Organisasi", name: "SINERGI", logo: "/logos/sinergi.png", link: "https://sinergi.web.bps.go.id/" },
-    { title: "Rekomendasi Kegiatan Statistik Online", name: "ROMANTIK", logo: "/logos/romantik.png", link: "https://romantik.web.bps.go.id/" },
-    { title: "General Online Job Assistant for Great Service", name: "GOJAGS", logo: "/logos/gojags.png", link: "https://gojags.web.bps.go.id/" },
-    { title: "Pelayanan Statistik Terpadu", name: "PST", logo: "/logos/pst.png", link: "https://pst.bps.go.id/" },
-    { title: "Pejabat Pengelola Informasi dan Dokumentasi", name: "PPID", logo: "/logos/ppid.png", link: "https://ppid.bps.go.id/?mfd=3101" },
-    { title: "Learning Management System", name: "LMS", logo: "/logos/lms.png", link: "https://lms.bps.go.id/" },
-    { title: "Perpustakaan BPS", name: "PERPUSTAKAAN", logo: "/logos/perpus.png", link: "https://perpustakaan.bps.go.id/apps/" },
   ];
 
   return (
@@ -255,7 +257,7 @@ export default function Home() {
                     <div className="flex-1 flex items-center justify-center mb-4">
                       <a href={service.link} className="relative w-24 h-24 cursor-pointer">
                         <Image
-                          src={service.logo}
+                          src={`/api/${service.logo}`}
                           alt={service.name}
                           fill
                           sizes="96px"

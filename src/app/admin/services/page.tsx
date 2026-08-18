@@ -1,83 +1,171 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Save, Plus, Trash2 } from "lucide-react";
+import { Save, Plus, Trash2, Edit2, Upload } from "lucide-react";
 
-interface ServiceItem {
-  id: string;
+interface Service {
+  id?: number;
   title: string;
   name: string;
   logo: string;
   link: string;
+  sortOrder: number;
+  isActive: boolean;
 }
-
-interface ServicesData {
-  backgroundColor: string;
-  services: ServiceItem[];
-}
-
-const defaultData: ServicesData = {
-  backgroundColor: "from-gray-50 to-white",
-  services: [
-    { id: "1", title: "Zona Integritas BPS", name: "ZI APP", logo: "/logos/zi.png", link: "https://penilaianzi.web.bps.go.id/penilaianzi/penilaian" },
-    { id: "2", title: "Sistem Informasi Layanan Statistik", name: "SILASTIK", logo: "/logos/silastik.png", link: "https://silastik.bps.go.id/v3/index.php/site/login/" },
-    { id: "3", title: "Sistem Informasi Kinerja Organisasi", name: "SINERGI", logo: "/logos/sinergi.png", link: "https://sinergi.web.bps.go.id/" },
-    { id: "4", title: "Rekomendasi Kegiatan Statistik Online", name: "ROMANTIK", logo: "/logos/romantik.png", link: "https://romantik.web.bps.go.id/" },
-    { id: "5", title: "General Online Job Assistant for Great Service", name: "GOJAGS", logo: "/logos/gojags.png", link: "https://gojags.web.bps.go.id/" },
-    { id: "6", title: "Pelayanan Statistik Terpadu", name: "PST", logo: "/logos/pst.png", link: "https://pst.bps.go.id/" },
-    { id: "7", title: "Pejabat Pengelola Informasi dan Dokumentasi", name: "PPID", logo: "/logos/ppid.png", link: "https://ppid.bps.go.id/?mfd=3101" },
-    { id: "8", title: "Learning Management System", name: "LMS", logo: "/logos/lms.png", link: "https://lms.bps.go.id/" },
-    { id: "9", title: "Perpustakaan BPS", name: "PERPUSTAKAAN", logo: "/logos/perpus.png", link: "https://perpustakaan.bps.go.id/apps/" },
-  ],
-};
 
 export default function AdminServicesPage() {
-  const [formData, setFormData] = useState<ServicesData>(defaultData);
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [newService, setNewService] = useState({ title: "", name: "", logo: "", link: "" });
+  const [saveMessage, setSaveMessage] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editFormData, setEditFormData] = useState<Service | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [newService, setNewService] = useState<Service>({
+    title: "",
+    name: "",
+    logo: "",
+    link: "",
+    sortOrder: 0,
+    isActive: true,
+  });
 
-  const handleServiceChange = (id: string, field: keyof ServiceItem, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.map(service =>
-        service.id === id ? { ...service, [field]: value } : service
-      ),
-    }));
-  };
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
-  const handleAddService = () => {
-    if (newService.title && newService.name && newService.logo && newService.link) {
-      const id = Date.now().toString();
-      setFormData(prev => ({
-        ...prev,
-        services: [...prev.services, { id, ...newService }],
-      }));
-      setNewService({ title: "", name: "", logo: "", link: "" });
+  const fetchServices = async () => {
+    try {
+      const response = await fetch('/api/services');
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data);
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRemoveService = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.filter(service => service.id !== id),
-    }));
-  };
+  const handleAddService = async () => {
+    if (!newService.title || !newService.name || !newService.logo || !newService.link) {
+      setSaveMessage("Error: Semua field harus diisi");
+      return;
+    }
 
-  const handleSave = async () => {
     setIsSaving(true);
+    setSaveMessage("");
     try {
-      // Simulasi penyimpanan ke database
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Tidak ada notifikasi
+      const response = await fetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newService),
+      });
+
+      if (!response.ok) throw new Error('Failed to add service');
+
+      setSaveMessage("Service berhasil ditambahkan!");
+      setNewService({ title: "", name: "", logo: "", link: "", sortOrder: 0, isActive: true });
+      fetchServices();
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal menambah service");
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleEditService = async () => {
+    if (!editFormData || !editingId) return;
+
+    if (!editFormData.title || !editFormData.name || !editFormData.logo || !editFormData.link) {
+      setSaveMessage("Error: Semua field harus diisi");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveMessage("");
+    try {
+      const response = await fetch(`/api/services/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editFormData),
+      });
+
+      if (!response.ok) throw new Error('Failed to update service');
+
+      setSaveMessage("Service berhasil diperbarui!");
+      setEditingId(null);
+      setEditFormData(null);
+      fetchServices();
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal memperbarui service");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteService = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus service ini?')) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/services/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete service');
+
+      setSaveMessage("Service berhasil dihapus!");
+      fetchServices();
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("Error: Gagal menghapus service");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isNew: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setSaveMessage("Error: Hanya file gambar yang diizinkan");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/uploads/services', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const result = await response.json();
+      if (isNew) {
+        setNewService(prev => ({ ...prev, logo: result.path }));
+      } else if (editFormData) {
+        setEditFormData(prev => prev ? { ...prev, logo: result.path } : null);
+      }
+    } catch (error) {
+      setSaveMessage("Error: Gagal upload logo");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="space-y-6"><p className="text-muted-foreground">Loading...</p></div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -86,189 +174,191 @@ export default function AdminServicesPage() {
         <p className="text-muted-foreground mt-2">Kelola layanan dan aplikasi web BPS</p>
       </div>
 
+      {saveMessage && (
+        <div className={`p-4 rounded-lg ${
+          saveMessage.includes("berhasil") 
+            ? "bg-green-50 border border-green-200 text-green-800" 
+            : "bg-red-50 border border-red-200 text-red-800"
+        }`}>
+          {saveMessage}
+        </div>
+      )}
+
       <div className="grid gap-6">
-        {/* Services Section */}
+        {/* List Services */}
         <Card>
           <CardHeader>
-            <CardTitle>BPS Services</CardTitle>
-            <CardDescription>Kelola daftar layanan dan aplikasi BPS (responsive hingga 5 kolom)</CardDescription>
+            <CardTitle>Daftar Services</CardTitle>
+            <CardDescription>Total: {services.length} service</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {formData.services.map((service) => (
-                <div key={service.id} className="p-4 border rounded-lg space-y-3 bg-muted/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs">Judul Layanan</Label>
-                      <Input
-                        value={service.title}
-                        onChange={(e) => handleServiceChange(service.id, "title", e.target.value)}
-                        className="mt-1 text-sm"
-                        placeholder="Zona Integritas BPS"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Nama Aplikasi</Label>
-                      <Input
-                        value={service.name}
-                        onChange={(e) => handleServiceChange(service.id, "name", e.target.value)}
-                        className="mt-1 text-sm"
-                        placeholder="ZI APP"
-                      />
-                    </div>
+          <CardContent>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+              {services.map((service) => (
+                <div key={service.id} className="p-4 border rounded-lg bg-gray-50 flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{service.title}</p>
+                    <p className="text-xs text-gray-500">{service.name} • {service.link}</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs">Logo URL (96px)</Label>
-                      <Input
-                        value={service.logo}
-                        onChange={(e) => handleServiceChange(service.id, "logo", e.target.value)}
-                        className="mt-1 text-sm"
-                        placeholder="/logos/zi.png"
-                      />
-                      {service.logo && (
-                        <div className="mt-2 p-2 bg-white rounded flex justify-center">
-                          <img 
-                            src={service.logo} 
-                            alt={service.name}
-                            className="h-12 w-12 object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-xs">Link Aplikasi</Label>
-                      <Input
-                        value={service.link}
-                        onChange={(e) => handleServiceChange(service.id, "link", e.target.value)}
-                        className="mt-1 text-sm"
-                        placeholder="https://..."
-                      />
-                    </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingId(service.id || null);
+                        setEditFormData({ ...service });
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteService(service.id || 0)}
+                      disabled={isSaving}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleRemoveService(service.id)}
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Hapus Service
-                  </Button>
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
 
-            {formData.services.length < 12 && (
-              <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
-                <h4 className="font-semibold text-sm">Tambah Service Baru</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">Judul Layanan</Label>
-                    <Input
-                      value={newService.title}
-                      onChange={(e) => setNewService(prev => ({ ...prev, title: e.target.value }))}
-                      className="mt-1 text-sm"
-                      placeholder="Judul layanan"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Nama Aplikasi</Label>
-                    <Input
-                      value={newService.name}
-                      onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
-                      className="mt-1 text-sm"
-                      placeholder="Nama aplikasi"
-                    />
-                  </div>
+        {/* Edit Service */}
+        {editingId && editFormData && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle>Edit Service</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Judul Layanan</Label>
+                  <Input
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    className="mt-1"
+                  />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs">Logo URL</Label>
-                    <Input
-                      value={newService.logo}
-                      onChange={(e) => setNewService(prev => ({ ...prev, logo: e.target.value }))}
-                      className="mt-1 text-sm"
-                      placeholder="/logos/app.png"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Link Aplikasi</Label>
-                    <Input
-                      value={newService.link}
-                      onChange={(e) => setNewService(prev => ({ ...prev, link: e.target.value }))}
-                      className="mt-1 text-sm"
-                      placeholder="https://..."
-                    />
-                  </div>
+                <div>
+                  <Label>Nama Aplikasi</Label>
+                  <Input
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    className="mt-1"
+                  />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Logo</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoUpload(e, false)}
+                    disabled={isUploading}
+                    className="mt-1"
+                  />
+                  {editFormData.logo && (
+                    <p className="text-xs text-gray-500 mt-1">{editFormData.logo}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Link Aplikasi</Label>
+                  <Input
+                    value={editFormData.link}
+                    onChange={(e) => setEditFormData({ ...editFormData, link: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
                 <Button
-                  onClick={handleAddService}
-                  className="w-full"
+                  onClick={handleEditService}
+                  disabled={isSaving}
+                  className="gap-2"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tambah Service
+                  <Save className="w-4 h-4" />
+                  Simpan Perubahan
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditFormData(null);
+                  }}
+                >
+                  Batal
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Preview Section */}
+        {/* Add New Service */}
         <Card>
           <CardHeader>
-            <CardTitle>Preview</CardTitle>
-            <CardDescription>Pratinjau tampilan services grid</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Tambah Service Baru
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`bg-gradient-to-b ${formData.backgroundColor} p-8 rounded-lg`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {formData.services.slice(0, 5).map((service) => (
-                  <div key={service.id} className="bg-white border-2 border-gray-200 rounded-xl p-6 flex flex-col items-center justify-between min-h-[280px]">
-                    <div className="text-center mb-4">
-                      <h3 className="text-sm font-bold text-[#111111] leading-tight">
-                        {service.title}
-                      </h3>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center mb-4">
-                      <img 
-                        src={service.logo} 
-                        alt={service.name}
-                        className="h-24 w-24 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.src = "/logos/placeholder.png";
-                        }}
-                      />
-                    </div>
-                    <div className="w-px h-12 bg-gray-300 mb-4"></div>
-                    <div className="w-full">
-                      <button className="block bg-white border-2 border-[#0072BC] hover:bg-[#0072BC] rounded-lg py-2 px-4 text-center transition-all group w-full">
-                        <span className="text-[#0072BC] group-hover:text-white font-bold text-sm uppercase transition-colors">
-                          {service.name}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Judul Layanan</Label>
+                <Input
+                  value={newService.title}
+                  onChange={(e) => setNewService({ ...newService, title: e.target.value })}
+                  placeholder="Zona Integritas BPS"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Nama Aplikasi</Label>
+                <Input
+                  value={newService.name}
+                  onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                  placeholder="ZI APP"
+                  className="mt-1"
+                />
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Upload Logo</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleLogoUpload(e, true)}
+                  disabled={isUploading}
+                  className="mt-1"
+                />
+                {newService.logo && (
+                  <p className="text-xs text-gray-500 mt-1">{newService.logo}</p>
+                )}
+              </div>
+              <div>
+                <Label>Link Aplikasi</Label>
+                <Input
+                  value={newService.link}
+                  onChange={(e) => setNewService({ ...newService, link: e.target.value })}
+                  placeholder="https://..."
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={handleAddService}
+              disabled={isSaving}
+              className="w-full gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Service
+            </Button>
           </CardContent>
         </Card>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 justify-end pt-6 border-t">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-          </Button>
-        </div>
       </div>
     </div>
   );
