@@ -5,16 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Plus, Trash2, Edit2, Upload } from "lucide-react";
+import { Save, Plus, Trash2, Edit2, Upload, X } from "lucide-react";
 
 interface Service {
   id?: number;
   title: string;
-  name: string;
-  logo: string;
-  link: string;
+  name?: string;
+  logo?: string;
+  link?: string;
   sortOrder: number;
   isActive: boolean;
+  type: 'header' | 'service';
+  description?: string;
 }
 
 export default function AdminServicesPage() {
@@ -22,16 +24,28 @@ export default function AdminServicesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editFormData, setEditFormData] = useState<Service | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [newService, setNewService] = useState<Service>({
+  
+  const [headerData, setHeaderData] = useState<Service | null>(null);
+  const [editingHeaderForm, setEditingHeaderForm] = useState(false);
+  const [headerFormData, setHeaderFormData] = useState<Service>({
+    title: "",
+    description: "",
+    sortOrder: 0,
+    isActive: true,
+    type: 'header',
+  });
+
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<Service>({
     title: "",
     name: "",
     logo: "",
     link: "",
     sortOrder: 0,
     isActive: true,
+    type: 'service',
   });
 
   useEffect(() => {
@@ -40,10 +54,18 @@ export default function AdminServicesPage() {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch('/api/services');
+      const response = await fetch('/api/services?all=true');
       if (response.ok) {
         const data = await response.json();
-        setServices(data);
+        const header = data.find((s: Service) => s.type === 'header');
+        const servicesList = data.filter((s: Service) => s.type === 'service');
+        
+        setHeaderData(header || null);
+        setServices(servicesList);
+        
+        if (header) {
+          setHeaderFormData(header);
+        }
       }
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -52,38 +74,67 @@ export default function AdminServicesPage() {
     }
   };
 
-  const handleAddService = async () => {
-    if (!newService.title || !newService.name || !newService.logo || !newService.link) {
-      setSaveMessage("Error: Semua field harus diisi");
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      name: "",
+      logo: "",
+      link: "",
+      sortOrder: 0,
+      isActive: true,
+      type: 'service',
+    });
+    setEditingId(null);
+  };
+
+  const openDialog = (service?: Service) => {
+    if (service) {
+      setEditingId(service.id || null);
+      setFormData(service);
+    } else {
+      resetForm();
+    }
+    setShowDialog(true);
+  };
+
+  const closeDialog = () => {
+    setShowDialog(false);
+    resetForm();
+  };
+
+  const handleSaveHeader = async () => {
+    if (!headerFormData.title || !headerFormData.description) {
+      setSaveMessage("Error: Title dan description harus diisi");
       return;
     }
 
     setIsSaving(true);
     setSaveMessage("");
     try {
-      const response = await fetch('/api/services', {
-        method: 'POST',
+      const method = headerData ? 'PUT' : 'POST';
+      const url = headerData ? `/api/services/${headerData.id}` : '/api/services';
+      
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newService),
+        body: JSON.stringify(headerFormData),
       });
 
-      if (!response.ok) throw new Error('Failed to add service');
+      if (!response.ok) throw new Error('Failed to save header');
 
-      setSaveMessage("Service berhasil ditambahkan!");
-      setNewService({ title: "", name: "", logo: "", link: "", sortOrder: 0, isActive: true });
+      setSaveMessage("Header berhasil disimpan!");
+      setEditingHeaderForm(false);
       fetchServices();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: Gagal menambah service");
+      setSaveMessage("Error: Gagal menyimpan header");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleEditService = async () => {
-    if (!editFormData || !editingId) return;
-
-    if (!editFormData.title || !editFormData.name || !editFormData.logo || !editFormData.link) {
+  const handleSaveService = async () => {
+    if (!formData.title || !formData.name || !formData.logo || !formData.link) {
       setSaveMessage("Error: Semua field harus diisi");
       return;
     }
@@ -91,21 +142,23 @@ export default function AdminServicesPage() {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      const response = await fetch(`/api/services/${editingId}`, {
-        method: 'PUT',
+      const method = editingId ? 'PUT' : 'POST';
+      const url = editingId ? `/api/services/${editingId}` : '/api/services';
+      
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Failed to update service');
+      if (!response.ok) throw new Error('Failed to save service');
 
-      setSaveMessage("Service berhasil diperbarui!");
-      setEditingId(null);
-      setEditFormData(null);
+      setSaveMessage(editingId ? "Service berhasil diperbarui!" : "Service berhasil ditambahkan!");
+      closeDialog();
       fetchServices();
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
-      setSaveMessage("Error: Gagal memperbarui service");
+      setSaveMessage("Error: Gagal menyimpan service");
     } finally {
       setIsSaving(false);
     }
@@ -129,7 +182,7 @@ export default function AdminServicesPage() {
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isNew: boolean) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -151,11 +204,7 @@ export default function AdminServicesPage() {
       if (!response.ok) throw new Error('Upload failed');
 
       const result = await response.json();
-      if (isNew) {
-        setNewService(prev => ({ ...prev, logo: result.path }));
-      } else if (editFormData) {
-        setEditFormData(prev => prev ? { ...prev, logo: result.path } : null);
-      }
+      setFormData(prev => ({ ...prev, logo: result.path }));
     } catch (error) {
       setSaveMessage("Error: Gagal upload logo");
     } finally {
@@ -171,7 +220,7 @@ export default function AdminServicesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">BPS Services Settings</h1>
-        <p className="text-muted-foreground mt-2">Kelola layanan dan aplikasi web BPS</p>
+        <p className="text-muted-foreground mt-2">Kelola header dan layanan BPS</p>
       </div>
 
       {saveMessage && (
@@ -185,11 +234,79 @@ export default function AdminServicesPage() {
       )}
 
       <div className="grid gap-6">
-        {/* List Services */}
+        {/* Header Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Daftar Services</CardTitle>
-            <CardDescription>Total: {services.length} service</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Section Header</CardTitle>
+                <CardDescription>Edit judul dan deskripsi section BPS Services</CardDescription>
+              </div>
+              {!editingHeaderForm && (
+                <Button onClick={() => setEditingHeaderForm(true)} size="sm">
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingHeaderForm ? (
+              <div className="space-y-4">
+                <div>
+                  <Label>Judul Section</Label>
+                  <Input
+                    value={headerFormData.title}
+                    onChange={(e) => setHeaderFormData({ ...headerFormData, title: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Deskripsi</Label>
+                  <Input
+                    value={headerFormData.description || ""}
+                    onChange={(e) => setHeaderFormData({ ...headerFormData, description: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveHeader} disabled={isSaving} className="gap-2">
+                    <Save className="w-4 h-4" />
+                    Simpan
+                  </Button>
+                  <Button variant="outline" onClick={() => setEditingHeaderForm(false)}>
+                    Batal
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm font-semibold text-gray-600">Judul:</p>
+                  <p className="text-lg font-bold">{headerFormData.title}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-600">Deskripsi:</p>
+                  <p className="text-gray-700">{headerFormData.description}</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Services List */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Daftar Services</CardTitle>
+                <CardDescription>Total: {services.length} service</CardDescription>
+              </div>
+              <Button onClick={() => openDialog()} size="sm" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Tambah Service
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -203,10 +320,7 @@ export default function AdminServicesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setEditingId(service.id || null);
-                        setEditFormData({ ...service });
-                      }}
+                      onClick={() => openDialog(service)}
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -221,96 +335,30 @@ export default function AdminServicesPage() {
                   </div>
                 </div>
               ))}
+              {services.length === 0 && (
+                <p className="text-center text-gray-400 py-8">Belum ada service</p>
+              )}
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Edit Service */}
-        {editingId && editFormData && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle>Edit Service</CardTitle>
+      {/* Dialog Popup */}
+      {showDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>{editingId ? 'Edit Service' : 'Tambah Service Baru'}</CardTitle>
+              <button onClick={closeDialog} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Judul Layanan</Label>
-                  <Input
-                    value={editFormData.title}
-                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Nama Aplikasi</Label>
-                  <Input
-                    value={editFormData.name}
-                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Logo</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleLogoUpload(e, false)}
-                    disabled={isUploading}
-                    className="mt-1"
-                  />
-                  {editFormData.logo && (
-                    <p className="text-xs text-gray-500 mt-1">{editFormData.logo}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>Link Aplikasi</Label>
-                  <Input
-                    value={editFormData.link}
-                    onChange={(e) => setEditFormData({ ...editFormData, link: e.target.value })}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleEditService}
-                  disabled={isSaving}
-                  className="gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  Simpan Perubahan
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setEditingId(null);
-                    setEditFormData(null);
-                  }}
-                >
-                  Batal
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Add New Service */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              Tambah Service Baru
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Judul Layanan</Label>
                 <Input
-                  value={newService.title}
-                  onChange={(e) => setNewService({ ...newService, title: e.target.value })}
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Zona Integritas BPS"
                   className="mt-1"
                 />
@@ -318,48 +366,47 @@ export default function AdminServicesPage() {
               <div>
                 <Label>Nama Aplikasi</Label>
                 <Input
-                  value={newService.name}
-                  onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                  value={formData.name || ""}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="ZI APP"
                   className="mt-1"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Upload Logo</Label>
                 <Input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleLogoUpload(e, true)}
+                  onChange={handleLogoUpload}
                   disabled={isUploading}
                   className="mt-1"
                 />
-                {newService.logo && (
-                  <p className="text-xs text-gray-500 mt-1">{newService.logo}</p>
+                {formData.logo && (
+                  <p className="text-xs text-gray-500 mt-1">{formData.logo}</p>
                 )}
               </div>
               <div>
                 <Label>Link Aplikasi</Label>
                 <Input
-                  value={newService.link}
-                  onChange={(e) => setNewService({ ...newService, link: e.target.value })}
+                  value={formData.link || ""}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                   placeholder="https://..."
                   className="mt-1"
                 />
               </div>
-            </div>
-            <Button
-              onClick={handleAddService}
-              disabled={isSaving}
-              className="w-full gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Tambah Service
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSaveService} disabled={isSaving} className="flex-1 gap-2">
+                  <Save className="w-4 h-4" />
+                  {editingId ? 'Simpan Perubahan' : 'Tambah Service'}
+                </Button>
+                <Button variant="outline" onClick={closeDialog} className="flex-1">
+                  Batal
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

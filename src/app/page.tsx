@@ -31,6 +31,7 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [serviceCategories, setServiceCategories] = useState<any[]>([]);
+  const [sectionHeader, setSectionHeader] = useState({ title: "BPS Services Web-App", description: "" });
 
   useEffect(() => {
     const fetchHeaderData = async () => {
@@ -47,10 +48,16 @@ export default function Home() {
 
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/services');
+        const response = await fetch('/api/services?all=true');
         if (response.ok) {
           const data = await response.json();
-          setServiceCategories(data);
+          const header = data.find((s: any) => s.type === 'header');
+          const services = data.filter((s: any) => s.type === 'service');
+          
+          if (header) {
+            setSectionHeader({ title: header.title, description: header.description });
+          }
+          setServiceCategories(services);
         }
       } catch (error) {
         console.error('Error fetching services:', error);
@@ -228,11 +235,10 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-              BPS Services Web-App
+              {sectionHeader.title}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Kumpulan layanan dan aplikasi digital untuk mendukung operasional
-              BPS Kepulauan Seribu
+              {sectionHeader.description}
             </p>
           </div>
 

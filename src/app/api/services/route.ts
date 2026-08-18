@@ -20,14 +20,26 @@ interface ServiceRow extends RowDataPacket {
   link: string;
   sortOrder: number;
   isActive: boolean;
+  type: string;
+  description?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const all = searchParams.get('all') === 'true';
+
     const connection = await pool.getConnection();
-    const [rows] = await connection.query<ServiceRow[]>(
-      'SELECT * FROM services WHERE isActive = TRUE ORDER BY sortOrder ASC'
-    );
+    
+    let query = 'SELECT * FROM services';
+    if (!all) {
+      query += ' WHERE isActive = TRUE AND type = "service"';
+    } else {
+      query += ' WHERE isActive = TRUE';
+    }
+    query += ' ORDER BY sortOrder ASC';
+
+    const [rows] = await connection.query<ServiceRow[]>(query);
     connection.release();
 
     if (!rows || rows.length === 0) {
@@ -36,7 +48,7 @@ export async function GET() {
 
     return NextResponse.json(rows.map((row) => ({
       ...row,
-      logo: resolveLogoPath(row.logo),
+      logo: row.type === 'service' ? resolveLogoPath(row.logo) : row.logo,
     })));
   } catch (error) {
     console.error('Error fetching services:', error);
@@ -47,11 +59,18 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, name, logo, link, sortOrder } = body;
+    const { title, name, logo, link, sortOrder, type, description } = body;
 
-    if (!title || !name || !logo || !link) {
+    if (!title || !type) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Title and type are required' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'service' && (!name || !logo || !link)) {
+      return NextResponse.json(
+        { error: 'Name, logo, and link required for service type' },
         { status: 400 }
       );
     }
@@ -59,8 +78,8 @@ export async function POST(request: NextRequest) {
     const connection = await pool.getConnection();
     
     const result = await connection.query(
-      'INSERT INTO services (title, name, logo, link, sortOrder, isActive) VALUES (?, ?, ?, ?, ?, TRUE)',
-      [title, name, logo, link, sortOrder || 0]
+      'INSERT INTO services (title, name, logo, link, sortOrder, isActive, type, description) VALUES (?, ?, ?, ?, ?, TRUE, ?, ?)',
+      [title, name || null, logo || null, link || null, sortOrder || 0, type, description || null]
     );
 
     connection.release();

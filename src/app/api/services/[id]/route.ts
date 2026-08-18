@@ -10,6 +10,8 @@ interface ServiceRow extends RowDataPacket {
   link: string;
   sortOrder: number;
   isActive: boolean;
+  type: string;
+  description?: string;
 }
 
 export async function GET(
@@ -51,11 +53,18 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { title, name, logo, link, sortOrder, isActive } = body;
+    const { title, name, logo, link, sortOrder, isActive, type, description } = body;
 
-    if (!title || !name || !logo || !link) {
+    if (!title || !type) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Title and type are required' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'service' && (!name || !logo || !link)) {
+      return NextResponse.json(
+        { error: 'Name, logo, and link required for service type' },
         { status: 400 }
       );
     }
@@ -63,8 +72,8 @@ export async function PUT(
     const connection = await pool.getConnection();
     
     await connection.query(
-      'UPDATE services SET title = ?, name = ?, logo = ?, link = ?, sortOrder = ?, isActive = ?, updatedAt = NOW() WHERE id = ?',
-      [title, name, logo, link, sortOrder || 0, isActive !== undefined ? isActive : true, id]
+      'UPDATE services SET title = ?, name = ?, logo = ?, link = ?, sortOrder = ?, isActive = ?, type = ?, description = ?, updatedAt = NOW() WHERE id = ?',
+      [title, name || null, logo || null, link || null, sortOrder || 0, isActive !== undefined ? isActive : true, type, description || null, id]
     );
 
     connection.release();
