@@ -67,7 +67,7 @@ export default function Home() {
 
     const fetchMainPortal = async () => {
       try {
-        const response = await fetch('/api/main-portal');
+        const response = await fetch('/api/portals');
         if (response.ok) {
           const data = await response.json();
           setMainMenuItems(data);

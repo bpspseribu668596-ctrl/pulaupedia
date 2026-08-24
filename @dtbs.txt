@@ -111,7 +111,63 @@ CREATE TABLE IF NOT EXISTS announcements (
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- ============================================================================
+-- Table: main_portals
+-- Untuk menyimpan portal utama (Portal Umum, Brankas Fungsi, etc)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS main_portals (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(50) NOT NULL,
+  href VARCHAR(255) NOT NULL,
+  sortOrder INT NOT NULL DEFAULT 0,
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
+-- Insert default main portals
+INSERT INTO main_portals (name, description, icon, href, sortOrder, isActive) VALUES
+('Portal Umum', 'Informasi umum dan layanan publik', 'BookOpen', '/portal-umum', 1, TRUE),
+('Brankas Fungsi', 'Dokumen dan arsip fungsi', 'Archive', '/brankas-fungsi', 2, TRUE),
+('Dokumentasi Kegiatan', 'Rekam jejak kegiatan kantor', 'FileText', '/dokumentasi-kegiatan', 3, TRUE),
+('SE2026 Archive Hub', 'Arsip surat edaran 2026', 'Package', '/se2026-archive-hub', 4, TRUE),
+('Aplikasi Daniel', 'Sistem aplikasi internal', 'Laptop', '/aplikasi-daniel', 5, TRUE),
+('Monev Anggaran', 'Monitoring evaluasi anggaran', 'DollarSign', '/monev-anggaran', 6, TRUE),
+('SAKIP 2026', 'Sistem Akuntabilitas Kinerja', 'BarChart3', '/sakip-2026', 7, TRUE),
+('ZI 2026', 'Zona Integritas', 'Award', '/zi-2026', 8, TRUE)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: portal_items
+-- Untuk menyimpan sub-item untuk setiap portal
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS portal_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  portalId INT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(50) NOT NULL,
+  link VARCHAR(255) NOT NULL,
+  sortOrder INT NOT NULL DEFAULT 0,
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (portalId) REFERENCES main_portals(id) ON DELETE CASCADE
+);
+
+-- Insert default portal items untuk Portal Umum (portalId = 1)
+INSERT INTO portal_items (portalId, name, description, icon, link, sortOrder, isActive) VALUES
+(1, 'Bigram', 'Bimbingan dan Pengawasan Umum', 'FileSpreadsheet', '/portal-umum/bigram', 1, TRUE),
+(1, 'Keuangan', 'Dokumen dan arsip keuangan', 'DollarSign', '/portal-umum/keuangan', 2, TRUE),
+(1, 'BMN & Persediaan', 'Barang Milik Negara dan Persediaan', 'Package', '/portal-umum/bmn-persediaan', 3, TRUE),
+(1, 'SAKIP', 'Sistem Akuntabilitas Kinerja Instansi Pemerintah', 'BarChart3', '/portal-umum/sakip', 4, TRUE),
+(1, 'HUMAS', 'Hubungan Masyarakat dan Komunikasi', 'Megaphone', '/portal-umum/humas', 5, TRUE),
+(1, 'Zona Integritas', 'Dokumen dan arsip Zona Integritas', 'Award', '/portal-umum/zona-integritas', 6, TRUE),
+(1, 'Pengadaan Barang & Jasa', 'Dokumen pengadaan barang dan jasa', 'ShoppingCart', '/portal-umum/pengadaan', 7, TRUE),
+(1, 'Kepegawaian', 'Dokumen dan arsip kepegawaian', 'Users', '/portal-umum/kepegawaian', 8, TRUE)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
 
 -- ============================================================================
 -- Selesai - Database Setup Selesai
