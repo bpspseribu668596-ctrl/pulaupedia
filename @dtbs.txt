@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS portal_items (
   description TEXT,
   icon VARCHAR(50) NOT NULL,
   link VARCHAR(255) NOT NULL,
+  documents JSON,
   sortOrder INT NOT NULL DEFAULT 0,
   isActive BOOLEAN NOT NULL DEFAULT TRUE,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -158,15 +159,15 @@ CREATE TABLE IF NOT EXISTS portal_items (
 );
 
 -- Insert default portal items untuk Portal Umum (portalId = 1)
-INSERT INTO portal_items (portalId, name, description, icon, link, sortOrder, isActive) VALUES
-(1, 'Bigram', 'Bimbingan dan Pengawasan Umum', 'FileSpreadsheet', '/portal-umum/bigram', 1, TRUE),
-(1, 'Keuangan', 'Dokumen dan arsip keuangan', 'DollarSign', '/portal-umum/keuangan', 2, TRUE),
-(1, 'BMN & Persediaan', 'Barang Milik Negara dan Persediaan', 'Package', '/portal-umum/bmn-persediaan', 3, TRUE),
-(1, 'SAKIP', 'Sistem Akuntabilitas Kinerja Instansi Pemerintah', 'BarChart3', '/portal-umum/sakip', 4, TRUE),
-(1, 'HUMAS', 'Hubungan Masyarakat dan Komunikasi', 'Megaphone', '/portal-umum/humas', 5, TRUE),
-(1, 'Zona Integritas', 'Dokumen dan arsip Zona Integritas', 'Award', '/portal-umum/zona-integritas', 6, TRUE),
-(1, 'Pengadaan Barang & Jasa', 'Dokumen pengadaan barang dan jasa', 'ShoppingCart', '/portal-umum/pengadaan', 7, TRUE),
-(1, 'Kepegawaian', 'Dokumen dan arsip kepegawaian', 'Users', '/portal-umum/kepegawaian', 8, TRUE)
+INSERT INTO portal_items (portalId, name, description, icon, link, documents, sortOrder, isActive) VALUES
+(1, 'Bigram', 'Bimbingan dan Pengawasan Umum', 'FileSpreadsheet', '/portal-umum/bigram', '[{"title":"KK RPD, Revisi dan Matriks Mitra 2025","link":"https://docs.google.com/spreadsheets/d/1M6rp9hU0CUowVN363sD_zlN_oy1R3JDjC3pEXkwiHOA/edit?usp=sharing"},{"title":"DIPA dan POK","link":"https://drive.google.com/drive/folders/1QXFRoIYq4RKRFwonJ99fQuSgURJupK3X"},{"title":"E-Monev Bappenas","link":"https://e-monev.bappenas.go.id/portal/"},{"title":"Monitoring Evaluasi Kemenkeu","link":"https://monev.kemenkeu.go.id/"},{"title":"Masterplan","link":"https://shbj.bps.go.id/masterplan/"}]', 1, TRUE),
+(1, 'Keuangan', 'Dokumen dan arsip keuangan', 'DollarSign', '/portal-umum/keuangan', '[]', 2, TRUE),
+(1, 'BMN & Persediaan', 'Barang Milik Negara dan Persediaan', 'Package', '/portal-umum/bmn-persediaan', '[]', 3, TRUE),
+(1, 'SAKIP', 'Sistem Akuntabilitas Kinerja Instansi Pemerintah', 'BarChart3', '/portal-umum/sakip', '[]', 4, TRUE),
+(1, 'HUMAS', 'Hubungan Masyarakat dan Komunikasi', 'Megaphone', '/portal-umum/humas', '[]', 5, TRUE),
+(1, 'Zona Integritas', 'Dokumen dan arsip Zona Integritas', 'Award', '/portal-umum/zona-integritas', '[]', 6, TRUE),
+(1, 'Pengadaan Barang & Jasa', 'Dokumen pengadaan barang dan jasa', 'ShoppingCart', '/portal-umum/pengadaan', '[]', 7, TRUE),
+(1, 'Kepegawaian', 'Dokumen dan arsip kepegawaian', 'Users', '/portal-umum/kepegawaian', '[]', 8, TRUE)
 ON DUPLICATE KEY UPDATE updatedAt = NOW();
 
 -- ============================================================================
