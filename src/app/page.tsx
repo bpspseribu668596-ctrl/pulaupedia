@@ -32,6 +32,7 @@ export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
   const [serviceCategories, setServiceCategories] = useState<any[]>([]);
   const [sectionHeader, setSectionHeader] = useState({ title: "BPS Services Web-App", description: "" });
+  const [mainMenuItems, setMainMenuItems] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchHeaderData = async () => {
@@ -64,8 +65,21 @@ export default function Home() {
       }
     };
 
+    const fetchMainPortal = async () => {
+      try {
+        const response = await fetch('/api/main-portal');
+        if (response.ok) {
+          const data = await response.json();
+          setMainMenuItems(data);
+        }
+      } catch (error) {
+        console.error('Error fetching main portal:', error);
+      }
+    };
+
     fetchHeaderData();
     fetchServices();
+    fetchMainPortal();
   }, []);
 
   useEffect(() => {
@@ -91,57 +105,6 @@ export default function Home() {
       observer.disconnect();
     };
   }, []);
-
-  const mainMenuItems = [
-    {
-      name: "Portal Umum",
-      icon: BookOpen,
-      description: "Informasi umum dan layanan publik",
-      href: "/portal-umum",
-    },
-    {
-      name: "Brankas Fungsi",
-      icon: Archive,
-      description: "Dokumen dan arsip fungsi",
-      href: "/brankas-fungsi",
-    },
-    {
-      name: "Dokumentasi Kegiatan",
-      icon: FileText,
-      description: "Rekam jejak kegiatan kantor",
-      href: "/dokumentasi-kegiatan",
-    },
-    {
-      name: "SE2026 Archive Hub",
-      icon: Package,
-      description: "Arsip surat edaran 2026",
-      href: "/se2026-archive-hub",
-    },
-    {
-      name: "Aplikasi Daniel",
-      icon: Laptop,
-      description: "Sistem aplikasi internal",
-      href: "/aplikasi-daniel",
-    },
-    {
-      name: "Monev Anggaran",
-      icon: DollarSign,
-      description: "Monitoring evaluasi anggaran",
-      href: "/monev-anggaran",
-    },
-    {
-      name: "SAKIP 2026",
-      icon: BarChart3,
-      description: "Sistem Akuntabilitas Kinerja",
-      href: "/sakip-2026",
-    },
-    {
-      name: "ZI 2026",
-      icon: Award,
-      description: "Zona Integritas",
-      href: "/zi-2026",
-    },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -206,7 +169,17 @@ export default function Home() {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {mainMenuItems.map((item, index) => {
-              const Icon = item.icon;
+              const iconMap: { [key: string]: any } = {
+                BookOpen,
+                Archive,
+                FileText,
+                Package,
+                Laptop,
+                DollarSign,
+                BarChart3,
+                Award,
+              };
+              const Icon = iconMap[item.icon] || BookOpen;
               return (
                 <Link
                   key={index}

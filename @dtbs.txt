@@ -112,5 +112,89 @@ CREATE TABLE IF NOT EXISTS announcements (
 );
 
 -- ============================================================================
+-- Table: main_portal_items
+-- Untuk menyimpan data portal items (Portal Pulau Pedia)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS main_portal_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  icon VARCHAR(100) NOT NULL,
+  href VARCHAR(500) NOT NULL,
+  sortOrder INT NOT NULL DEFAULT 0,
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert default portal items
+INSERT INTO main_portal_items (name, description, icon, href, sortOrder, isActive) VALUES
+('Portal Umum', 'Informasi umum dan layanan publik', 'BookOpen', '/portal-umum', 1, TRUE),
+('Brankas Fungsi', 'Dokumen dan arsip fungsi', 'Archive', '/brankas-fungsi', 2, TRUE),
+('Dokumentasi Kegiatan', 'Rekam jejak kegiatan kantor', 'FileText', '/dokumentasi-kegiatan', 3, TRUE),
+('SE2026 Archive Hub', 'Arsip surat edaran 2026', 'Package', '/se2026-archive-hub', 4, TRUE),
+('Aplikasi Daniel', 'Sistem aplikasi internal', 'Laptop', '/aplikasi-daniel', 5, TRUE),
+('Monev Anggaran', 'Monitoring evaluasi anggaran', 'DollarSign', '/monev-anggaran', 6, TRUE),
+('SAKIP 2026', 'Sistem Akuntabilitas Kinerja', 'BarChart3', '/sakip-2026', 7, TRUE),
+('ZI 2026', 'Zona Integritas', 'Award', '/zi-2026', 8, TRUE)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
+-- Table: portal_pages
+-- Untuk menyimpan konten halaman portal yang dinamis
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS portal_pages (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  content LONGTEXT,
+  backgroundImage VARCHAR(500),
+  image VARCHAR(500),
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- Table: portal_items
+-- Untuk menyimpan item/card di setiap halaman portal
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS portal_items (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  portalPageId INT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(100) NOT NULL,
+  link VARCHAR(500),
+  sortOrder INT NOT NULL DEFAULT 0,
+  isActive BOOLEAN NOT NULL DEFAULT TRUE,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (portalPageId) REFERENCES portal_pages(id) ON DELETE CASCADE
+);
+
+-- Insert default portal pages
+INSERT INTO portal_pages (slug, title, description, content, backgroundImage, image, isActive) VALUES
+('portal-umum', 'Portal Umum', 'Informasi umum dan layanan publik', '<h2>Selamat datang di Portal Umum</h2><p>Portal ini menyediakan informasi umum dan layanan publik dari BPS Kepulauan Seribu.</p><p>Anda dapat menemukan berbagai informasi statistik dan layanan yang kami sediakan.</p>', NULL, NULL, TRUE),
+('brankas-fungsi', 'Brankas Fungsi', 'Dokumen dan arsip fungsi', '<h2>Brankas Fungsi</h2><p>Pilih fungsi untuk mengakses dokumen dan arsip yang tersimpan di Google Drive</p>', NULL, NULL, TRUE),
+('dokumentasi-kegiatan', 'Dokumentasi Kegiatan', 'Rekam jejak kegiatan kantor', '<h2>Dokumentasi Kegiatan</h2><p>Rekam jejak lengkap kegiatan-kegiatan kantor BPS Kepulauan Seribu.</p><p>Semua kegiatan didokumentasikan untuk keperluan administrasi dan referensi.</p>', NULL, NULL, TRUE),
+('se2026-archive-hub', 'SE2026 Archive Hub', 'Arsip surat edaran 2026', '<h2>SE2026 Archive Hub</h2><p>Pusat arsip untuk semua surat edaran tahun 2026.</p><p>Surat edaran tersimpan dan dapat diakses dengan mudah.</p>', NULL, NULL, TRUE),
+('aplikasi-daniel', 'Aplikasi Daniel', 'Sistem aplikasi internal', '<h2>Aplikasi Daniel</h2><p>Sistem aplikasi internal untuk mendukung operasional BPS Kepulauan Seribu.</p><p>Aplikasi ini dirancang untuk meningkatkan efisiensi kerja.</p>', NULL, NULL, TRUE),
+('monev-anggaran', 'Monev Anggaran', 'Monitoring evaluasi anggaran', '<h2>Monitoring Evaluasi Anggaran</h2><p>Sistem monitoring dan evaluasi anggaran BPS Kepulauan Seribu.</p><p>Membantu dalam perencanaan dan pengawasan penggunaan anggaran.</p>', NULL, NULL, TRUE),
+('sakip-2026', 'SAKIP 2026', 'Sistem Akuntabilitas Kinerja', '<h2>SAKIP 2026</h2><p>Sistem Akuntabilitas Kinerja Instansi Pemerintah tahun 2026.</p><p>Memastikan akuntabilitas dan transparansi kinerja organisasi.</p>', NULL, NULL, TRUE),
+('zi-2026', 'ZI 2026', 'Zona Integritas', '<h2>Zona Integritas 2026</h2><p>Program Zona Integritas untuk menjaga integritas dan akuntabilitas.</p><p>Komitmen kami terhadap etika dan nilai-nilai organisasi.</p>', NULL, NULL, TRUE)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- Insert default portal items untuk brankas-fungsi
+INSERT INTO portal_items (portalPageId, name, description, icon, link, sortOrder, isActive) VALUES
+((SELECT id FROM portal_pages WHERE slug='brankas-fungsi'), 'Sosial', 'Dokumen dan arsip fungsi sosial', 'Users', 'https://drive.google.com/drive/folders/sosial', 1, TRUE),
+((SELECT id FROM portal_pages WHERE slug='brankas-fungsi'), 'Distribusi', 'Dokumen dan arsip fungsi distribusi', 'TrendingUp', 'https://drive.google.com/drive/folders/distribusi', 2, TRUE),
+((SELECT id FROM portal_pages WHERE slug='brankas-fungsi'), 'Produksi', 'Dokumen dan arsip fungsi produksi', 'Package', 'https://drive.google.com/drive/folders/produksi', 3, TRUE),
+((SELECT id FROM portal_pages WHERE slug='brankas-fungsi'), 'Nerwilis', 'Dokumen dan arsip neraca wilayah', 'FileText', 'https://drive.google.com/drive/folders/nerwilis', 4, TRUE),
+((SELECT id FROM portal_pages WHERE slug='brankas-fungsi'), 'IPDS', 'Dokumen dan arsip IPDS', 'BarChart3', 'https://drive.google.com/drive/folders/ipds', 5, TRUE)
+ON DUPLICATE KEY UPDATE updatedAt = NOW();
+
+-- ============================================================================
 -- Selesai - Database Setup Selesai
 -- ============================================================================
