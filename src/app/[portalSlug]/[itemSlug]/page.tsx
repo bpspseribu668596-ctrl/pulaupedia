@@ -51,7 +51,10 @@ export default function ItemDetailPage() {
     const timer = setTimeout(() => setIsVisible(true), 100);
 
     const header = document.getElementById("main-header");
-    if (!header) return;
+    if (!header) {
+      clearTimeout(timer);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -69,7 +72,7 @@ export default function ItemDetailPage() {
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, []);
+  }, [isLoading]);
 
   useEffect(() => {
     const fetchItemData = async () => {

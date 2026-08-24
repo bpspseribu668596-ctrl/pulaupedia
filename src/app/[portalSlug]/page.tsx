@@ -59,7 +59,10 @@ export default function DynamicPortalPage() {
     const timer = setTimeout(() => setIsVisible(true), 100);
 
     const header = document.getElementById("main-header");
-    if (!header) return;
+    if (!header) {
+      clearTimeout(timer);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -77,7 +80,7 @@ export default function DynamicPortalPage() {
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, []);
+  }, [isLoading]);
 
   useEffect(() => {
     const fetchPortalData = async () => {
