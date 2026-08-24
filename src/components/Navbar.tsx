@@ -16,36 +16,42 @@ interface NavbarConfig {
   brandName: string;
 }
 
+interface PortalMenuItem {
+  id: number;
+  name: string;
+  href: string;
+  sortOrder: number;
+}
+
 export default function Navbar({ isScrolled }: NavbarProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [navbarConfig, setNavbarConfig] = useState<NavbarConfig | null>(null);
+  const [portalMenuItems, setPortalMenuItems] = useState<PortalMenuItem[]>([]);
 
   useEffect(() => {
-    const fetchNavbarConfig = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/navbar');
-        if (response.ok) {
-          const data = await response.json();
-          setNavbarConfig(data);
+        const [navbarRes, portalsRes] = await Promise.all([
+          fetch('/api/navbar'),
+          fetch('/api/portals'),
+        ]);
+
+        if (navbarRes.ok) {
+          const navbarData = await navbarRes.json();
+          setNavbarConfig(navbarData);
+        }
+
+        if (portalsRes.ok) {
+          const portalsData = await portalsRes.json();
+          setPortalMenuItems(portalsData);
         }
       } catch (error) {
-        console.error('Error fetching navbar config:', error);
+        console.error('Error fetching navbar data:', error);
       }
     };
 
-    fetchNavbarConfig();
+    fetchData();
   }, []);
-
-  const portalMenuItems = [
-    { name: "Portal Umum", href: "/portal-umum" },
-    { name: "Brankas Fungsi", href: "/brankas-fungsi" },
-    { name: "Dokumentasi Kegiatan", href: "/dokumentasi-kegiatan" },
-    { name: "SE2026 Archive Hub", href: "/se2026-archive-hub" },
-    { name: "Aplikasi Daniel", href: "/aplikasi-daniel" },
-    { name: "Monev Anggaran", href: "/monev-anggaran" },
-    { name: "SAKIP 2026", href: "/sakip-2026" },
-    { name: "ZI 2026", href: "/zi-2026" },
-  ];
 
   return (
     <nav
@@ -106,15 +112,19 @@ export default function Navbar({ isScrolled }: NavbarProps) {
                 {openDropdown && (
                   <div className="absolute top-full right-0 pt-2 z-50">
                     <div className="w-64 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
-                      {portalMenuItems.map((item, index) => (
-                        <Link
-                          key={index}
-                          href={item.href}
-                          className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors duration-200"
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
+                      {portalMenuItems.length > 0 ? (
+                        portalMenuItems.map((item) => (
+                          <Link
+                            key={item.id}
+                            href={item.href}
+                            className="block px-4 py-3 text-[#111111] hover:bg-[#337ab7] hover:text-white transition-colors duration-200"
+                          >
+                            {item.name}
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-[#111111] text-sm">Memuat menu...</div>
+                      )}
                     </div>
                   </div>
                 )}
