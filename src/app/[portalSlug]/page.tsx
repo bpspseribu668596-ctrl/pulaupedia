@@ -37,6 +37,13 @@ interface PortalItem {
   link: string;
 }
 
+interface HeaderData {
+  id?: number;
+  title: string;
+  subtitle: string;
+  backgroundImage: string;
+}
+
 export default function DynamicPortalPage() {
   const params = useParams();
   const portalSlug = params.portalSlug as string;
@@ -46,6 +53,7 @@ export default function DynamicPortalPage() {
   const [portal, setPortal] = useState<Portal | null>(null);
   const [items, setItems] = useState<PortalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [headerData, setHeaderData] = useState<HeaderData | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
@@ -74,7 +82,16 @@ export default function DynamicPortalPage() {
   useEffect(() => {
     const fetchPortalData = async () => {
       try {
-        const portalsRes = await fetch('/api/portals?all=true');
+        const [portalsRes, headerRes] = await Promise.all([
+          fetch('/api/portals?all=true'),
+          fetch('/api/header'),
+        ]);
+
+        if (headerRes.ok) {
+          const headerData = await headerRes.json();
+          setHeaderData(headerData);
+        }
+
         if (!portalsRes.ok) throw new Error('Failed to fetch portals');
         
         const portalsData = await portalsRes.json();
@@ -113,7 +130,8 @@ export default function DynamicPortalPage() {
   };
 
   const getIconComponent = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
+    type IconMap = Record<string, React.ComponentType<{ className?: string }>>;
+    const iconMap: IconMap = {
       FileSpreadsheet,
       DollarSign,
       Package,
@@ -167,13 +185,14 @@ export default function DynamicPortalPage() {
         id="main-header"
         className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('/images/Pulau_Yu,_Kepulauan_Seribu,_Provinsi_DKI_Jakarta.jpg')",
-          }}
-        />
+        {headerData?.backgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+            }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
         <div className="container mx-auto px-4 relative z-10 w-full">
           <div
