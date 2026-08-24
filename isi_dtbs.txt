@@ -1,181 +1,3 @@
--- ============================================================================
--- Database: pulau_pedia3101
--- ============================================================================
-
-CREATE DATABASE IF NOT EXISTS pulau_pedia3101;
-USE pulau_pedia3101;
-
--- ============================================================================
--- Table: headers
--- Untuk menyimpan konfigurasi header halaman utama
--- ============================================================================
-CREATE TABLE IF NOT EXISTS headers (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  title VARCHAR(255) NOT NULL DEFAULT 'PULAU PEDIA',
-  subtitle VARCHAR(500) NOT NULL DEFAULT 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
-  backgroundImage VARCHAR(500) NOT NULL DEFAULT 'uploads/headers/default.jpg',
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Insert default data
-INSERT INTO headers (id, title, subtitle, backgroundImage) VALUES
-(1, 'PULAU PEDIA', 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu', 'uploads/headers/default.jpg')
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- ============================================================================
--- Table: navbar_config
--- Untuk menyimpan konfigurasi navbar
--- ============================================================================
-CREATE TABLE IF NOT EXISTS navbar_config (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  logo VARCHAR(500) NOT NULL DEFAULT 'uploads/navbar/logo.png',
-  logoAlt VARCHAR(100) NOT NULL DEFAULT 'Pulau Pedia Logo',
-  brandName VARCHAR(255) NOT NULL DEFAULT 'PULAU PEDIA',
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Insert default navbar config
-INSERT INTO navbar_config (id, logo, logoAlt, brandName) VALUES
-(1, 'uploads/navbar/logo.png', 'Pulau Pedia Logo', 'PULAU PEDIA')
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- ============================================================================
--- Table: footer_config
--- Untuk menyimpan konfigurasi footer
--- ============================================================================
-CREATE TABLE IF NOT EXISTS footer_config (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  companyName VARCHAR(255) NOT NULL DEFAULT 'BPS Kepulauan Seribu',
-  companyAddress VARCHAR(500) NOT NULL DEFAULT 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
-  phone VARCHAR(20) NOT NULL DEFAULT '+62-21-XXXXXX',
-  email VARCHAR(100) NOT NULL DEFAULT 'info@kepulauanseribu.bps.go.id',
-  logo VARCHAR(500) NOT NULL DEFAULT 'uploads/footer/logo.png',
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Insert default footer config
-INSERT INTO footer_config (id, companyName, companyAddress, phone, email, logo) VALUES
-(1, 'BPS Kepulauan Seribu', 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta', '+62-21-XXXXXX', 'info@kepulauanseribu.bps.go.id', 'uploads/footer/logo.png')
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- ============================================================================
--- Table: services
--- Untuk menyimpan data layanan/aplikasi BPS dan header section
--- ============================================================================
-CREATE TABLE IF NOT EXISTS services (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  title VARCHAR(255) NOT NULL,
-  name VARCHAR(100),
-  logo VARCHAR(500),
-  link VARCHAR(500),
-  sortOrder INT NOT NULL DEFAULT 0,
-  isActive BOOLEAN NOT NULL DEFAULT TRUE,
-  type VARCHAR(50) NOT NULL DEFAULT 'service',
-  description TEXT,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Insert header section
-INSERT INTO services (title, name, logo, link, sortOrder, isActive, type, description) VALUES
-('BPS Services Web-App', 'Header', 'N/A', 'N/A', 0, TRUE, 'header', 'Kumpulan layanan dan aplikasi digital untuk mendukung operasional BPS Kepulauan Seribu')
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- Insert default services
-INSERT INTO services (title, name, logo, link, sortOrder, isActive, type, description) VALUES
-('Zona Integritas BPS', 'ZI APP', 'uploads/services/zi.png', 'https://penilaianzi.web.bps.go.id/penilaianzi/penilaian', 1, TRUE, 'service', NULL),
-('Sistem Informasi Layanan Statistik', 'SILASTIK', 'uploads/services/silastik.png', 'https://silastik.bps.go.id/v3/index.php/site/login/', 2, TRUE, 'service', NULL),
-('Sistem Informasi Kinerja Organisasi', 'SINERGI', 'uploads/services/sinergi.png', 'https://sinergi.web.bps.go.id/', 3, TRUE, 'service', NULL),
-('Rekomendasi Kegiatan Statistik Online', 'ROMANTIK', 'uploads/services/romantik.png', 'https://romantik.web.bps.go.id/', 4, TRUE, 'service', NULL),
-('General Online Job Assistant for Great Service', 'GOJAGS', 'uploads/services/gojags.png', 'https://gojags.web.bps.go.id/', 5, TRUE, 'service', NULL),
-('Pelayanan Statistik Terpadu', 'PST', 'uploads/services/pst.png', 'https://pst.bps.go.id/', 6, TRUE, 'service', NULL),
-('Pejabat Pengelola Informasi dan Dokumentasi', 'PPID', 'uploads/services/ppid.png', 'https://ppid.bps.go.id/?mfd=3101', 7, TRUE, 'service', NULL),
-('Learning Management System', 'LMS', 'uploads/services/lms.png', 'https://lms.bps.go.id/', 8, TRUE, 'service', NULL),
-('Perpustakaan BPS', 'PERPUSTAKAAN', 'uploads/services/perpus.png', 'https://perpustakaan.bps.go.id/apps/', 9, TRUE, 'service', NULL)
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- ============================================================================
--- Table: announcements
--- Untuk menyimpan data pengumuman/announcement
--- ============================================================================
-CREATE TABLE IF NOT EXISTS announcements (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  title VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  image VARCHAR(500),
-  isActive BOOLEAN NOT NULL DEFAULT TRUE,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- ============================================================================
--- Table: main_portals
--- Untuk menyimpan portal utama (Portal Umum, Brankas Fungsi, etc)
--- ============================================================================
-CREATE TABLE IF NOT EXISTS main_portals (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  icon VARCHAR(50) NOT NULL,
-  href VARCHAR(255) NOT NULL,
-  sortOrder INT NOT NULL DEFAULT 0,
-  isActive BOOLEAN NOT NULL DEFAULT TRUE,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Insert default main portals
-INSERT INTO main_portals (name, description, icon, href, sortOrder, isActive) VALUES
-('Portal Umum', 'Informasi umum dan layanan publik', 'BookOpen', '/portal-umum', 1, TRUE),
-('Brankas Fungsi', 'Dokumen dan arsip fungsi', 'Archive', '/brankas-fungsi', 2, TRUE),
-('Dokumentasi Kegiatan', 'Rekam jejak kegiatan kantor', 'FileText', '/dokumentasi-kegiatan', 3, TRUE),
-('SE2026 Archive Hub', 'Arsip surat edaran 2026', 'Package', '/se2026-archive-hub', 4, TRUE),
-('Aplikasi Daniel', 'Sistem aplikasi internal', 'Laptop', '/aplikasi-daniel', 5, TRUE),
-('Monev Anggaran', 'Monitoring evaluasi anggaran', 'DollarSign', '/monev-anggaran', 6, TRUE),
-('SAKIP 2026', 'Sistem Akuntabilitas Kinerja', 'BarChart3', '/sakip-2026', 7, TRUE),
-('ZI 2026', 'Zona Integritas', 'Award', '/zi-2026', 8, TRUE)
-ON DUPLICATE KEY UPDATE updatedAt = NOW();
-
--- ============================================================================
--- Table: portal_items
--- Untuk menyimpan sub-item untuk setiap portal
--- ============================================================================
-CREATE TABLE IF NOT EXISTS portal_items (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  portalId INT NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  icon VARCHAR(50) NOT NULL,
-  link VARCHAR(255) NOT NULL,
-  documents JSON,
-  sortOrder INT NOT NULL DEFAULT 0,
-  isActive BOOLEAN NOT NULL DEFAULT TRUE,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (portalId) REFERENCES main_portals(id) ON DELETE CASCADE
-);
-
--- =============================================
--- CREATE TABLE portal_items
--- =============================================
-CREATE TABLE IF NOT EXISTS portal_items (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  portalId INT NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  icon VARCHAR(50) NOT NULL,
-  link VARCHAR(255) NOT NULL,
-  documents JSON,
-  sortOrder INT NOT NULL DEFAULT 0,
-  isActive BOOLEAN NOT NULL DEFAULT TRUE,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (portalId) REFERENCES main_portals(id) ON DELETE CASCADE
-);
-
 -- =============================================
 -- INSERT DEFAULT PORTAL ITEMS (Portal Umum)
 -- =============================================
@@ -319,6 +141,14 @@ ON DUPLICATE KEY UPDATE
   sortOrder = VALUES(sortOrder),
   isActive = VALUES(isActive),
   updatedAt = NOW();
+
+
+
+
+
+
+
+
 
 -- ============================================================
 -- PORTAL ITEMS ZI
@@ -535,6 +365,170 @@ ON DUPLICATE KEY UPDATE
   updatedAt = NOW();
 
 
--- ============================================================================
--- Selesai - Database Setup Selesai
--- ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO portal_items (portalId, name, description, icon, link, documents, sortOrder, isActive) VALUES
+(
+  2,
+  'Sosial',
+  'Dokumen dan arsip fungsi sosial',
+  'Users',
+  'https://drive.google.com/drive/folders/sosial',
+  '[]',
+  1,
+  TRUE
+),
+(
+  2,
+  'Distribusi',
+  'Dokumen dan arsip fungsi distribusi',
+  'TrendingUp',
+  'https://drive.google.com/drive/folders/distribusi',
+  '[]',
+  2,
+  TRUE
+),
+(
+  2,
+  'Produksi',
+  'Dokumen dan arsip fungsi produksi',
+  'Package',
+  'https://drive.google.com/drive/folders/produksi',
+  '[]',
+  3,
+  TRUE
+),
+(
+  2,
+  'Nerwilis',
+  'Dokumen dan arsip neraca wilayah',
+  'FileText',
+  'https://drive.google.com/drive/folders/nerwilis',
+  '[]',
+  4,
+  TRUE
+),
+(
+  2,
+  'IPDS',
+  'Dokumen dan arsip IPDS',
+  'BarChart3',
+  'https://drive.google.com/drive/folders/ipds',
+  '[]',
+  5,
+  TRUE
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+INSERT INTO portal_items (portalId, name, description, icon, link, documents, sortOrder, isActive) VALUES
+(
+  3,
+  'Kegiatan 2024',
+  'Dokumentasi kegiatan tahun 2024',
+  'Calendar',
+  'https://drive.google.com/drive/folders/kegiatan-2024',
+  '[]',
+  1,
+  TRUE
+),
+(
+  3,
+  'Kegiatan 2025',
+  'Dokumentasi kegiatan tahun 2025',
+  'Calendar',
+  'https://drive.google.com/drive/folders/kegiatan-2025',
+  '[]',
+  2,
+  TRUE
+),
+(
+  3,
+  'Kegiatan 2026',
+  'Dokumentasi kegiatan tahun 2026',
+  'Calendar',
+  'https://drive.google.com/drive/folders/kegiatan-2026',
+  '[]',
+  3,
+  TRUE
+),
+(
+  3,
+  'Foto Kegiatan',
+  'Galeri foto dokumentasi',
+  'Camera',
+  'https://drive.google.com/drive/folders/foto-kegiatan',
+  '[]',
+  4,
+  TRUE
+),
+(
+  3,
+  'Laporan',
+  'Laporan kegiatan dan evaluasi',
+  'FileText',
+  'https://drive.google.com/drive/folders/laporan',
+  '[]',
+  5,
+  TRUE
+),
+(
+  3,
+  'Rapat',
+  'Dokumentasi rapat dan pertemuan',
+  'Users',
+  'https://drive.google.com/drive/folders/rapat',
+  '[]',
+  6,
+  TRUE
+),
+(
+  3,
+  'Penghargaan',
+  'Dokumentasi penghargaan',
+  'Award',
+  'https://drive.google.com/drive/folders/penghargaan',
+  '[]',
+  7,
+  TRUE
+),
+(
+  3,
+  'Pelatihan',
+  'Dokumentasi pelatihan pegawai',
+  'BookOpen',
+  'https://drive.google.com/drive/folders/pelatihan',
+  '[]',
+  8,
+  TRUE
+);
+
+
+
+
+
+
+
+
+
+
+
