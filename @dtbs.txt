@@ -170,6 +170,464 @@ INSERT INTO portal_items (portalId, name, description, icon, link, documents, so
 (1, 'Kepegawaian', 'Dokumen dan arsip kepegawaian', 'Users', '/portal-umum/kepegawaian', '[]', 8, TRUE)
 ON DUPLICATE KEY UPDATE updatedAt = NOW();
 
+-- ============================================================
+-- PORTAL ITEMS ZI
+-- portalId = 8
+-- ============================================================
+
+INSERT INTO portal_items
+(portalId, name, description, icon, link, documents, sortOrder, isActive)
+VALUES
+
+-- ============================================================
+-- ZI 2026 - LINK UPLOAD
+-- ============================================================
+
+(
+  8,
+  'Bukti Dukung Pemenuhan',
+  'Bukti Dukung ZI 2026 (Pemenuhan)',
+  'FileText',
+  '/zi-2026/bukti-dukung-pemenuhan',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  1,
+  TRUE
+),
+
+(
+  8,
+  'Bukti Dukung Reform',
+  'Bukti Dukung ZI 2026 (Reform)',
+  'FileText',
+  '/zi-2026/bukti-dukung-reform',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  2,
+  TRUE
+),
+
+(
+  8,
+  'LKE ZI 2026',
+  'Laporan Ketaatan Etika ZI 2026',
+  'FileText',
+  '/zi-2026/lke-zi-2026',
+  '[
+    {
+      "title": "LKE BPS Kepulauan Seribu 2026",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  3,
+  TRUE
+),
+
+-- ============================================================
+-- LINK CONTOH BUKTI DUKUNG
+-- BPS KEPULAUAN SERIBU 2025
+-- ============================================================
+
+(
+  8,
+  'Bukti Dukung ZI BPS Kepulauan Seribu 2025 (Pemenuhan)',
+  'Bukti Dukung ZI BPS Kepulauan Seribu 2025 (Pemenuhan)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-kepulauan-seribu-2025-pemenuhan',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  4,
+  TRUE
+),
+
+(
+  8,
+  'Bukti Dukung ZI BPS Kepulauan Seribu 2025 (Reform)',
+  'Bukti Dukung ZI BPS Kepulauan Seribu 2025 (Reform)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-kepulauan-seribu-2025-reform',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  5,
+  TRUE
+),
+
+(
+  8,
+  'LKE ZI BPS Kepulauan Seribu 2025',
+  'LKE ZI BPS Kepulauan Seribu 2025',
+  'FileText',
+  '/zi-2026/contoh/lke-kepulauan-seribu-2025',
+  '[
+    {
+      "title": "LKE BPS Kepulauan Seribu 2025",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  6,
+  TRUE
+),
+
+-- ============================================================
+-- BPS KOTA JAKARTA TIMUR 2025
+-- ============================================================
+
+(
+  8,
+  'Bukti Dukung ZI BPS Kota Jakarta Timur 2025 (Pemenuhan)',
+  'Bukti Dukung ZI BPS Kota Jakarta Timur 2025 (Pemenuhan)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-jakarta-timur-2025-pemenuhan',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  7,
+  TRUE
+),
+
+(
+  8,
+  'Bukti Dukung ZI BPS Kota Jakarta Timur 2025 (Reform)',
+  'Bukti Dukung ZI BPS Kota Jakarta Timur 2025 (Reform)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-jakarta-timur-2025-reform',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  8,
+  TRUE
+),
+
+(
+  8,
+  'LKE ZI BPS Kota Jakarta Timur 2025',
+  'LKE ZI BPS Kota Jakarta Timur 2025',
+  'FileText',
+  '/zi-2026/contoh/lke-jakarta-timur-2025',
+  '[
+    {
+      "title": "LKE BPS Kota Jakarta Timur 2025",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  9,
+  TRUE
+),
+
+-- ============================================================
+-- ZI RB BPS RI 2024
+-- ============================================================
+
+(
+  8,
+  'Bukti Dukung ZI RB BPS RI 2024 (Pemenuhan)',
+  'Bukti Dukung ZI RB BPS RI 2024 (Pemenuhan)',
+  'FileText',
+  '/zi-2026/contoh/zi-rb-bps-ri-2024-pemenuhan',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  10,
+  TRUE
+),
+
+(
+  8,
+  'Bukti Dukung ZI RB BPS RI 2024 (Reform)',
+  'Bukti Dukung ZI RB BPS RI 2024 (Reform)',
+  'FileText',
+  '/zi-2026/contoh/zi-rb-bps-ri-2024-reform',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  11,
+  TRUE
+),
+
+-- ============================================================
+-- BPS DKI JAKARTA 2025
+-- ============================================================
+
+(
+  8,
+  'Bukti Dukung ZI BPS DKI Jakarta 2025 (Pemenuhan)',
+  'Bukti Dukung ZI BPS DKI Jakarta 2025 (Pemenuhan)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-bps-dki-2025-pemenuhan',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  12,
+  TRUE
+),
+
+(
+  8,
+  'Bukti Dukung ZI BPS DKI Jakarta 2025 (Reform)',
+  'Bukti Dukung ZI BPS DKI Jakarta 2025 (Reform)',
+  'FileText',
+  '/zi-2026/contoh/bukti-dukung-bps-dki-2025-reform',
+  '[
+    {
+      "title": "Pilar 1. MANAJEMEN PERUBAHAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 2. PENATAAN TATALAKSANA",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 3. PENATAAN SISTEM MANAJEMEN SDM APARATUR",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 4. PENGUATAN AKUNTABILITAS",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 5. PENGUATAN PENGAWASAN",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    },
+    {
+      "title": "Pilar 6. PENINGKATAN KUALITAS PELAYANAN PUBLIK",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  13,
+  TRUE
+),
+
+(
+  8,
+  'LKE ZI BPS DKI Jakarta 2025',
+  'LKE ZI BPS DKI Jakarta 2025',
+  'FileText',
+  '/zi-2026/contoh/lke-bps-dki-jakarta-2025',
+  '[
+    {
+      "title": "LKE BPS DKI Jakarta 2025",
+      "link": "https://drive.google.com/drive/folders/zi-2026"
+    }
+  ]',
+  14,
+  TRUE
+)
+
+ON DUPLICATE KEY UPDATE
+  updatedAt = NOW();
+
+
 -- ============================================================================
 -- Selesai - Database Setup Selesai
 -- ============================================================================
