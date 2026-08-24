@@ -41,6 +41,10 @@ interface PortalItem {
   link: string;
   sortOrder: number;
   isActive: boolean;
+  documents?: Array<{
+    title: string;
+    link: string;
+  }>;
 }
 
 interface PortalWithItems extends Portal {
@@ -90,6 +94,7 @@ export default function AdminMainPortalPage() {
     link: "",
     sortOrder: 0,
     isActive: true,
+    documents: [],
   });
 
   useEffect(() => {
@@ -139,6 +144,7 @@ export default function AdminMainPortalPage() {
       link: "",
       sortOrder: 0,
       isActive: true,
+      documents: [],
     });
     setEditingId(null);
     setSelectedPortalId(null);
@@ -577,20 +583,92 @@ export default function AdminMainPortalPage() {
                     />
                   </div>
 
-                  <div>
-                    <Label>Sort Order</Label>
-                    <Input
-                      type="number"
-                      value={itemFormData.sortOrder}
-                      onChange={(e) => setItemFormData({ ...itemFormData, sortOrder: parseInt(e.target.value) || 0 })}
-                      className="mt-1"
-                    />
-                  </div>
+                   <div>
+                     <Label>Sort Order</Label>
+                     <Input
+                       type="number"
+                       value={itemFormData.sortOrder}
+                       onChange={(e) => setItemFormData({ ...itemFormData, sortOrder: parseInt(e.target.value) || 0 })}
+                       className="mt-1"
+                     />
+                   </div>
 
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleSaveItem} disabled={isSaving} className="flex-1 gap-2">
-                      <Save className="w-4 h-4" />
-                      {editingId ? 'Simpan Perubahan' : 'Tambah Item'}
+                   <div>
+                     <Label>Documents</Label>
+                     <div className="mt-2 space-y-2 p-3 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                       {itemFormData.documents && itemFormData.documents.length > 0 ? (
+                         itemFormData.documents.map((doc, index) => (
+                           <div key={index} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                             <div className="flex-1 min-w-0">
+                               <p className="text-sm font-medium truncate">{doc.title}</p>
+                               <p className="text-xs text-gray-500 truncate">{doc.link}</p>
+                             </div>
+                             <Button
+                               type="button"
+                               size="sm"
+                               variant="destructive"
+                               onClick={() => {
+                                 setItemFormData({
+                                   ...itemFormData,
+                                   documents: itemFormData.documents?.filter((_, i) => i !== index) || [],
+                                 });
+                               }}
+                               className="ml-2 shrink-0"
+                             >
+                               <Trash2 className="w-3 h-3" />
+                             </Button>
+                           </div>
+                         ))
+                       ) : (
+                         <p className="text-sm text-gray-500 text-center py-2">Belum ada dokumen</p>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className="border-t pt-4">
+                     <Label>Tambah Dokumen Baru</Label>
+                     <div className="space-y-2 mt-2">
+                       <Input
+                         placeholder="Judul dokumen"
+                         id="doc-title"
+                         className="mt-1"
+                       />
+                       <Input
+                         placeholder="Link dokumen (https://...)"
+                         id="doc-link"
+                         className="mt-1"
+                       />
+                       <Button
+                         type="button"
+                         variant="outline"
+                         className="w-full gap-2"
+                         onClick={() => {
+                           const titleInput = document.getElementById('doc-title') as HTMLInputElement;
+                           const linkInput = document.getElementById('doc-link') as HTMLInputElement;
+                           
+                           if (titleInput?.value && linkInput?.value) {
+                             setItemFormData({
+                               ...itemFormData,
+                               documents: [
+                                 ...(itemFormData.documents || []),
+                                 { title: titleInput.value, link: linkInput.value },
+                               ],
+                             });
+                             titleInput.value = '';
+                             linkInput.value = '';
+                           }
+                         }}
+                       >
+                         <Plus className="w-4 h-4" />
+                         Tambah Dokumen
+                       </Button>
+                     </div>
+                   </div>
+
+                   <div className="flex gap-2 pt-4">
+                     <Button onClick={handleSaveItem} disabled={isSaving} className="flex-1 gap-2">
+                       <Save className="w-4 h-4" />
+                       {editingId ? 'Simpan Perubahan' : 'Tambah Item'}
                     </Button>
                     <Button variant="outline" onClick={closeDialog} className="flex-1">
                       Batal
