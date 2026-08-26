@@ -16,8 +16,8 @@ interface FooterRow extends RowDataPacket {
   id: number;
   companyName: string;
   companyAddress: string;
-  phone: string;
-  email: string;
+  contacts: string;
+  links: string;
   logo: string;
 }
 
@@ -30,17 +30,21 @@ export async function GET() {
     if (!rows || rows.length === 0) {
       return NextResponse.json({
         id: 1,
-        companyName: 'BPS Kepulauan Seribu',
-        companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
-        phone: '+62-21-XXXXXX',
-        email: 'info@kepulauanseribu.bps.go.id',
+        companyName: null,
+        companyAddress: null,
+        contacts: null,
+        links: null,
         logo: null,
       });
     }
 
+    const row = rows[0];
     return NextResponse.json({
-      ...rows[0],
-      logo: resolveLogoPath(rows[0].logo),
+      ...row,
+      companyAddress: typeof row.companyAddress === 'string' ? JSON.parse(row.companyAddress) : row.companyAddress,
+      contacts: typeof row.contacts === 'string' ? JSON.parse(row.contacts) : row.contacts,
+      links: typeof row.links === 'string' ? JSON.parse(row.links) : row.links,
+      logo: resolveLogoPath(row.logo),
     });
   } catch (error) {
     console.error('Error fetching footer:', error);
@@ -49,8 +53,8 @@ export async function GET() {
         id: 1,
         companyName: null,
         companyAddress: null,
-        phone: null,
-        email: null,
+        contacts: null,
+        links: null,
         logo: null,
       },
       { status: 200 }
@@ -61,11 +65,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { companyName, companyAddress, phone, email, logo } = body;
+    const { companyName, companyAddress, contacts, links, logo } = body;
 
-    if (!companyName || !companyAddress || !phone || !email) {
+    if (!companyName) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Company name is required' },
         { status: 400 }
       );
     }
@@ -73,8 +77,14 @@ export async function POST(request: NextRequest) {
     const connection = await pool.getConnection();
     
     await connection.query(
-      'UPDATE footer_config SET companyName = ?, companyAddress = ?, phone = ?, email = ?, logo = ?, updatedAt = NOW() WHERE id = 1',
-      [companyName, companyAddress, phone, email, logo]
+      'UPDATE footer_config SET companyName = ?, companyAddress = ?, contacts = ?, links = ?, logo = ?, updatedAt = NOW() WHERE id = 1',
+      [
+        companyName, 
+        JSON.stringify(companyAddress || []),
+        JSON.stringify(contacts || []),
+        JSON.stringify(links || []),
+        logo
+      ]
     );
 
     connection.release();
@@ -97,8 +107,14 @@ export async function DELETE() {
     const connection = await pool.getConnection();
     
     await connection.query(
-      'UPDATE footer_config SET companyName = ?, companyAddress = ?, phone = ?, email = ?, logo = ?, updatedAt = NOW() WHERE id = 1',
-      ['BPS Kepulauan Seribu', 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta', '+62-21-XXXXXX', 'info@kepulauanseribu.bps.go.id', 'uploads/footer/logo.png']
+      'UPDATE footer_config SET companyName = ?, companyAddress = ?, contacts = ?, links = ?, logo = ?, updatedAt = NOW() WHERE id = 1',
+      [
+        'BPS Kepulauan Seribu', 
+        JSON.stringify(['Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta']),
+        JSON.stringify([{ label: 'Telepon', value: '+62-21-XXXXXX' }]),
+        JSON.stringify([{ label: 'Email', url: 'mailto:info@kepulauanseribu.bps.go.id' }]),
+        'uploads/footer/logo.png'
+      ]
     );
 
     connection.release();

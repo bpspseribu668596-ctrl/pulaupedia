@@ -9,9 +9,9 @@ import { ERROR_MESSAGES } from "@/lib/error-messages";
 interface FooterConfig {
   id?: number;
   companyName: string;
-  companyAddress: string;
-  phone: string;
-  email: string;
+  companyAddress: string[];
+  contacts: { label: string; value: string }[];
+  links: { label: string; url: string }[];
   logo: string;
 }
 
@@ -89,9 +89,17 @@ export default function Footer() {
                     Alamat Kantor
                   </h3>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {footerConfig?.companyAddress ?? 'Alamat tidak tersedia'}
-                </p>
+                {footerConfig?.companyAddress && footerConfig.companyAddress.length > 0 ? (
+                  <div className="space-y-2">
+                    {footerConfig.companyAddress.map((addr, index) => (
+                      <p key={index} className="text-sm text-gray-300 leading-relaxed">
+                        {addr}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-300 leading-relaxed">Alamat tidak tersedia</p>
+                )}
               </div>
               <div className="text-center md:text-left">
                 <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
@@ -100,29 +108,47 @@ export default function Footer() {
                     Kontak
                   </h3>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  {footerConfig?.phone ?? 'Nomor tidak tersedia'}
-                </p>
+                {footerConfig?.contacts && footerConfig.contacts.length > 0 ? (
+                  <div className="space-y-2">
+                    {footerConfig.contacts.map((contact, index) => (
+                      <div key={index}>
+                        <p className="text-xs text-gray-400">{contact.label}</p>
+                        <p className="text-sm text-gray-300 leading-relaxed">{contact.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-300 leading-relaxed">Kontak tidak tersedia</p>
+                )}
               </div>
               <div className="text-center md:text-left">
                 <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
                   <Globe className="w-5 h-5" style={{ color: gradientColor1 }} />
                   <h3 className="font-bold" style={{ color: gradientColor1 }}>
-                    Email
+                    Tautan Lainnya
                   </h3>
                 </div>
-                {footerConfig?.email ? (
-                  <a
-                    href={`mailto:${footerConfig.email}`}
-                    className="text-sm text-gray-300 transition-colors"
-                    style={{ color: "inherit" }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = gradientColor1}
-                    onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
-                  >
-                    {footerConfig.email}
-                  </a>
+                {footerConfig?.links && footerConfig.links.length > 0 ? (
+                  <div className="space-y-2">
+                    {footerConfig.links.map((link, index) => (
+                      <div key={index}>
+                        <p className="text-xs text-gray-400">{link.label}</p>
+                        <a
+                          href={link.url}
+                          target={link.url.startsWith('http') ? '_blank' : '_self'}
+                          rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                          className="text-sm text-gray-300 transition-colors hover:underline break-all"
+                          style={{ color: "inherit" }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = gradientColor1}
+                          onMouseLeave={(e) => e.currentTarget.style.color = "inherit"}
+                        >
+                          {link.url}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-300">Email tidak tersedia</p>
+                  <p className="text-sm text-gray-300">Tautan tidak tersedia</p>
                 )}
               </div>
             </div>

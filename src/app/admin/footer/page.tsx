@@ -6,22 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, Edit2, RotateCcw, X } from "lucide-react";
+import { Save, Edit2, RotateCcw, X, Plus, Trash2 } from "lucide-react";
 
 interface FooterConfig {
   id?: number;
   companyName: string;
-  companyAddress: string;
-  phone: string;
-  email: string;
+  companyAddress: string[];
+  contacts: { label: string; value: string }[];
+  links: { label: string; url: string }[];
   logo: string;
 }
 
 const defaultData: FooterConfig = {
   companyName: 'BPS Kepulauan Seribu',
-  companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
-  phone: '+62-21-XXXXXX',
-  email: 'info@kepulauanseribu.bps.go.id',
+  companyAddress: ['Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta'],
+  contacts: [{ label: 'Telepon', value: '+62-21-XXXXXX' }],
+  links: [{ label: 'Email', url: 'mailto:info@kepulauanseribu.bps.go.id' }],
   logo: 'uploads/footer/logo.png',
 };
 
@@ -101,8 +101,8 @@ export default function AdminFooterPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.companyName || !formData.email || !formData.phone) {
-      setSaveMessage("Error: Company name, email, dan phone harus diisi");
+    if (!formData.companyName) {
+      setSaveMessage("Error: Company name harus diisi");
       return;
     }
 
@@ -156,6 +156,73 @@ export default function AdminFooterPage() {
     }
   };
 
+  const addAddress = () => {
+    setFormData(prev => ({
+      ...prev,
+      companyAddress: [...prev.companyAddress, '']
+    }));
+  };
+
+  const removeAddress = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      companyAddress: prev.companyAddress.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateAddress = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      companyAddress: prev.companyAddress.map((addr, i) => i === index ? value : addr)
+    }));
+  };
+
+  const addContact = () => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: [...prev.contacts, { label: '', value: '' }]
+    }));
+  };
+
+  const removeContact = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: prev.contacts.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateContact = (index: number, field: 'label' | 'value', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: prev.contacts.map((contact, i) => 
+        i === index ? { ...contact, [field]: value } : contact
+      )
+    }));
+  };
+
+  const addLink = () => {
+    setFormData(prev => ({
+      ...prev,
+      links: [...prev.links, { label: '', url: '' }]
+    }));
+  };
+
+  const removeLink = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      links: prev.links.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateLink = (index: number, field: 'label' | 'url', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      links: prev.links.map((link, i) => 
+        i === index ? { ...link, [field]: value } : link
+      )
+    }));
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -186,7 +253,6 @@ export default function AdminFooterPage() {
       )}
 
       <div className="grid gap-6">
-        {/* Footer Preview Card */}
         <Card className="overflow-hidden">
           <div className="bg-[#111111] py-12 relative overflow-hidden">
             <div
@@ -201,7 +267,7 @@ export default function AdminFooterPage() {
             <div className="container mx-auto px-4 relative z-10">
               <div className="flex justify-center mb-8">
                 <div className="flex items-center gap-4">
-                  {footerData.logo ? (
+                  {footerData?.logo ? (
                     <img
                       src={`/api/${footerData.logo}`}
                       alt="Logo BPS"
@@ -229,9 +295,17 @@ export default function AdminFooterPage() {
                       Alamat Kantor
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {footerData?.companyAddress ?? 'Alamat tidak tersedia'}
-                  </p>
+                  {footerData?.companyAddress && footerData.companyAddress.length > 0 ? (
+                    <div className="space-y-2">
+                      {footerData.companyAddress.map((addr, index) => (
+                        <p key={index} className="text-sm text-gray-300 leading-relaxed">
+                          {addr}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-300 leading-relaxed">Alamat tidak tersedia</p>
+                  )}
                 </div>
                 <div className="text-center md:text-left">
                   <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
@@ -242,9 +316,18 @@ export default function AdminFooterPage() {
                       Kontak
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    {footerData?.phone ?? 'Nomor tidak tersedia'}
-                  </p>
+                  {footerData?.contacts && footerData.contacts.length > 0 ? (
+                    <div className="space-y-2">
+                      {footerData.contacts.map((contact, index) => (
+                        <div key={index}>
+                          <p className="text-xs text-gray-400">{contact.label}</p>
+                          <p className="text-sm text-gray-300 leading-relaxed">{contact.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-300 leading-relaxed">Kontak tidak tersedia</p>
+                  )}
                 </div>
                 <div className="text-center md:text-left">
                   <div className="flex items-center gap-2 mb-3 justify-center md:justify-start">
@@ -252,18 +335,25 @@ export default function AdminFooterPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                     </svg>
                     <h3 className="font-bold" style={{ color: '#A87932' }}>
-                      Email
+                      Tautan Lainnya
                     </h3>
                   </div>
-                  {footerData?.email ? (
-                    <a
-                      href={`mailto:${footerData.email}`}
-                      className="text-sm text-gray-300 transition-colors hover:opacity-80"
-                    >
-                      {footerData.email}
-                    </a>
+                  {footerData?.links && footerData.links.length > 0 ? (
+                    <div className="space-y-2">
+                      {footerData.links.map((link, index) => (
+                        <div key={index}>
+                          <p className="text-xs text-gray-400">{link.label}</p>
+                          <a
+                            href={link.url}
+                            className="text-sm text-gray-300 transition-colors hover:opacity-80 break-all"
+                          >
+                            {link.url}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <p className="text-sm text-gray-300">Email tidak tersedia</p>
+                    <p className="text-sm text-gray-300">Tautan tidak tersedia</p>
                   )}
                 </div>
               </div>
@@ -294,33 +384,54 @@ export default function AdminFooterPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-600">Nama Perusahaan:</p>
-                <p className="text-sm text-gray-700">{footerData?.companyName ?? 'Tidak tersedia'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-600">Email:</p>
-                <p className="text-sm text-gray-700">{footerData?.email ?? 'Tidak tersedia'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-600">Telepon:</p>
-                <p className="text-sm text-gray-700">{footerData?.phone ?? 'Tidak tersedia'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-600">Logo Path:</p>
-                <p className="text-xs text-gray-500">{footerData?.logo ?? 'Tidak ada logo'}</p>
-              </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Nama Perusahaan:</p>
+              <p className="text-sm text-gray-700">{footerData?.companyName ?? 'Tidak tersedia'}</p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-600">Alamat:</p>
-              <p className="text-sm text-gray-700">{footerData?.companyAddress ?? 'Tidak tersedia'}</p>
+              <p className="text-sm font-semibold text-gray-600">Alamat Kantor:</p>
+              {footerData?.companyAddress && footerData.companyAddress.length > 0 ? (
+                <div className="space-y-1">
+                  {footerData.companyAddress.map((addr, index) => (
+                    <p key={index} className="text-sm text-gray-700">{addr}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">Tidak tersedia</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Kontak:</p>
+              {footerData?.contacts && footerData.contacts.length > 0 ? (
+                <div className="space-y-1">
+                  {footerData.contacts.map((contact, index) => (
+                    <p key={index} className="text-sm text-gray-700">{contact.label}: {contact.value}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">Tidak tersedia</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Tautan Lainnya:</p>
+              {footerData?.links && footerData.links.length > 0 ? (
+                <div className="space-y-1">
+                  {footerData.links.map((link, index) => (
+                    <p key={index} className="text-sm text-gray-700">{link.label}: {link.url}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-700">Tidak tersedia</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Logo Path:</p>
+              <p className="text-xs text-gray-500">{footerData?.logo ?? 'Tidak ada logo'}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Edit Dialog */}
       {showDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -342,34 +453,114 @@ export default function AdminFooterPage() {
               </div>
 
               <div>
-                <Label>Alamat Kantor</Label>
-                <Textarea
-                  value={formData.companyAddress}
-                  onChange={(e) => setFormData({ ...formData, companyAddress: e.target.value })}
-                  placeholder="Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta"
-                  className="mt-1 min-h-[80px]"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Alamat Kantor</Label>
+                  <Button onClick={addAddress} size="sm" variant="outline" className="gap-1">
+                    <Plus className="w-4 h-4" />
+                    Tambah
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.companyAddress.map((addr, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Textarea
+                        value={addr}
+                        onChange={(e) => updateAddress(index, e.target.value)}
+                        placeholder="Alamat"
+                        className="min-h-[60px]"
+                      />
+                      {formData.companyAddress.length > 1 && (
+                        <Button 
+                          onClick={() => removeAddress(index)} 
+                          size="sm" 
+                          variant="destructive"
+                          className="shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Nomor Telepon</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+62-21-XXXXXX"
-                    className="mt-1"
-                  />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Kontak</Label>
+                  <Button onClick={addContact} size="sm" variant="outline" className="gap-1">
+                    <Plus className="w-4 h-4" />
+                    Tambah
+                  </Button>
                 </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="info@kepulauanseribu.bps.go.id"
-                    className="mt-1"
-                  />
+                <div className="space-y-3">
+                  {formData.contacts.map((contact, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={contact.label}
+                          onChange={(e) => updateContact(index, 'label', e.target.value)}
+                          placeholder="Label (e.g., Telepon, WhatsApp)"
+                          className="text-sm"
+                        />
+                        <Input
+                          value={contact.value}
+                          onChange={(e) => updateContact(index, 'value', e.target.value)}
+                          placeholder="Nilai (e.g., +62-21-XXXXXX)"
+                          className="text-sm"
+                        />
+                      </div>
+                      {formData.contacts.length > 1 && (
+                        <Button 
+                          onClick={() => removeContact(index)} 
+                          size="sm" 
+                          variant="destructive"
+                          className="shrink-0 mt-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Tautan Lainnya</Label>
+                  <Button onClick={addLink} size="sm" variant="outline" className="gap-1">
+                    <Plus className="w-4 h-4" />
+                    Tambah
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {formData.links.map((link, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={link.label}
+                          onChange={(e) => updateLink(index, 'label', e.target.value)}
+                          placeholder="Label (e.g., Email, Website)"
+                          className="text-sm"
+                        />
+                        <Input
+                          value={link.url}
+                          onChange={(e) => updateLink(index, 'url', e.target.value)}
+                          placeholder="URL (e.g., mailto:email@domain.com)"
+                          className="text-sm"
+                        />
+                      </div>
+                      {formData.links.length > 1 && (
+                        <Button 
+                          onClick={() => removeLink(index)} 
+                          size="sm" 
+                          variant="destructive"
+                          className="shrink-0 mt-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
