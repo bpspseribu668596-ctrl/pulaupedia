@@ -535,6 +535,65 @@ ON DUPLICATE KEY UPDATE
   updatedAt = NOW();
 
 
+
+
+
+
+
+  -- ============================================================================
+-- Table: users (untuk authentication)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'user') DEFAULT 'admin',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- Insert default admin user
+-- Username: admin
+-- Password: admin123
+-- Hash generated with bcrypt (rounds: 10)
+-- ============================================================================
+INSERT INTO users (username, password, name, role) VALUES
+('admin', '$2b$10$YYJ1pRgQjfC.Ixc9cvjP8OBaI9aMZ2t1EMJyk/oIQjozy.WOQw/yC', 'Administrator', 'admin')
+ON DUPLICATE KEY UPDATE password = '$2b$10$YYJ1pRgQjfC.Ixc9cvjP8OBaI9aMZ2t1EMJyk/oIQjozy.WOQw/yC', updatedAt = NOW();
+
+
+
+
+
+
+
+CREATE TABLE footer_config (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  companyName VARCHAR(255) NOT NULL DEFAULT 'BPS Kepulauan Seribu',
+  companyAddress JSON,
+  contacts JSON,
+  links JSON,
+  logo VARCHAR(500) NOT NULL DEFAULT 'uploads/footer/logo.png',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================================================
+-- Step 3: Insert default data with JSON format
+-- ============================================================================
+INSERT INTO footer_config (id, companyName, companyAddress, contacts, links, logo) VALUES
+(
+  1, 
+  'BPS Kepulauan Seribu',
+  JSON_ARRAY('Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta'),
+  JSON_ARRAY(JSON_OBJECT('label', 'Telepon', 'value', '+62-21-XXXXXX')),
+  JSON_ARRAY(JSON_OBJECT('label', 'Email', 'url', 'mailto:info@kepulauanseribu.bps.go.id')),
+  'uploads/footer/logo.png'
+);
+
+
 -- ============================================================================
 -- Selesai - Database Setup Selesai
 -- ============================================================================
