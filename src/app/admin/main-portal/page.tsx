@@ -296,6 +296,27 @@ export default function AdminMainPortalPage() {
     return option ? option.Icon : BookOpen;
   };
 
+  const generateSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  };
+
+  const generateSuggestedLink = () => {
+    if (!itemFormData.name || !selectedPortalId) return '';
+    
+    const portal = portals.find(p => p.id === selectedPortalId);
+    if (!portal) return '';
+    
+    const portalHref = portal.href;
+    const itemSlug = generateSlug(itemFormData.name);
+    
+    return `${portalHref}/${itemSlug}`;
+  };
+
   if (isLoading) {
     return <div className="space-y-6"><p className="text-muted-foreground">Loading...</p></div>;
   }
@@ -575,12 +596,30 @@ export default function AdminMainPortalPage() {
 
                   <div>
                     <Label>Link</Label>
-                    <Input
-                      value={itemFormData.link}
-                      onChange={(e) => setItemFormData({ ...itemFormData, link: e.target.value })}
-                      placeholder="/portal-umum/bigram"
-                      className="mt-1"
-                    />
+                    <div className="space-y-2 mt-1">
+                      <Input
+                        value={itemFormData.link}
+                        onChange={(e) => setItemFormData({ ...itemFormData, link: e.target.value })}
+                        placeholder="/portal-umum/bigram"
+                      />
+                      {itemFormData.name && selectedPortalId && generateSuggestedLink() !== itemFormData.link && (
+                        <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                          <div className="flex-1">
+                            <p className="text-xs text-blue-600 font-medium">Saran:</p>
+                            <p className="text-sm text-blue-800">{generateSuggestedLink()}</p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setItemFormData({ ...itemFormData, link: generateSuggestedLink() })}
+                            className="shrink-0"
+                          >
+                            Gunakan
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                    <div>
