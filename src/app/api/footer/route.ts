@@ -47,10 +47,10 @@ export async function GET() {
     return NextResponse.json(
       {
         id: 1,
-        companyName: 'BPS Kepulauan Seribu',
-        companyAddress: 'Jalan Raya Pulau Panjang, Kepulauan Seribu, DKI Jakarta',
-        phone: '+62-21-XXXXXX',
-        email: 'info@kepulauanseribu.bps.go.id',
+        companyName: null,
+        companyAddress: null,
+        phone: null,
+        email: null,
         logo: null,
       },
       { status: 200 }

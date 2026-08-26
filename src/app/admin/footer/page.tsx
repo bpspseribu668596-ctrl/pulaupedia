@@ -45,9 +45,12 @@ export default function AdminFooterPage() {
       if (response.ok) {
         const data = await response.json();
         setFooterData(data);
+      } else {
+        setSaveMessage("Error: Footer tidak tersedia");
       }
     } catch (error) {
       console.error('Error fetching footer config:', error);
+      setSaveMessage("Error: Koneksi database gagal");
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +213,7 @@ export default function AdminFooterPage() {
                     </div>
                   )}
                   <span className="text-white font-bold text-xl md:text-2xl uppercase">
-                    {footerData.companyName}
+                    {footerData?.companyName ?? 'BPS Kepulauan Seribu'}
                   </span>
                 </div>
               </div>
@@ -227,7 +230,7 @@ export default function AdminFooterPage() {
                     </h3>
                   </div>
                   <p className="text-sm text-gray-300 leading-relaxed">
-                    {footerData.companyAddress}
+                    {footerData?.companyAddress ?? 'Alamat tidak tersedia'}
                   </p>
                 </div>
                 <div className="text-center md:text-left">
@@ -240,7 +243,7 @@ export default function AdminFooterPage() {
                     </h3>
                   </div>
                   <p className="text-sm text-gray-300 leading-relaxed">
-                    {footerData.phone}
+                    {footerData?.phone ?? 'Nomor tidak tersedia'}
                   </p>
                 </div>
                 <div className="text-center md:text-left">
@@ -252,18 +255,22 @@ export default function AdminFooterPage() {
                       Email
                     </h3>
                   </div>
-                  <a
-                    href={`mailto:${footerData.email}`}
-                    className="text-sm text-gray-300 transition-colors hover:opacity-80"
-                  >
-                    {footerData.email}
-                  </a>
+                  {footerData?.email ? (
+                    <a
+                      href={`mailto:${footerData.email}`}
+                      className="text-sm text-gray-300 transition-colors hover:opacity-80"
+                    >
+                      {footerData.email}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-gray-300">Email tidak tersedia</p>
+                  )}
                 </div>
               </div>
 
               <div className="border-t border-gray-800 pt-6">
                 <p className="text-center text-gray-400 text-sm">
-                  © 2026 {footerData.companyName}. All rights reserved.
+                  © 2026 {footerData?.companyName ?? 'BPS Kepulauan Seribu'}. All rights reserved.
                 </p>
               </div>
             </div>
@@ -290,24 +297,24 @@ export default function AdminFooterPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-600">Nama Perusahaan:</p>
-                <p className="text-sm text-gray-700">{footerData.companyName}</p>
+                <p className="text-sm text-gray-700">{footerData?.companyName ?? 'Tidak tersedia'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600">Email:</p>
-                <p className="text-sm text-gray-700">{footerData.email}</p>
+                <p className="text-sm text-gray-700">{footerData?.email ?? 'Tidak tersedia'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600">Telepon:</p>
-                <p className="text-sm text-gray-700">{footerData.phone}</p>
+                <p className="text-sm text-gray-700">{footerData?.phone ?? 'Tidak tersedia'}</p>
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-600">Logo Path:</p>
-                <p className="text-xs text-gray-500">{footerData.logo}</p>
+                <p className="text-xs text-gray-500">{footerData?.logo ?? 'Tidak ada logo'}</p>
               </div>
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-600">Alamat:</p>
-              <p className="text-sm text-gray-700">{footerData.companyAddress}</p>
+              <p className="text-sm text-gray-700">{footerData?.companyAddress ?? 'Tidak tersedia'}</p>
             </div>
           </CardContent>
         </Card>

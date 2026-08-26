@@ -41,9 +41,12 @@ export default function AdminHeaderPage() {
       if (response.ok) {
         const data = await response.json();
         setHeaderData(data);
+      } else {
+        setSaveMessage("Error: Header tidak tersedia");
       }
     } catch (error) {
       console.error('Error fetching header:', error);
+      setSaveMessage("Error: Koneksi database gagal");
     } finally {
       setIsLoading(false);
     }
@@ -181,19 +184,23 @@ export default function AdminHeaderPage() {
       <div className="grid gap-6">
         {/* Header Preview Card */}
         <Card className="overflow-hidden">
-          <div 
-            className="relative h-64 bg-cover bg-center"
-            style={{
-              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
-            }}
-          >
+          <div className="relative h-64">
+            <div className="absolute inset-0 bg-[#333333]" />
+            {headerData?.backgroundImage && (
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60" />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-10">
               <h2 className="text-white text-4xl md:text-5xl font-bold tracking-wide drop-shadow-2xl mb-4">
-                {headerData.title}
+                {headerData?.title ?? 'Judul tidak tersedia'}
               </h2>
               <p className="text-white/90 text-lg max-w-2xl drop-shadow-lg">
-                {headerData.subtitle}
+                {headerData?.subtitle ?? 'Subjudul tidak tersedia'}
               </p>
             </div>
           </div>
@@ -218,15 +225,15 @@ export default function AdminHeaderPage() {
           <CardContent className="space-y-2">
             <div>
               <p className="text-sm font-semibold text-gray-600">Judul:</p>
-              <p className="text-lg font-bold">{headerData.title}</p>
+              <p className="text-lg font-bold">{headerData?.title ?? 'Judul tidak tersedia'}</p>
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-600">Subtitle:</p>
-              <p className="text-gray-700">{headerData.subtitle}</p>
+              <p className="text-gray-700">{headerData?.subtitle ?? 'Subjudul tidak tersedia'}</p>
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-600">Background Image:</p>
-              <p className="text-xs text-gray-500">{headerData.backgroundImage}</p>
+              <p className="text-xs text-gray-500">{headerData?.backgroundImage ?? 'Tidak ada gambar'}</p>
             </div>
           </CardContent>
         </Card>

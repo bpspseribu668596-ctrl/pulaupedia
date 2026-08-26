@@ -125,37 +125,48 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isScrolled={isScrolled} />
+      <Navbar isScrolled={isScrolled || !!headerError} />
 
       <header
         id="main-header"
         className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
-        {headerData?.backgroundImage && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
-            }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
-        <div className="container mx-auto px-4 relative z-10 w-full">
-          <div
-            className={`text-center transition-all duration-1000 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
-            }`}
-          >
-            <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
-              {headerData?.title ?? 'Judul tidak tersedia'}
-            </h1>
-            <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
-              {headerData?.subtitle ?? 'Subjudul tidak tersedia'}
-            </p>
+        {headerError ? (
+          <div className="absolute inset-0 bg-red-100 flex items-center justify-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 text-center max-w-md">
+              <p className="font-semibold text-lg">{headerError}</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[#333333]" />
+            {headerData?.backgroundImage && (
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+                }}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
+            <div className="container mx-auto px-4 relative z-10 w-full">
+              <div
+                className={`text-center transition-all duration-1000 ${
+                  isVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-8"
+                }`}
+              >
+                <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
+                  {headerData?.title ?? 'Judul tidak tersedia'}
+                </h1>
+                <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
+                  {headerData?.subtitle ?? 'Subjudul tidak tersedia'}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
         <button
           onClick={() => {
             const portalSection = document.getElementById("portal-pulau-pedia");
@@ -182,16 +193,15 @@ export default function Home() {
              Portal Pulau Pedia
            </h2>
            <p className="text-white/90 text-center mb-12 max-w-2xl mx-auto">
-             {mainMenuItems.length > 0 
-               ? mainMenuItems[0]?.description || "Akses cepat ke berbagai portal dan layanan informasi"
-               : "Akses cepat ke berbagai portal dan layanan informasi"}
-           </p>
+              Akses cepat ke berbagai portal dan layanan informasi
+            </p>
 
-           {portalsError && <ErrorMessage message={portalsError} />}
+            {portalsError && <ErrorMessage message={portalsError} />}
 
-           {!portalsError && (
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-               {mainMenuItems.map((item, index) => {
+            {!portalsError && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                {mainMenuItems.length > 0 ? (
+                  mainMenuItems.map((item, index) => {
                  const iconMap: { [key: string]: any } = {
                    BookOpen,
                    Archive,
@@ -220,11 +230,16 @@ export default function Home() {
                          {item.description}
                        </p>
                      </div>
-                   </Link>
-                 );
-               })}
-             </div>
-           )}
+                    </Link>
+                  );
+                })
+                ) : (
+                  <div className="col-span-2 md:col-span-4 text-center py-12">
+                    <p className="text-white/80 text-lg">Portal tidak tersedia</p>
+                  </div>
+                )}
+              </div>
+            )}
         </div>
       </section>
 

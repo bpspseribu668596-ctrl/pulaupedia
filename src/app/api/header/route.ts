@@ -43,8 +43,8 @@ export async function GET() {
     return NextResponse.json(
       {
         id: 1,
-        title: 'PULAU PEDIA',
-        subtitle: 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu',
+        title: null,
+        subtitle: null,
         backgroundImage: null,
       },
       { status: 200 }
