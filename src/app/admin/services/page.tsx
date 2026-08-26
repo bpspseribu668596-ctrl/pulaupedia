@@ -235,7 +235,7 @@ export default function AdminServicesPage() {
 
       <div className="grid gap-6">
         {/* Header Section */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -292,7 +292,7 @@ export default function AdminServicesPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Services List */}
         <div>

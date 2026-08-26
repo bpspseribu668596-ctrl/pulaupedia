@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 
 interface HeaderData {
@@ -26,13 +28,24 @@ interface HeaderData {
   backgroundImage: string;
 }
 
+interface MainPortal {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  href: string;
+}
+
 export default function Home() {
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [serviceCategories, setServiceCategories] = useState<any[]>([]);
-  const [sectionHeader, setSectionHeader] = useState({ title: "BPS Services Web-App", description: "" });
-  const [mainMenuItems, setMainMenuItems] = useState<any[]>([]);
+  const [mainMenuItems, setMainMenuItems] = useState<MainPortal[]>([]);
+  
+  const [headerError, setHeaderError] = useState<string | null>(null);
+  const [servicesError, setServicesError] = useState<string | null>(null);
+  const [portalsError, setPortalsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHeaderData = async () => {
@@ -41,9 +54,12 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setHeaderData(data);
+        } else {
+          setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
       } catch (error) {
         console.error('Error fetching header:', error);
+        setHeaderError(ERROR_MESSAGES.DB_CONNECTION);
       }
     };
 
@@ -52,16 +68,14 @@ export default function Home() {
         const response = await fetch('/api/services?all=true');
         if (response.ok) {
           const data = await response.json();
-          const header = data.find((s: any) => s.type === 'header');
           const services = data.filter((s: any) => s.type === 'service');
-          
-          if (header) {
-            setSectionHeader({ title: header.title, description: header.description });
-          }
           setServiceCategories(services);
+        } else {
+          setServicesError(ERROR_MESSAGES.SERVICES_UNAVAILABLE);
         }
       } catch (error) {
         console.error('Error fetching services:', error);
+        setServicesError(ERROR_MESSAGES.DB_CONNECTION);
       }
     };
 
@@ -71,9 +85,12 @@ export default function Home() {
         if (response.ok) {
           const data = await response.json();
           setMainMenuItems(data);
+        } else {
+          setPortalsError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
         }
       } catch (error) {
         console.error('Error fetching main portal:', error);
+        setPortalsError(ERROR_MESSAGES.DB_CONNECTION);
       }
     };
 
@@ -160,93 +177,103 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
         </div>
-        <div className="container mx-auto px-4 relative z-10">
-          <h2 className="text-white text-3xl md:text-4xl font-bold text-center mb-4">
-            Portal Pulau Pedia
-          </h2>
-          <p className="text-white/90 text-center mb-12 max-w-2xl mx-auto">
-            Akses cepat ke berbagai portal dan layanan informasi
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {mainMenuItems.map((item, index) => {
-              const iconMap: { [key: string]: any } = {
-                BookOpen,
-                Archive,
-                FileText,
-                Package,
-                Laptop,
-                DollarSign,
-                BarChart3,
-                Award,
-              };
-              const Icon = iconMap[item.icon] || BookOpen;
-              return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
-                >
-                  <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-white text-base md:text-lg font-bold mb-2">
-                      {item.name}
-                    </h3>
-                    <p className="text-white/80 text-xs leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+         <div className="container mx-auto px-4 relative z-10">
+           <h2 className="text-white text-3xl md:text-4xl font-bold text-center mb-4">
+             Portal Pulau Pedia
+           </h2>
+           <p className="text-white/90 text-center mb-12 max-w-2xl mx-auto">
+             {mainMenuItems.length > 0 
+               ? mainMenuItems[0]?.description || "Akses cepat ke berbagai portal dan layanan informasi"
+               : "Akses cepat ke berbagai portal dan layanan informasi"}
+           </p>
+
+           {portalsError && <ErrorMessage message={portalsError} />}
+
+           {!portalsError && (
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+               {mainMenuItems.map((item, index) => {
+                 const iconMap: { [key: string]: any } = {
+                   BookOpen,
+                   Archive,
+                   FileText,
+                   Package,
+                   Laptop,
+                   DollarSign,
+                   BarChart3,
+                   Award,
+                 };
+                 const Icon = iconMap[item.icon] || BookOpen;
+                 return (
+                   <Link
+                     key={index}
+                     href={item.href}
+                     className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
+                   >
+                     <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
+                       <Icon className="w-8 h-8 text-white" />
+                     </div>
+                     <div className="text-center">
+                       <h3 className="text-white text-base md:text-lg font-bold mb-2">
+                         {item.name}
+                       </h3>
+                       <p className="text-white/80 text-xs leading-relaxed">
+                         {item.description}
+                       </p>
+                     </div>
+                   </Link>
+                 );
+               })}
+             </div>
+           )}
         </div>
       </section>
 
-      {/* bps services web-app */}
-      <section className="bg-gradient-to-b from-gray-50 to-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-              {sectionHeader.title}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {sectionHeader.description}
-            </p>
-          </div>
+        {/* bps services web-app */}
+        <section className="bg-gradient-to-b from-gray-50 to-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
+                BPS Services Web-App
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Kumpulan layanan dan aplikasi digital untuk mendukung operasional BPS Kepulauan Seribu
+              </p>
+            </div>
 
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {serviceCategories.map((service, index) => {
-                return (
-                  <div
-                    key={index}
-                    className="bg-white border-2 border-gray-200 rounded-xl p-6 flex flex-col items-center justify-between min-h-[280px]"
-                  >
-                    <div className="text-center mb-4">
-                      <h3 className="text-sm font-bold text-[#111111] leading-tight">
-                        {service.title}
-                      </h3>
-                    </div>
+            {servicesError && <ErrorMessage message={servicesError} />}
 
-                    <div className="flex-1 flex items-center justify-center mb-4">
-                      <a href={service.link} className="relative w-24 h-24 cursor-pointer">
-                        {service.logo ? (
-                          <Image
-                            src={`/api/${service.logo}`}
-                            alt={service.name}
-                            fill
-                            sizes="96px"
-                            className="object-contain"
-                            style={{ objectFit: "contain" }}
-                          />
-                        ) : (
-                          <div className="w-24 h-24 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
-                            <span className="text-gray-400 text-xs text-center leading-tight">Gambar<br/>tidak tersedia</span>
-                          </div>
-                        )}
-                      </a>
+            {!servicesError && (
+              <div className="max-w-7xl mx-auto">
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                 {serviceCategories.map((service, index) => {
+                   return (
+                     <div
+                       key={index}
+                       className="bg-white border-2 border-gray-200 rounded-xl p-6 flex flex-col items-center justify-between min-h-[280px]"
+                     >
+                       <div className="text-center mb-4">
+                         <h3 className="text-sm font-bold text-[#111111] leading-tight">
+                           {service.title}
+                         </h3>
+                       </div>
+
+                       <div className="flex-1 flex items-center justify-center mb-4">
+                         <a href={service.link} className="relative w-24 h-24 cursor-pointer">
+                           {service.logo ? (
+                             <Image
+                               src={`/api/${service.logo}`}
+                               alt={service.name}
+                               fill
+                               sizes="96px"
+                               className="object-contain"
+                               style={{ objectFit: "contain" }}
+                             />
+                           ) : (
+                             <div className="w-24 h-24 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
+                               <span className="text-gray-400 text-xs text-center leading-tight">Gambar<br/>tidak tersedia</span>
+                             </div>
+                           )}
+                         </a>
                     </div>
 
                     <div className="w-px h-12 bg-gray-300 mb-4"></div>
@@ -261,13 +288,19 @@ export default function Home() {
                         </span>
                       </a>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
+                   </div>
+                 );
+               })}
+               {serviceCategories.length === 0 && (
+                 <div className="col-span-full text-center py-12 text-gray-500">
+                   Tidak ada layanan tersedia
+                 </div>
+               )}
+             </div>
+           </div>
+           )}
+         </div>
+       </section>
 
       <Footer />
     </div>

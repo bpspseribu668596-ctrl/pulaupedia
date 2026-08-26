@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -54,6 +56,10 @@ export default function DynamicPortalPage() {
   const [items, setItems] = useState<PortalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
+  
+  const [headerError, setHeaderError] = useState<string | null>(null);
+  const [portalError, setPortalError] = useState<string | null>(null);
+  const [itemsError, setItemsError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
@@ -93,9 +99,15 @@ export default function DynamicPortalPage() {
         if (headerRes.ok) {
           const headerData = await headerRes.json();
           setHeaderData(headerData);
+        } else {
+          setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
 
-        if (!portalsRes.ok) throw new Error('Failed to fetch portals');
+        if (!portalsRes.ok) {
+          setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
+          setIsLoading(false);
+          return;
+        }
         
         const portalsData = await portalsRes.json();
         const currentPortal = portalsData.find((p: Portal) => {
@@ -104,6 +116,7 @@ export default function DynamicPortalPage() {
         });
 
         if (!currentPortal) {
+          setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
           setIsLoading(false);
           return;
         }
@@ -114,9 +127,12 @@ export default function DynamicPortalPage() {
         if (itemsRes.ok) {
           const itemsData = await itemsRes.json();
           setItems(itemsData);
+        } else {
+          setItemsError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
         }
       } catch (error) {
         console.error('Error fetching portal data:', error);
+        setPortalError(ERROR_MESSAGES.DB_CONNECTION);
       } finally {
         setIsLoading(false);
       }
@@ -224,23 +240,25 @@ export default function DynamicPortalPage() {
 
       <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-16 flex-1">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-              {portal.name}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {portal.description}
-            </p>
-          </div>
+           <div className="text-center mb-12">
+             <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
+               {portal.name}
+             </h2>
+             <p className="text-gray-600 max-w-2xl mx-auto">
+               {portal.description}
+             </p>
+           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {items.map((item) => {
-              const Icon = getIconComponent(item.icon);
-              return (
-                <Link
-                  key={item.id}
-                  href={item.link}
-                  className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
+           {itemsError && <ErrorMessage message={itemsError} />}
+
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+             {items.map((item) => {
+               const Icon = getIconComponent(item.icon);
+               return (
+                 <Link
+                   key={item.id}
+                   href={item.link}
+                   className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
                 >
                   <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
                     <Icon className="w-8 h-8 text-white" />

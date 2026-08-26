@@ -5,6 +5,8 @@ import { ChevronDown, ArrowLeft, FileText, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PortalSidebar from "@/components/PortalSidebar";
+import { ErrorMessage } from "@/components/ErrorMessage";
+import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -46,6 +48,9 @@ export default function ItemDetailPage() {
   const [currentItem, setCurrentItem] = useState<PortalItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
+  
+  const [headerError, setHeaderError] = useState<string | null>(null);
+  const [itemError, setItemError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
@@ -85,9 +90,15 @@ export default function ItemDetailPage() {
         if (headerRes.ok) {
           const headerData = await headerRes.json();
           setHeaderData(headerData);
+        } else {
+          setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
 
-        if (!portalsRes.ok) throw new Error('Failed to fetch portals');
+        if (!portalsRes.ok) {
+          setItemError(ERROR_MESSAGES.DB_CONNECTION);
+          setIsLoading(false);
+          return;
+        }
         
         const portalsData = await portalsRes.json();
         const matchedPortal = portalsData.find((p: Portal) => {
@@ -96,6 +107,7 @@ export default function ItemDetailPage() {
         });
 
         if (!matchedPortal) {
+          setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
           setIsLoading(false);
           return;
         }
@@ -103,7 +115,11 @@ export default function ItemDetailPage() {
         setPortal(matchedPortal);
 
         const itemsRes = await fetch(`/api/portals/${matchedPortal.id}/items`);
-        if (!itemsRes.ok) throw new Error('Failed to fetch items');
+        if (!itemsRes.ok) {
+          setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
+          setIsLoading(false);
+          return;
+        }
         
         const itemsData = await itemsRes.json();
         
@@ -114,9 +130,12 @@ export default function ItemDetailPage() {
 
         if (matchedItem) {
           setCurrentItem(matchedItem);
+        } else {
+          setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
         }
       } catch (error) {
         console.error('Error fetching item data:', error);
+        setItemError(ERROR_MESSAGES.DB_CONNECTION);
       } finally {
         setIsLoading(false);
       }
@@ -210,17 +229,19 @@ export default function ItemDetailPage() {
           <div className="flex flex-col md:flex-row gap-8">
             <PortalSidebar />
             <div className="flex-1 min-w-0">
-              <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                  <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-                    Dokumen {currentItem.name}
-                  </h2>
-                  <p className="text-gray-600">
-                    Pilih dokumen untuk mengakses file yang tersimpan di Google Drive
-                  </p>
-                </div>
+               <div className="max-w-4xl mx-auto">
+                 <div className="text-center mb-12">
+                   <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
+                     Dokumen {currentItem.name}
+                   </h2>
+                   <p className="text-gray-600">
+                     Pilih dokumen untuk mengakses file yang tersimpan di Google Drive
+                   </p>
+                 </div>
 
-                {currentItem.documents && currentItem.documents.length > 0 ? (
+                 {itemError && <ErrorMessage message={itemError} />}
+
+                 {currentItem.documents && currentItem.documents.length > 0 ? (
                   <div className="space-y-4">
                     {currentItem.documents.map((doc, index) => (
                       <a
