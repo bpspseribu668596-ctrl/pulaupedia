@@ -9,6 +9,7 @@ interface PortalItemRow extends RowDataPacket {
   description: string;
   icon: string;
   link: string;
+  documents: any;
   sortOrder: number;
   isActive: boolean;
 }
@@ -53,7 +54,7 @@ export async function POST(
     const { id } = await params;
     const portalId = parseInt(id);
     const body = await request.json();
-    const { name, description, icon, link, sortOrder } = body;
+    const { name, description, icon, link, sortOrder, documents } = body;
 
     if (!name || !icon || !link) {
       return NextResponse.json(
@@ -65,8 +66,8 @@ export async function POST(
     const connection = await pool.getConnection();
     
     const result = await connection.query(
-      'INSERT INTO portal_items (portalId, name, description, icon, link, sortOrder, isActive) VALUES (?, ?, ?, ?, ?, ?, TRUE)',
-      [portalId, name, description || null, icon, link, sortOrder || 0]
+      'INSERT INTO portal_items (portalId, name, description, icon, link, documents, sortOrder, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)',
+      [portalId, name, description || null, icon, link, JSON.stringify(documents || []), sortOrder || 0]
     );
 
     connection.release();

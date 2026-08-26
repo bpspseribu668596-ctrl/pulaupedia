@@ -9,6 +9,7 @@ interface PortalItemRow extends RowDataPacket {
   description: string;
   icon: string;
   link: string;
+  documents: any;
   sortOrder: number;
   isActive: boolean;
 }
@@ -56,7 +57,7 @@ export async function PUT(
     const portalId = parseInt(id);
     const parsedItemId = parseInt(itemId);
     const body = await request.json();
-    const { name, description, icon, link, sortOrder, isActive } = body;
+    const { name, description, icon, link, sortOrder, isActive, documents } = body;
 
     if (!name || !icon || !link) {
       return NextResponse.json(
@@ -68,8 +69,8 @@ export async function PUT(
     const connection = await pool.getConnection();
     
     await connection.query(
-      'UPDATE portal_items SET name = ?, description = ?, icon = ?, link = ?, sortOrder = ?, isActive = ?, updatedAt = NOW() WHERE id = ? AND portalId = ?',
-      [name, description || null, icon, link, sortOrder || 0, isActive !== undefined ? isActive : true, parsedItemId, portalId]
+      'UPDATE portal_items SET name = ?, description = ?, icon = ?, link = ?, documents = ?, sortOrder = ?, isActive = ?, updatedAt = NOW() WHERE id = ? AND portalId = ?',
+      [name, description || null, icon, link, JSON.stringify(documents || []), sortOrder || 0, isActive !== undefined ? isActive : true, parsedItemId, portalId]
     );
 
     connection.release();
