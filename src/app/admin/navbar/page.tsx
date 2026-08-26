@@ -221,14 +221,14 @@ export default function AdminNavbarPage() {
               <p className="text-sm font-semibold text-gray-600">Logo Path:</p>
               <p className="text-xs text-gray-500">{navbarData.logo}</p>
             </div>
-            <div>
+            {/* <div>
               <p className="text-sm font-semibold text-gray-600">Logo Alt Text:</p>
               <p className="text-sm text-gray-700">{navbarData.logoAlt}</p>
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-600">Brand Name:</p>
               <p className="text-lg font-bold">{navbarData.brandName}</p>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>
@@ -244,7 +244,7 @@ export default function AdminNavbarPage() {
               </button>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
+              {/* <div>
                 <Label>Logo Brand Name</Label>
                 <Input
                   value={formData.brandName}
@@ -262,7 +262,7 @@ export default function AdminNavbarPage() {
                   placeholder="Pulau Pedia Logo"
                   className="mt-1"
                 />
-              </div>
+              </div> */}
 
               <div>
                 <Label>Upload Logo</Label>

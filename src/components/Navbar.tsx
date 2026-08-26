@@ -55,11 +55,10 @@ export default function Navbar({ isScrolled }: NavbarProps) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? "translate-y-0 opacity-100"
           : "-translate-y-full opacity-0"
-      }`}
+        }`}
     >
       <div className="bg-[#111111] shadow-lg backdrop-blur-sm border-b-4 border-[#337ab7]">
         <div className="container mx-auto px-4 py-3">
@@ -80,12 +79,15 @@ export default function Navbar({ isScrolled }: NavbarProps) {
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight">
+                <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight whitespace-nowrap">
                   BADAN PUSAT STATISTIK
                 </span>
-                <span className="text-white font-semibold text-xs md:text-sm uppercase leading-tight">
-                  {navbarConfig?.brandName ?? 'PULAU PEDIA'}
-                </span>
+
+                <div className="flex justify-between text-white font-semibold text-xs md:text-sm uppercase leading-tight w-full">
+                  {"PULAU PEDIA".split("").map((char, i) => (
+                    <span key={i}>{char === " " ? "\u00A0" : char}</span>
+                  ))}
+                </div>
               </div>
             </Link>
 
