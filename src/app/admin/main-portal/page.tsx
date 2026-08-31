@@ -305,6 +305,13 @@ export default function AdminMainPortalPage() {
       .replace(/-+/g, '-');
   };
 
+  const generateSuggestedPortalHref = () => {
+    if (!portalFormData.name) return '';
+    
+    const slug = generateSlug(portalFormData.name);
+    return `/${slug}`;
+  };
+
   const generateSuggestedLink = () => {
     if (!itemFormData.name || !selectedPortalId) return '';
     
@@ -521,12 +528,30 @@ export default function AdminMainPortalPage() {
 
                   <div>
                     <Label>URL/Href</Label>
-                    <Input
-                      value={portalFormData.href}
-                      onChange={(e) => setPortalFormData({ ...portalFormData, href: e.target.value })}
-                      placeholder="/portal-umum"
-                      className="mt-1"
-                    />
+                    <div className="space-y-2 mt-1">
+                      <Input
+                        value={portalFormData.href}
+                        onChange={(e) => setPortalFormData({ ...portalFormData, href: e.target.value })}
+                        placeholder="/portal-umum"
+                      />
+                      {portalFormData.name && generateSuggestedPortalHref() !== portalFormData.href && (
+                        <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                          <div className="flex-1">
+                            <p className="text-xs text-blue-600 font-medium">Saran:</p>
+                            <p className="text-sm text-blue-800">{generateSuggestedPortalHref()}</p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPortalFormData({ ...portalFormData, href: generateSuggestedPortalHref() })}
+                            className="shrink-0"
+                          >
+                            Gunakan
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
