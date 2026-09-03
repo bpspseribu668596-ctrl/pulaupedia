@@ -109,9 +109,9 @@ export default function LoginPage() {
               )}
             </Button>
 
-            <div className="text-center text-sm text-gray-500 pt-2">
+            {/* <div className="text-center text-sm text-gray-500 pt-2">
               <p>Default: username = <strong>admin</strong>, password = <strong>admin123</strong></p>
-            </div>
+            </div> */}
           </form>
         </CardContent>
       </Card>
