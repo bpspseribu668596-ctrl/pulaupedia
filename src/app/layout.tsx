@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "Pulau Pedia - BPS Kepulauan Seribu",
   description: "Portal informasi dan layanan BPS Kepulauan Seribu",
   icons: {
-    icon: "/api/logos/logo-bps.png",
-    apple: "/api/logos/logo-bps.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
