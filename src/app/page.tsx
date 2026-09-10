@@ -305,7 +305,7 @@ export default function Home() {
                })}
                {serviceCategories.length === 0 && (
                  <div className="col-span-full text-center py-12 text-gray-500">
-                   Tidak ada layanan tersedia
+                   Tidak ada layanan tersediaa
                  </div>
                )}
              </div>
