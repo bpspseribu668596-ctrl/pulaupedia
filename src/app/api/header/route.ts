@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
-const STORAGE_DIR = join(process.cwd(), 'storage', 'uploads');
 
 function resolveImagePath(imagePath: string | null | undefined): string | null {
   if (!imagePath) return null;
-  const filepath = join(STORAGE_DIR, imagePath.replace(/^uploads\//, ''));
-  return existsSync(filepath) ? imagePath : null;
+  return imagePath;
 }
 
 export async function GET() {

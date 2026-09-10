@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, Globe } from "lucide-react";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
@@ -13,6 +12,13 @@ interface FooterConfig {
   contacts: { label: string; value: string }[];
   links: { label: string; url: string }[];
   logo: string;
+}
+
+// Handle path lama (uploads/...) maupun URL Cloudinary baru (https://...)
+function resolveImageUrl(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (src.startsWith('http://') || src.startsWith('https://')) return src;
+  return null; // path lama tidak bisa ditampilkan, return null
 }
 
 export default function Footer() {
@@ -61,14 +67,12 @@ export default function Footer() {
           <>
             <div className="flex justify-center mb-8">
               <Link href="/" className="flex items-center gap-4">
-                {footerConfig?.logo ? (
-                  <Image
-                    src={`/api/${footerConfig.logo}`}
+                {resolveImageUrl(footerConfig?.logo) ? (
+                  <img
+                    src={resolveImageUrl(footerConfig!.logo)!}
                     alt="Logo BPS"
-                    width={80}
-                    height={80}
                     className="object-contain opacity-90"
-                    style={{ width: "auto", height: "80px" }}
+                    style={{ height: "80px", width: "auto" }}
                   />
                 ) : (
                   <div className="w-20 h-20 flex items-center justify-center rounded bg-white/10">

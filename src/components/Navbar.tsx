@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Home, Folder } from "lucide-react";
 
@@ -21,6 +20,12 @@ interface PortalMenuItem {
   name: string;
   href: string;
   sortOrder: number;
+}
+
+function resolveImageUrl(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (src.startsWith('http://') || src.startsWith('https://')) return src;
+  return null;
 }
 
 export default function Navbar({ isScrolled }: NavbarProps) {
@@ -64,14 +69,12 @@ export default function Navbar({ isScrolled }: NavbarProps) {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-4">
-              {navbarConfig?.logo ? (
-                <Image
-                  src={`/api/${navbarConfig.logo}`}
-                  alt={navbarConfig.logoAlt ?? 'Logo'}
-                  width={40}
-                  height={40}
+              {resolveImageUrl(navbarConfig?.logo) ? (
+                <img
+                  src={resolveImageUrl(navbarConfig!.logo)!}
+                  alt={navbarConfig?.logoAlt ?? 'Logo'}
                   className="object-contain"
-                  style={{ width: "auto", height: "40px" }}
+                  style={{ height: "40px", width: "auto" }}
                 />
               ) : (
                 <div className="w-10 h-10 flex items-center justify-center rounded bg-white/10">

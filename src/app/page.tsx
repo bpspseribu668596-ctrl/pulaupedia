@@ -144,7 +144,7 @@ export default function Home() {
               <div
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{
-                  backgroundImage: `url('/api/${headerData.backgroundImage}')`,
+                  backgroundImage: `url('${headerData.backgroundImage}')`,
                 }}
               />
             )}
@@ -274,14 +274,11 @@ export default function Home() {
 
                        <div className="flex-1 flex items-center justify-center mb-4">
                          <a href={service.link} className="relative w-24 h-24 cursor-pointer">
-                           {service.logo ? (
-                             <Image
-                               src={`/api/${service.logo}`}
+                           {service.logo && service.logo.startsWith('http') ? (
+                             <img
+                               src={service.logo}
                                alt={service.name}
-                               fill
-                               sizes="96px"
-                               className="object-contain"
-                               style={{ objectFit: "contain" }}
+                               className="w-full h-full object-contain"
                              />
                            ) : (
                              <div className="w-24 h-24 flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
@@ -422,7 +419,7 @@ function AnnouncementModalComponent() {
           <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden mb-4">
             {currentAnnouncement.image ? (
               <img
-                src={`/api/${currentAnnouncement.image}`}
+                src={currentAnnouncement.image}
                 alt={currentAnnouncement.title}
                 className="w-full h-full object-cover"
               />
