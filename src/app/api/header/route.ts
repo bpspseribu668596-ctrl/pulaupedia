@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -12,18 +11,9 @@ function resolveImagePath(imagePath: string | null | undefined): string | null {
   return existsSync(filepath) ? imagePath : null;
 }
 
-interface HeaderRow extends RowDataPacket {
-  id: number;
-  title: string;
-  subtitle: string;
-  backgroundImage: string;
-}
-
 export async function GET() {
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query<HeaderRow[]>('SELECT * FROM headers WHERE id = 1');
-    connection.release();
+    const { rows } = await pool.query('SELECT * FROM headers WHERE id = 1');
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({
@@ -41,12 +31,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching header:', error);
     return NextResponse.json(
-      {
-        id: 1,
-        title: null,
-        subtitle: null,
-        backgroundImage: null,
-      },
+      { id: 1, title: null, subtitle: null, backgroundImage: null },
       { status: 200 }
     );
   }
@@ -64,14 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE headers SET title = ?, subtitle = ?, backgroundImage = ?, updatedAt = NOW() WHERE id = 1',
+    await pool.query(
+      'UPDATE headers SET title = $1, subtitle = $2, "backgroundImage" = $3, "updatedAt" = NOW() WHERE id = 1',
       [title, subtitle, backgroundImage]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Header updated successfully' },
@@ -88,14 +69,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE headers SET title = ?, subtitle = ?, backgroundImage = ?, updatedAt = NOW() WHERE id = 1',
+    await pool.query(
+      'UPDATE headers SET title = $1, subtitle = $2, "backgroundImage" = $3, "updatedAt" = NOW() WHERE id = 1',
       ['PULAU PEDIA', 'Portal Informasi dan Layanan Digital BPS Kepulauan Seribu', 'uploads/headers/default.jpg']
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Header reset to default' },

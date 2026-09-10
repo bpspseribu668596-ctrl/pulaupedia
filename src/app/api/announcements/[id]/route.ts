@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface AnnouncementRow extends RowDataPacket {
-  id: number;
-  title: string;
-  content: string;
-  image: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export async function GET(
   request: NextRequest,
@@ -19,12 +8,10 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query<AnnouncementRow[]>(
-      'SELECT * FROM announcements WHERE id = ?',
+    const { rows } = await pool.query(
+      'SELECT * FROM announcements WHERE id = $1',
       [id]
     );
-    connection.release();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -60,14 +47,10 @@ export async function PUT(
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE announcements SET title = ?, content = ?, image = ?, isActive = ?, updatedAt = NOW() WHERE id = ?',
+    await pool.query(
+      'UPDATE announcements SET title = $1, content = $2, image = $3, "isActive" = $4, "updatedAt" = NOW() WHERE id = $5',
       [title, content, image || null, isActive !== undefined ? isActive : true, id]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Announcement updated successfully' },
@@ -89,14 +72,10 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'DELETE FROM announcements WHERE id = ?',
+    await pool.query(
+      'DELETE FROM announcements WHERE id = $1',
       [id]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Announcement deleted successfully' },

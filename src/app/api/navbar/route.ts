@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -12,18 +11,9 @@ function resolveLogoPath(logo: string | null | undefined): string | null {
   return existsSync(filepath) ? logo : null;
 }
 
-interface NavbarRow extends RowDataPacket {
-  id: number;
-  logo: string;
-  logoAlt: string;
-  brandName: string;
-}
-
 export async function GET() {
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query<NavbarRow[]>('SELECT * FROM navbar_config WHERE id = 1');
-    connection.release();
+    const { rows } = await pool.query('SELECT * FROM navbar_config WHERE id = 1');
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({
@@ -41,12 +31,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching navbar:', error);
     return NextResponse.json(
-      {
-        id: 1,
-        logo: null,
-        logoAlt: 'Pulau Pedia Logo',
-        brandName: 'PULAU PEDIA',
-      },
+      { id: 1, logo: null, logoAlt: 'Pulau Pedia Logo', brandName: 'PULAU PEDIA' },
       { status: 200 }
     );
   }
@@ -64,14 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE navbar_config SET logo = ?, logoAlt = ?, brandName = ?, updatedAt = NOW() WHERE id = 1',
+    await pool.query(
+      'UPDATE navbar_config SET logo = $1, "logoAlt" = $2, "brandName" = $3, "updatedAt" = NOW() WHERE id = 1',
       [logo, logoAlt, brandName]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Navbar config updated successfully' },
@@ -88,14 +69,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE navbar_config SET logo = ?, logoAlt = ?, brandName = ?, updatedAt = NOW() WHERE id = 1',
+    await pool.query(
+      'UPDATE navbar_config SET logo = $1, "logoAlt" = $2, "brandName" = $3, "updatedAt" = NOW() WHERE id = 1',
       ['uploads/navbar/logo.png', 'Pulau Pedia Logo', 'PULAU PEDIA']
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Navbar config reset to default' },

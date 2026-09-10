@@ -1,36 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface AnnouncementRow extends RowDataPacket {
-  id: number;
-  title: string;
-  content: string;
-  image: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
 
-    const connection = await pool.getConnection();
-    
     let query = 'SELECT * FROM announcements';
     if (!all) {
-      query += ' WHERE isActive = TRUE';
+      query += ' WHERE "isActive" = TRUE';
     }
-    query += ' ORDER BY createdAt DESC';
+    query += ' ORDER BY "createdAt" DESC';
 
-    const [rows] = await connection.query<AnnouncementRow[]>(query);
-    connection.release();
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json([]);
-    }
+    const { rows } = await pool.query(query);
 
     return NextResponse.json(rows);
   } catch (error) {
@@ -51,17 +33,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    const result = await connection.query(
-      'INSERT INTO announcements (title, content, image, isActive) VALUES (?, ?, ?, TRUE)',
+    const { rows } = await pool.query(
+      'INSERT INTO announcements (title, content, image, "isActive") VALUES ($1, $2, $3, TRUE) RETURNING id',
       [title, content, image || null]
     );
 
-    connection.release();
-
     return NextResponse.json(
-      { success: true, message: 'Announcement created successfully', id: (result as any)[0].insertId },
+      { success: true, message: 'Announcement created successfully', id: rows[0].id },
       { status: 201 }
     );
   } catch (error) {

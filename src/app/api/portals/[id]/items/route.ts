@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface PortalItemRow extends RowDataPacket {
-  id: number;
-  portalId: number;
-  name: string;
-  description: string;
-  icon: string;
-  link: string;
-  documents: any;
-  sortOrder: number;
-  isActive: boolean;
-}
 
 export async function GET(
   request: NextRequest,
@@ -24,20 +11,13 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
 
-    const connection = await pool.getConnection();
-    
-    let query = 'SELECT * FROM portal_items WHERE portalId = ?';
+    let query = 'SELECT * FROM portal_items WHERE "portalId" = $1';
     if (!all) {
-      query += ' AND isActive = TRUE';
+      query += ' AND "isActive" = TRUE';
     }
-    query += ' ORDER BY sortOrder ASC';
+    query += ' ORDER BY "sortOrder" ASC';
 
-    const [rows] = await connection.query<PortalItemRow[]>(query, [portalId]);
-    connection.release();
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json([]);
-    }
+    const { rows } = await pool.query(query, [portalId]);
 
     return NextResponse.json(rows);
   } catch (error) {
@@ -63,17 +43,13 @@ export async function POST(
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    const result = await connection.query(
-      'INSERT INTO portal_items (portalId, name, description, icon, link, documents, sortOrder, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)',
+    const { rows } = await pool.query(
+      'INSERT INTO portal_items ("portalId", name, description, icon, link, documents, "sortOrder", "isActive") VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE) RETURNING id',
       [portalId, name, description || null, icon, link, JSON.stringify(documents || []), sortOrder || 0]
     );
 
-    connection.release();
-
     return NextResponse.json(
-      { success: true, message: 'Portal item created successfully', id: (result as any)[0].insertId },
+      { success: true, message: 'Portal item created successfully', id: rows[0].id },
       { status: 201 }
     );
   } catch (error) {

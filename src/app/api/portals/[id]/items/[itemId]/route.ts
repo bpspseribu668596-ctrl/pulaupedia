@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface PortalItemRow extends RowDataPacket {
-  id: number;
-  portalId: number;
-  name: string;
-  description: string;
-  icon: string;
-  link: string;
-  documents: any;
-  sortOrder: number;
-  isActive: boolean;
-}
 
 export async function GET(
   request: NextRequest,
@@ -20,16 +7,11 @@ export async function GET(
 ) {
   try {
     const { id, itemId } = await params;
-    const portalId = parseInt(id);
-    const parsedItemId = parseInt(itemId);
-    
-    const connection = await pool.getConnection();
-    
-    const [rows] = await connection.query<PortalItemRow[]>(
-      'SELECT * FROM portal_items WHERE id = ? AND portalId = ?',
-      [parsedItemId, portalId]
+
+    const { rows } = await pool.query(
+      'SELECT * FROM portal_items WHERE id = $1 AND "portalId" = $2',
+      [parseInt(itemId), parseInt(id)]
     );
-    connection.release();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -54,8 +36,6 @@ export async function PUT(
 ) {
   try {
     const { id, itemId } = await params;
-    const portalId = parseInt(id);
-    const parsedItemId = parseInt(itemId);
     const body = await request.json();
     const { name, description, icon, link, sortOrder, isActive, documents } = body;
 
@@ -66,14 +46,10 @@ export async function PUT(
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE portal_items SET name = ?, description = ?, icon = ?, link = ?, documents = ?, sortOrder = ?, isActive = ?, updatedAt = NOW() WHERE id = ? AND portalId = ?',
-      [name, description || null, icon, link, JSON.stringify(documents || []), sortOrder || 0, isActive !== undefined ? isActive : true, parsedItemId, portalId]
+    await pool.query(
+      'UPDATE portal_items SET name = $1, description = $2, icon = $3, link = $4, documents = $5, "sortOrder" = $6, "isActive" = $7, "updatedAt" = NOW() WHERE id = $8 AND "portalId" = $9',
+      [name, description || null, icon, link, JSON.stringify(documents || []), sortOrder || 0, isActive !== undefined ? isActive : true, parseInt(itemId), parseInt(id)]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Portal item updated successfully' },
@@ -94,17 +70,11 @@ export async function DELETE(
 ) {
   try {
     const { id, itemId } = await params;
-    const portalId = parseInt(id);
-    const parsedItemId = parseInt(itemId);
-    
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'DELETE FROM portal_items WHERE id = ? AND portalId = ?',
-      [parsedItemId, portalId]
-    );
 
-    connection.release();
+    await pool.query(
+      'DELETE FROM portal_items WHERE id = $1 AND "portalId" = $2',
+      [parseInt(itemId), parseInt(id)]
+    );
 
     return NextResponse.json(
       { success: true, message: 'Portal item deleted successfully' },

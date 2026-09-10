@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
-
-interface UserRow extends RowDataPacket {
-  id: number;
-  username: string;
-  password: string;
-  name: string;
-  role: string;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,14 +14,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    const [rows] = await connection.query<UserRow[]>(
-      'SELECT * FROM users WHERE username = ?',
+    const { rows } = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
       [username]
     );
-    
-    connection.release();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -40,8 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = rows[0];
-    
-    // Verify password
+
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
@@ -51,7 +37,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create session data (without password)
     const sessionData = {
       id: user.id,
       username: user.username,
@@ -59,17 +44,15 @@ export async function POST(request: NextRequest) {
       role: user.role,
     };
 
-    // Set session cookie
     const response = NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: 'Login berhasil',
-        user: sessionData
+        user: sessionData,
       },
       { status: 200 }
     );
 
-    // Set HTTP-only cookie for session
     response.cookies.set('admin-session', JSON.stringify(sessionData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

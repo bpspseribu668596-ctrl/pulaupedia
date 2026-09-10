@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface MainPortalRow extends RowDataPacket {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  href: string;
-  sortOrder: number;
-  isActive: boolean;
-}
 
 export async function GET(
   request: NextRequest,
@@ -18,14 +7,11 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const parsedId = parseInt(id);
-    const connection = await pool.getConnection();
-    
-    const [rows] = await connection.query<MainPortalRow[]>(
-      'SELECT * FROM main_portals WHERE id = ?',
-      [parsedId]
+
+    const { rows } = await pool.query(
+      'SELECT * FROM main_portals WHERE id = $1',
+      [parseInt(id)]
     );
-    connection.release();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -50,7 +36,6 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const parsedId = parseInt(id);
     const body = await request.json();
     const { name, description, icon, href, sortOrder, isActive } = body;
 
@@ -61,14 +46,10 @@ export async function PUT(
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE main_portals SET name = ?, description = ?, icon = ?, href = ?, sortOrder = ?, isActive = ?, updatedAt = NOW() WHERE id = ?',
-      [name, description || null, icon, href, sortOrder || 0, isActive !== undefined ? isActive : true, parsedId]
+    await pool.query(
+      'UPDATE main_portals SET name = $1, description = $2, icon = $3, href = $4, "sortOrder" = $5, "isActive" = $6, "updatedAt" = NOW() WHERE id = $7',
+      [name, description || null, icon, href, sortOrder || 0, isActive !== undefined ? isActive : true, parseInt(id)]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Portal updated successfully' },
@@ -89,15 +70,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const parsedId = parseInt(id);
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'DELETE FROM main_portals WHERE id = ?',
-      [parsedId]
-    );
 
-    connection.release();
+    await pool.query(
+      'DELETE FROM main_portals WHERE id = $1',
+      [parseInt(id)]
+    );
 
     return NextResponse.json(
       { success: true, message: 'Portal deleted successfully' },

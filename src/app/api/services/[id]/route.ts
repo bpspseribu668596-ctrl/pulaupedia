@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface ServiceRow extends RowDataPacket {
-  id: number;
-  title: string;
-  name: string;
-  logo: string;
-  link: string;
-  sortOrder: number;
-  isActive: boolean;
-  type: string;
-  description?: string;
-}
 
 export async function GET(
   request: NextRequest,
@@ -21,12 +8,10 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query<ServiceRow[]>(
-      'SELECT * FROM services WHERE id = ?',
+    const { rows } = await pool.query(
+      'SELECT * FROM services WHERE id = $1',
       [id]
     );
-    connection.release();
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -69,14 +54,10 @@ export async function PUT(
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'UPDATE services SET title = ?, name = ?, logo = ?, link = ?, sortOrder = ?, isActive = ?, type = ?, description = ?, updatedAt = NOW() WHERE id = ?',
+    await pool.query(
+      'UPDATE services SET title = $1, name = $2, logo = $3, link = $4, "sortOrder" = $5, "isActive" = $6, type = $7, description = $8, "updatedAt" = NOW() WHERE id = $9',
       [title, name || null, logo || null, link || null, sortOrder || 0, isActive !== undefined ? isActive : true, type, description || null, id]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Service updated successfully' },
@@ -98,14 +79,10 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.query(
-      'DELETE FROM services WHERE id = ?',
+    await pool.query(
+      'DELETE FROM services WHERE id = $1',
       [id]
     );
-
-    connection.release();
 
     return NextResponse.json(
       { success: true, message: 'Service deleted successfully' },

@@ -1,36 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import { RowDataPacket } from 'mysql2/promise';
-
-interface MainPortalRow extends RowDataPacket {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  href: string;
-  sortOrder: number;
-  isActive: boolean;
-}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get('all') === 'true';
 
-    const connection = await pool.getConnection();
-    
     let query = 'SELECT * FROM main_portals';
     if (!all) {
-      query += ' WHERE isActive = TRUE';
+      query += ' WHERE "isActive" = TRUE';
     }
-    query += ' ORDER BY sortOrder ASC';
+    query += ' ORDER BY "sortOrder" ASC';
 
-    const [rows] = await connection.query<MainPortalRow[]>(query);
-    connection.release();
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json([]);
-    }
+    const { rows } = await pool.query(query);
 
     return NextResponse.json(rows);
   } catch (error) {
@@ -51,17 +33,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const connection = await pool.getConnection();
-    
-    const result = await connection.query(
-      'INSERT INTO main_portals (name, description, icon, href, sortOrder, isActive) VALUES (?, ?, ?, ?, ?, TRUE)',
+    const { rows } = await pool.query(
+      'INSERT INTO main_portals (name, description, icon, href, "sortOrder", "isActive") VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id',
       [name, description || null, icon, href, sortOrder || 0]
     );
 
-    connection.release();
-
     return NextResponse.json(
-      { success: true, message: 'Portal created successfully', id: (result as any)[0].insertId },
+      { success: true, message: 'Portal created successfully', id: rows[0].id },
       { status: 201 }
     );
   } catch (error) {
