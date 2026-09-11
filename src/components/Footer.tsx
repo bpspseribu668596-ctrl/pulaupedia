@@ -24,6 +24,7 @@ function resolveImageUrl(src: string | null | undefined): string | null {
 export default function Footer() {
   const [footerConfig, setFooterConfig] = useState<FooterConfig | null>(null);
   const [footerError, setFooterError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchFooterConfig = async () => {
@@ -38,6 +39,8 @@ export default function Footer() {
       } catch (error) {
         console.error('Error fetching footer config:', error);
         setFooterError(ERROR_MESSAGES.DB_CONNECTION);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -62,6 +65,31 @@ export default function Footer() {
         {footerError ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-center">
             {footerError}
+          </div>
+        ) : isLoading ? (
+          <div className="animate-pulse">
+            {/* Logo + nama skeleton */}
+            <div className="flex justify-center mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-white/10 rounded" />
+                <div className="h-6 w-48 bg-white/10 rounded" />
+              </div>
+            </div>
+            {/* 3 kolom skeleton */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-8">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="h-4 w-32 bg-white/10 rounded" />
+                  <div className="h-3 w-full bg-white/10 rounded" />
+                  <div className="h-3 w-4/5 bg-white/10 rounded" />
+                  <div className="h-3 w-3/5 bg-white/10 rounded" />
+                </div>
+              ))}
+            </div>
+            {/* Copyright skeleton */}
+            <div className="border-t border-gray-800 pt-6 flex justify-center">
+              <div className="h-3 w-64 bg-white/10 rounded" />
+            </div>
           </div>
         ) : (
           <>

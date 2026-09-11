@@ -47,6 +47,10 @@ export default function Home() {
   const [servicesError, setServicesError] = useState<string | null>(null);
   const [portalsError, setPortalsError] = useState<string | null>(null);
 
+  const [headerLoading, setHeaderLoading] = useState(true);
+  const [portalsLoading, setPortalsLoading] = useState(true);
+  const [servicesLoading, setServicesLoading] = useState(true);
+
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
@@ -60,6 +64,8 @@ export default function Home() {
       } catch (error) {
         console.error('Error fetching header:', error);
         setHeaderError(ERROR_MESSAGES.DB_CONNECTION);
+      } finally {
+        setHeaderLoading(false);
       }
     };
 
@@ -76,6 +82,8 @@ export default function Home() {
       } catch (error) {
         console.error('Error fetching services:', error);
         setServicesError(ERROR_MESSAGES.DB_CONNECTION);
+      } finally {
+        setServicesLoading(false);
       }
     };
 
@@ -91,6 +99,8 @@ export default function Home() {
       } catch (error) {
         console.error('Error fetching main portal:', error);
         setPortalsError(ERROR_MESSAGES.DB_CONNECTION);
+      } finally {
+        setPortalsLoading(false);
       }
     };
 
@@ -135,6 +145,14 @@ export default function Home() {
           <div className="absolute inset-0 bg-red-100 flex items-center justify-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700 text-center max-w-md">
               <p className="font-semibold text-lg">{headerError}</p>
+            </div>
+          </div>
+        ) : headerLoading ? (
+          <div className="absolute inset-0 bg-[#333333] flex items-center justify-center">
+            <div className="text-center w-full px-4 animate-pulse">
+              <div className="h-12 md:h-16 bg-white/20 rounded-lg max-w-lg mx-auto mb-4" />
+              <div className="h-5 bg-white/10 rounded max-w-sm mx-auto mb-2" />
+              <div className="h-5 bg-white/10 rounded max-w-xs mx-auto" />
             </div>
           </div>
         ) : (
@@ -198,7 +216,19 @@ export default function Home() {
 
             {portalsError && <ErrorMessage message={portalsError} />}
 
-            {!portalsError && (
+            {portalsLoading && !portalsError && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto animate-pulse">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="bg-white/10 rounded-xl p-6 h-40 flex flex-col items-center justify-center gap-3">
+                    <div className="bg-white/20 rounded-full w-16 h-16" />
+                    <div className="bg-white/20 rounded h-4 w-24" />
+                    <div className="bg-white/10 rounded h-3 w-20" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!portalsLoading && !portalsError && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
                 {mainMenuItems.length > 0 ? (
                   mainMenuItems.map((item, index) => {
@@ -257,7 +287,22 @@ export default function Home() {
 
             {servicesError && <ErrorMessage message={servicesError} />}
 
-            {!servicesError && (
+            {servicesLoading && !servicesError && (
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 animate-pulse">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="bg-white border-2 border-gray-100 rounded-xl p-6 flex flex-col items-center justify-between min-h-[280px]">
+                      <div className="bg-gray-200 rounded h-4 w-28 mb-4" />
+                      <div className="bg-gray-200 rounded-full w-24 h-24 mb-4" />
+                      <div className="w-px h-12 bg-gray-200 mb-4" />
+                      <div className="bg-gray-200 rounded-lg h-9 w-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!servicesLoading && !servicesError && (
               <div className="max-w-7xl mx-auto">
                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                  {serviceCategories.map((service, index) => {

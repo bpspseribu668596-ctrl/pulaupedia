@@ -61,30 +61,44 @@ export default function DynamicPortalPage() {
   const [portalError, setPortalError] = useState<string | null>(null);
   const [itemsError, setItemsError] = useState<string | null>(null);
 
+  const [headerLoading, setHeaderLoading] = useState(true);
+  const [itemsLoading, setItemsLoading] = useState(true);
+
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
 
-    const header = document.getElementById("main-header");
-    if (!header) {
-      clearTimeout(timer);
-      return;
+    const attachObserver = () => {
+      const header = document.getElementById("main-header");
+      if (!header) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsScrolled(!entry.isIntersecting);
+        },
+        {
+          threshold: 0,
+          rootMargin: "-1px 0px 0px 0px",
+        }
+      );
+
+      observer.observe(header);
+      return observer;
+    };
+
+    // Coba langsung, kalau belum ada headernya tunggu sebentar
+    let observer = attachObserver();
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    if (!observer) {
+      retryTimer = setTimeout(() => {
+        observer = attachObserver();
+      }, 300);
     }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsScrolled(!entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: "-1px 0px 0px 0px",
-      }
-    );
-
-    observer.observe(header);
 
     return () => {
       clearTimeout(timer);
-      observer.disconnect();
+      clearTimeout(retryTimer);
+      observer?.disconnect();
     };
   }, [isLoading]);
 
@@ -102,10 +116,12 @@ export default function DynamicPortalPage() {
         } else {
           setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
+        setHeaderLoading(false);
 
         if (!portalsRes.ok) {
           setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
           setIsLoading(false);
+          setItemsLoading(false);
           return;
         }
         
@@ -118,10 +134,12 @@ export default function DynamicPortalPage() {
         if (!currentPortal) {
           setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
           setIsLoading(false);
+          setItemsLoading(false);
           return;
         }
 
         setPortal(currentPortal);
+        setIsLoading(false);
 
         const itemsRes = await fetch(`/api/portals/${currentPortal.id}/items`);
         if (itemsRes.ok) {
@@ -130,9 +148,12 @@ export default function DynamicPortalPage() {
         } else {
           setItemsError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
         }
+        setItemsLoading(false);
       } catch (error) {
         console.error('Error fetching portal data:', error);
         setPortalError(ERROR_MESSAGES.DB_CONNECTION);
+        setHeaderLoading(false);
+        setItemsLoading(false);
       } finally {
         setIsLoading(false);
       }
@@ -167,19 +188,7 @@ export default function DynamicPortalPage() {
     return iconMap[iconName] || FileSpreadsheet;
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar isScrolled={isScrolled} />
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Loading...</p>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!portal) {
+  if (!portal && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar isScrolled={isScrolled} />
@@ -200,35 +209,41 @@ export default function DynamicPortalPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar isScrolled={isScrolled} />
 
+      {/* Header */}
       <header
         id="main-header"
         className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
-        {headerData?.backgroundImage && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('/api/${headerData.backgroundImage}')`,
-            }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
-        <div className="container mx-auto px-4 relative z-10 w-full">
-          <div
-            className={`text-center transition-all duration-1000 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
-            }`}
-          >
-            <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
-              {portal.name.toUpperCase()}
-            </h1>
-            <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
-              {portal.description}
-            </p>
+        <div className="absolute inset-0 bg-[#333333]" />
+        {headerLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center animate-pulse">
+            <div className="text-center w-full px-4">
+              <div className="h-12 md:h-16 bg-white/20 rounded-lg max-w-lg mx-auto mb-4" />
+              <div className="h-5 bg-white/10 rounded max-w-sm mx-auto mb-2" />
+              <div className="h-5 bg-white/10 rounded max-w-xs mx-auto" />
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {headerData?.backgroundImage?.startsWith('http') && (
+              <div
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url('${headerData.backgroundImage}')` }}
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
+            <div className="container mx-auto px-4 relative z-10 w-full">
+              <div className={`text-center transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+                <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
+                  {portal?.name.toUpperCase()}
+                </h1>
+                <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
+                  {portal?.description}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
         <button
           onClick={scrollToContent}
           className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20 animate-bounce cursor-pointer hover:scale-110 transition-transform"
@@ -238,48 +253,59 @@ export default function DynamicPortalPage() {
         </button>
       </header>
 
+      {/* Content */}
       <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-16 flex-1">
         <div className="container mx-auto px-4">
-           <div className="text-center mb-12">
-             <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
-               {portal.name}
-             </h2>
-             <p className="text-gray-600 max-w-2xl mx-auto">
-               {portal.description}
-             </p>
-           </div>
-
-           {itemsError && <ErrorMessage message={itemsError} />}
-
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-             {items.map((item) => {
-               const Icon = getIconComponent(item.icon);
-               return (
-                 <Link
-                   key={item.id}
-                   href={item.link}
-                   className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
-                >
-                  <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
-                    <Icon className="w-8 h-8 text-white" />
+          {itemsLoading ? (
+            <div className="animate-pulse">
+              <div className="text-center mb-12">
+                <div className="h-8 bg-gray-200 rounded max-w-xs mx-auto mb-4" />
+                <div className="h-4 bg-gray-100 rounded max-w-sm mx-auto" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="bg-[#D83F3F]/20 rounded-xl p-6 h-40 flex flex-col items-center justify-center gap-3">
+                    <div className="bg-[#D83F3F]/30 rounded-full w-16 h-16" />
+                    <div className="bg-[#D83F3F]/20 rounded h-4 w-24" />
+                    <div className="bg-[#D83F3F]/10 rounded h-3 w-20" />
                   </div>
-                  <div className="text-center">
-                    <h3 className="text-white text-base md:text-lg font-bold mb-2">
-                      {item.name}
-                    </h3>
-                    <p className="text-white/80 text-xs leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-            {items.length === 0 && (
-              <p className="col-span-full text-center text-gray-500 py-8">
-                Belum ada items untuk portal ini
-              </p>
-            )}
-          </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-12">
+                <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">{portal?.name}</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">{portal?.description}</p>
+              </div>
+
+              {itemsError && <ErrorMessage message={itemsError} />}
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                {items.map((item) => {
+                  const Icon = getIconComponent(item.icon);
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.link}
+                      className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-6 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
+                    >
+                      <div className="bg-white/20 p-4 rounded-full group-hover:bg-white/30 transition-all">
+                        <Icon className="w-8 h-8 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-white text-base md:text-lg font-bold mb-2">{item.name}</h3>
+                        <p className="text-white/80 text-xs leading-relaxed">{item.description}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {items.length === 0 && (
+                  <p className="col-span-full text-center text-gray-500 py-8">Belum ada items untuk portal ini</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
