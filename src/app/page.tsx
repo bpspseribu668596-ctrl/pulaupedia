@@ -149,7 +149,7 @@ export default function Home() {
           </div>
         ) : headerLoading ? (
           <div className="absolute inset-0 bg-[#333333] flex items-center justify-center">
-            <div className="text-center w-full px-4 animate-pulse">
+            <div className="text-center w-full px-4 pt-16 pb-10 animate-pulse">
               <div className="h-12 md:h-16 bg-white/20 rounded-lg max-w-lg mx-auto mb-4" />
               <div className="h-5 bg-white/10 rounded max-w-sm mx-auto mb-2" />
               <div className="h-5 bg-white/10 rounded max-w-xs mx-auto" />
@@ -167,7 +167,7 @@ export default function Home() {
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
-            <div className="container mx-auto px-4 relative z-10 w-full">
+            <div className="container mx-auto px-4 relative z-10 w-full pt-16 pb-10">
               <div
                 className={`text-center transition-all duration-1000 ${
                   isVisible
