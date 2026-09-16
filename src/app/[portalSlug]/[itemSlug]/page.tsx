@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ArrowLeft, FileText, ExternalLink } from "lucide-react";
+import { ChevronDown, FileText, ExternalLink, ChevronRight, House } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PortalSidebar from "@/components/PortalSidebar";
@@ -24,10 +24,7 @@ interface PortalItem {
   description: string;
   icon: string;
   link: string;
-  documents?: Array<{
-    title: string;
-    link: string;
-  }>;
+  documents?: Array<{ title: string; link: string }>;
 }
 
 interface HeaderData {
@@ -48,7 +45,7 @@ export default function ItemDetailPage() {
   const [currentItem, setCurrentItem] = useState<PortalItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
-  
+
   const [headerError, setHeaderError] = useState<string | null>(null);
   const [itemError, setItemError] = useState<string | null>(null);
 
@@ -61,28 +58,18 @@ export default function ItemDetailPage() {
     const attachObserver = () => {
       const header = document.getElementById("main-header");
       if (!header) return;
-
       const observer = new IntersectionObserver(
-        ([entry]) => {
-          setIsScrolled(!entry.isIntersecting);
-        },
-        {
-          threshold: 0,
-          rootMargin: "-1px 0px 0px 0px",
-        }
+        ([entry]) => setIsScrolled(!entry.isIntersecting),
+        { threshold: 0, rootMargin: "-1px 0px 0px 0px" }
       );
-
       observer.observe(header);
       return observer;
     };
 
     let observer = attachObserver();
     let retryTimer: ReturnType<typeof setTimeout>;
-
     if (!observer) {
-      retryTimer = setTimeout(() => {
-        observer = attachObserver();
-      }, 300);
+      retryTimer = setTimeout(() => { observer = attachObserver(); }, 300);
     }
 
     return () => {
@@ -101,8 +88,7 @@ export default function ItemDetailPage() {
         ]);
 
         if (headerRes.ok) {
-          const headerData = await headerRes.json();
-          setHeaderData(headerData);
+          setHeaderData(await headerRes.json());
         } else {
           setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
@@ -114,7 +100,7 @@ export default function ItemDetailPage() {
           setItemsLoading(false);
           return;
         }
-        
+
         const portalsData = await portalsRes.json();
         const matchedPortal = portalsData.find((p: Portal) => {
           const hrefSlug = p.href.replace(/^\//, '').toLowerCase();
@@ -137,7 +123,7 @@ export default function ItemDetailPage() {
           setItemsLoading(false);
           return;
         }
-        
+
         const itemsData = await itemsRes.json();
         const matchedItem = itemsData.find((item: PortalItem) => {
           const itemLinkSlug = item.link.split('/').pop()?.toLowerCase();
@@ -150,8 +136,7 @@ export default function ItemDetailPage() {
           setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
         }
         setItemsLoading(false);
-      } catch (error) {
-        console.error('Error fetching item data:', error);
+      } catch {
         setItemError(ERROR_MESSAGES.DB_CONNECTION);
         setHeaderLoading(false);
         setItemsLoading(false);
@@ -164,22 +149,17 @@ export default function ItemDetailPage() {
   }, [portalSlug, itemSlug]);
 
   const scrollToContent = () => {
-    const contentSection = document.getElementById("content-section");
-    if (contentSection) {
-      contentSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    document.getElementById("content-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (!portal && !isLoading || !currentItem && !isLoading) {
+  if ((!portal || !currentItem) && !isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar isScrolled={isScrolled} />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <p className="text-gray-500 mb-4">Item tidak ditemukan</p>
-            <Link href="/" className="text-blue-600 hover:underline">
-              Kembali ke halaman utama
-            </Link>
+            <Link href="/" className="text-blue-600 hover:underline">Kembali ke halaman utama</Link>
           </div>
         </div>
         <Footer />
@@ -193,18 +173,18 @@ export default function ItemDetailPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar isScrolled={isScrolled} />
 
-      {/* Header */}
+      {/* Hero Header */}
       <header
         id="main-header"
-        className="relative h-[30vh] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
+        className="relative h-[40vh] min-h-[240px] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
       >
         <div className="absolute inset-0 bg-[#333333]" />
         {headerLoading ? (
           <div className="absolute inset-0 flex items-center justify-center animate-pulse">
             <div className="text-center w-full px-4 pt-16 pb-10">
-              <div className="h-12 md:h-16 bg-white/20 rounded-lg max-w-lg mx-auto mb-4" />
-              <div className="h-5 bg-white/10 rounded max-w-sm mx-auto mb-2" />
-              <div className="h-5 bg-white/10 rounded max-w-xs mx-auto" />
+              <div className="h-8 sm:h-12 md:h-16 bg-white/20 rounded-lg max-w-xs sm:max-w-lg mx-auto mb-4" />
+              <div className="h-4 sm:h-5 bg-white/10 rounded max-w-[200px] sm:max-w-sm mx-auto mb-2" />
+              <div className="h-4 sm:h-5 bg-white/10 rounded max-w-[160px] sm:max-w-xs mx-auto" />
             </div>
           </div>
         ) : (
@@ -218,10 +198,10 @@ export default function ItemDetailPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-[#333333]/80 via-[#333333]/70 to-[#333333]/60 halftone-pattern" />
             <div className="container mx-auto px-4 relative z-10 w-full pt-16 pb-10">
               <div className={`text-center transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <h1 className="text-white text-5xl md:text-7xl font-bold tracking-wide drop-shadow-2xl mb-4">
+                <h1 className="text-white text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-wide drop-shadow-2xl mb-3 sm:mb-4 break-words">
                   {currentItem?.name.toUpperCase()}
                 </h1>
-                <p className="text-white/90 text-lg md:text-xl max-w-2xl mx-auto drop-shadow-lg">
+                <p className="text-white/90 text-sm sm:text-base md:text-lg lg:text-xl max-w-xs sm:max-w-xl md:max-w-2xl mx-auto drop-shadow-lg px-2">
                   {currentItem?.description}
                 </p>
               </div>
@@ -230,44 +210,62 @@ export default function ItemDetailPage() {
         )}
         <button
           onClick={scrollToContent}
-          className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20 animate-bounce cursor-pointer hover:scale-110 transition-transform"
+          className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 animate-bounce cursor-pointer hover:scale-110 transition-transform"
           aria-label="Scroll to Content"
         >
-          <ChevronDown className="text-white w-8 h-8 drop-shadow-lg" />
+          <ChevronDown className="text-white w-7 h-7 sm:w-8 sm:h-8 drop-shadow-lg" />
         </button>
       </header>
 
       {/* Content */}
-      <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-16 flex-1">
+      <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-12 sm:py-16 flex-1">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-8">
+
+          {/* Breadcrumb — wrappable di mobile kecil */}
+          <nav className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs sm:text-sm mb-6 sm:mb-8 text-gray-500">
+            <Link href="/" className="flex items-center gap-1 hover:text-[#0072BC] transition-colors shrink-0">
+              <House className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Beranda</span>
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 shrink-0" />
+            <Link href={portalHref} className="hover:text-[#0072BC] transition-colors shrink-0 max-w-[120px] sm:max-w-none truncate">
+              {portal?.name ?? portalSlug}
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 shrink-0" />
+            <span className="text-[#111111] font-medium truncate max-w-[140px] sm:max-w-[200px]">
+              {currentItem?.name ?? itemSlug}
+            </span>
+          </nav>
+
+          {/* Layout: sidebar kiri, konten kanan */}
+          <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
             <PortalSidebar />
             <div className="flex-1 min-w-0">
               {itemsLoading ? (
-                <div className="max-w-4xl mx-auto animate-pulse">
-                  <div className="text-center mb-12">
-                    <div className="h-8 bg-gray-200 rounded max-w-xs mx-auto mb-4" />
-                    <div className="h-4 bg-gray-100 rounded max-w-sm mx-auto" />
+                <div className="animate-pulse">
+                  <div className="text-center mb-8 sm:mb-12">
+                    <div className="h-7 sm:h-8 bg-gray-200 rounded max-w-[160px] sm:max-w-xs mx-auto mb-3" />
+                    <div className="h-3 sm:h-4 bg-gray-100 rounded max-w-[200px] sm:max-w-sm mx-auto" />
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-4 bg-white border-2 border-gray-100 rounded-lg p-6">
-                        <div className="bg-gray-200 rounded-lg w-12 h-12 shrink-0" />
-                        <div className="flex-1">
-                          <div className="h-5 bg-gray-200 rounded w-3/4" />
+                      <div key={i} className="flex items-center gap-3 sm:gap-4 bg-white border-2 border-gray-100 rounded-lg p-4 sm:p-6">
+                        <div className="bg-gray-200 rounded-lg w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="h-4 sm:h-5 bg-gray-200 rounded w-3/4" />
                         </div>
-                        <div className="bg-gray-100 rounded w-5 h-5 shrink-0" />
+                        <div className="bg-gray-100 rounded w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-center mb-12">
-                    <h2 className="text-[#111111] text-3xl md:text-4xl font-bold mb-4">
+                <div>
+                  <div className="text-center mb-8 sm:mb-12">
+                    <h2 className="text-[#111111] text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 break-words">
                       Dokumen {currentItem?.name}
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base px-2">
                       Pilih dokumen untuk mengakses file yang tersimpan di Google Drive
                     </p>
                   </div>
@@ -275,30 +273,30 @@ export default function ItemDetailPage() {
                   {itemError && <ErrorMessage message={itemError} />}
 
                   {currentItem?.documents && currentItem.documents.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {currentItem.documents.map((doc, index) => (
                         <a
                           key={index}
                           href={doc.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group flex items-center justify-between bg-white border-2 border-gray-200 hover:border-[#0072BC] rounded-lg p-6 transition-all hover:shadow-lg"
+                          className="group flex items-center justify-between bg-white border-2 border-gray-200 hover:border-[#0072BC] rounded-lg p-4 sm:p-6 transition-all hover:shadow-lg gap-3"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="bg-[#0072BC]/10 p-3 rounded-lg group-hover:bg-[#0072BC]/20 transition-all">
-                              <FileText className="w-6 h-6 text-[#0072BC]" />
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div className="bg-[#0072BC]/10 p-2 sm:p-3 rounded-lg group-hover:bg-[#0072BC]/20 transition-all shrink-0">
+                              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#0072BC]" />
                             </div>
-                            <h3 className="text-lg font-semibold text-[#111111] group-hover:text-[#0072BC] transition-colors">
+                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-[#111111] group-hover:text-[#0072BC] transition-colors break-words min-w-0">
                               {doc.title}
                             </h3>
                           </div>
-                          <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-[#0072BC] transition-colors" />
+                          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#0072BC] transition-colors shrink-0" />
                         </a>
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-gray-500">Belum ada dokumen untuk item ini</p>
+                      <p className="text-gray-500 text-sm sm:text-base">Belum ada dokumen untuk item ini</p>
                     </div>
                   )}
                 </div>
