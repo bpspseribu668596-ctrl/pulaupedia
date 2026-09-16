@@ -1,0 +1,454 @@
+import { NextRequest, NextResponse } from "next/server";
+import { validateFasihSession } from "@/lib/fasih-auth";
+import { getFasihImports, writeFasihActivityLog } from "@/lib/fasih-db";
+import pool from "@/lib/db";
+
+// ─── GET: list import history ─────────────────────────────────────────────────
+export async function GET() {
+  try {
+    const user = await validateFasihSession();
+    if (!user) return NextResponse.json({ error: "Tidak terautentikasi" }, { status: 401 });
+
+    const imports = await getFasihImports();
+    return NextResponse.json({ imports });
+  } catch (err) {
+    console.error("[FASIH] import GET error:", err);
+    return NextResponse.json({ error: "Gagal memuat riwayat import" }, { status: 500 });
+  }
+}
+
+// ─── Expected CSV/Excel columns (order-independent, trimmed) ─────────────────
+const REQUIRED_HEADERS = [
+  "username",
+  "name",
+  "regioncode",
+  "islandname",
+  "regionname",
+  "totalregion",
+  "approved",
+  "draft",
+  "open",
+  "submitted",
+  "rejected",
+  "editedadmin",
+  "revoked",
+  "submittedrespondent",
+  "editedsupervisor",
+];
+
+function normalizeHeader(h: string): string {
+  return h.toLowerCase().replace(/[\s_\-\/]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+// Map normalised header → DB field name
+const HEADER_MAP: Record<string, string> = {
+  username:             "username",
+  name:                 "name",
+  regioncode:           "regionCode",
+  islandname:           "islandName",
+  regionname:           "regionName",
+  totalregion:          "totalRegion",
+  approved:             "approved",
+  draft:                "draft",
+  open:                 "open",
+  submitted:            "submitted",
+  rejected:             "rejected",
+  editedadmin:          "editedAdmin",
+  revoked:              "revoked",
+  submittedrespondent:  "submittedRespondent",
+  editedsupervisor:     "editedSupervisor",
+};
+
+interface ParsedRow {
+  rowNumber: number;
+  username: string;
+  name: string;
+  regionCode: string;
+  islandName: string;
+  regionName: string;
+  totalRegion: number;
+  approved: number;
+  draft: number;
+  open: number;
+  submitted: number;
+  rejected: number;
+  editedAdmin: number;
+  revoked: number;
+  submittedRespondent: number;
+  editedSupervisor: number;
+}
+
+interface RowError {
+  rowNumber: number;
+  errorType: string;
+  errorMessage: string;
+  rawData: Record<string, string>;
+}
+
+// Parse CSV text — handles quoted fields, CRLF and LF
+function parseCSV(text: string): string[][] {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  return lines.map((line) => {
+    const cols: string[] = [];
+    let cur = "";
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuote) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') inQuote = false;
+        else cur += ch;
+      } else {
+        if (ch === '"') inQuote = true;
+        else if (ch === ",") { cols.push(cur); cur = ""; }
+        else cur += ch;
+      }
+    }
+    cols.push(cur);
+    return cols.map((c) => c.trim());
+  });
+}
+
+// ─── POST: process import ─────────────────────────────────────────────────────
+export async function POST(request: NextRequest) {
+  const user = await validateFasihSession();
+  if (!user) return NextResponse.json({ error: "Tidak terautentikasi" }, { status: 401 });
+  if (user.role !== "admin") return NextResponse.json({ error: "Akses ditolak" }, { status: 403 });
+
+  let importId: string | null = null;
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file) return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext !== "csv") {
+      return NextResponse.json({ error: "Hanya file CSV (.csv) yang didukung" }, { status: 400 });
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "Ukuran file maksimal 10MB" }, { status: 400 });
+    }
+
+    const text = await file.text();
+    const rows = parseCSV(text).filter((r) => r.some((c) => c !== ""));
+
+    if (rows.length < 2) {
+      return NextResponse.json({ error: "File kosong atau tidak memiliki data" }, { status: 400 });
+    }
+
+    // ── Header validation ──────────────────────────────────────────────────
+    const rawHeaders = rows[0];
+    const normHeaders = rawHeaders.map(normalizeHeader);
+
+    const missingHeaders = REQUIRED_HEADERS.filter((h) => !normHeaders.includes(h));
+    if (missingHeaders.length > 0) {
+      return NextResponse.json(
+        { error: `Header kolom tidak lengkap. Kolom yang kurang: ${missingHeaders.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Build column index map
+    const colIdx: Record<string, number> = {};
+    normHeaders.forEach((h, i) => {
+      if (HEADER_MAP[h]) colIdx[HEADER_MAP[h]] = i;
+    });
+
+    const dataRows = rows.slice(1);
+    const totalRows = dataRows.length;
+
+    // Create import record (processing)
+    const importRes = await pool.query(
+      `INSERT INTO public.fasih_imports
+         (file_name, imported_by, total_rows, success_rows, failed_rows, status)
+       VALUES ($1, $2, $3, 0, 0, 'processing')
+       RETURNING id`,
+      [file.name, user.id, totalRows]
+    );
+    importId = importRes.rows[0].id;
+
+    // ── Parse & validate rows ──────────────────────────────────────────────
+    const parsed: ParsedRow[] = [];
+    const rowErrors: RowError[] = [];
+
+    for (let i = 0; i < dataRows.length; i++) {
+      const cols = dataRows[i];
+      const rowNum = i + 2; // 1-indexed, row 1 is header
+
+      const raw: Record<string, string> = {};
+      Object.entries(colIdx).forEach(([field, idx]) => {
+        raw[field] = cols[idx] ?? "";
+      });
+
+      // Skip fully empty rows
+      if (Object.values(raw).every((v) => v === "")) continue;
+
+      const errors: string[] = [];
+
+      // Required text fields
+      if (!raw.name?.trim()) errors.push("name tidak boleh kosong");
+      if (!raw.regionCode?.trim()) errors.push("regionCode tidak boleh kosong");
+      if (!raw.islandName?.trim()) errors.push("islandName tidak boleh kosong");
+      if (!raw.regionName?.trim()) errors.push("regionName tidak boleh kosong");
+
+      // Integer fields
+      const intFields = ["totalRegion","approved","draft","open","submitted",
+                         "rejected","editedAdmin","revoked","submittedRespondent","editedSupervisor"];
+      const intValues: Record<string, number> = {};
+      for (const f of intFields) {
+        const v = parseInt(raw[f] ?? "0", 10);
+        if (isNaN(v) || v < 0) {
+          errors.push(`${f} harus berupa angka >= 0`);
+        } else {
+          intValues[f] = v;
+        }
+      }
+
+      if (errors.length > 0) {
+        rowErrors.push({
+          rowNumber: rowNum,
+          errorType: "VALIDATION_ERROR",
+          errorMessage: errors.join("; "),
+          rawData: raw,
+        });
+        continue;
+      }
+
+      parsed.push({
+        rowNumber: rowNum,
+        username:            raw.username?.trim() ?? "",
+        name:                raw.name.trim(),
+        regionCode:          raw.regionCode.trim(),
+        islandName:          raw.islandName.trim(),
+        regionName:          raw.regionName.trim(),
+        totalRegion:         intValues.totalRegion,
+        approved:            intValues.approved,
+        draft:               intValues.draft,
+        open:                intValues.open,
+        submitted:           intValues.submitted,
+        rejected:            intValues.rejected,
+        editedAdmin:         intValues.editedAdmin,
+        revoked:             intValues.revoked,
+        submittedRespondent: intValues.submittedRespondent,
+        editedSupervisor:    intValues.editedSupervisor,
+      });
+    }
+
+    // ── DB upsert (idempotent, keyed on pencacah username + region_code) ──
+    let successCount = 0;
+
+    for (const row of parsed) {
+      try {
+        await pool.query("BEGIN");
+
+        // 1. Upsert officer (pencacah) — keyed on username if provided, else name
+        let officerId: string;
+        if (row.username) {
+          const existing = await pool.query(
+            `SELECT id FROM public.fasih_officers WHERE username = $1 AND officer_role = 'pencacah'`,
+            [row.username]
+          );
+          if (existing.rows.length > 0) {
+            officerId = existing.rows[0].id;
+            // Update name if changed
+            await pool.query(
+              `UPDATE public.fasih_officers SET name = $1 WHERE id = $2`,
+              [row.name, officerId]
+            );
+          } else {
+            const ins = await pool.query(
+              `INSERT INTO public.fasih_officers (username, name, officer_role, is_active)
+               VALUES ($1, $2, 'pencacah', true)
+               ON CONFLICT DO NOTHING
+               RETURNING id`,
+              [row.username, row.name]
+            );
+            if (ins.rows.length === 0) {
+              // Race — fetch again
+              const re = await pool.query(
+                `SELECT id FROM public.fasih_officers WHERE username = $1`,
+                [row.username]
+              );
+              officerId = re.rows[0].id;
+            } else {
+              officerId = ins.rows[0].id;
+            }
+          }
+        } else {
+          // No username — match by name
+          const existing = await pool.query(
+            `SELECT id FROM public.fasih_officers WHERE name = $1 AND officer_role = 'pencacah'`,
+            [row.name]
+          );
+          if (existing.rows.length > 0) {
+            officerId = existing.rows[0].id;
+          } else {
+            const ins = await pool.query(
+              `INSERT INTO public.fasih_officers (name, officer_role, is_active)
+               VALUES ($1, 'pencacah', true)
+               RETURNING id`,
+              [row.name]
+            );
+            officerId = ins.rows[0].id;
+          }
+        }
+
+        // 2. Upsert region — keyed on region_code (TEXT)
+        const regionRes = await pool.query(
+          `INSERT INTO public.fasih_regions
+             (region_code, island_name, region_name, total_region)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (id) DO UPDATE
+             SET island_name  = EXCLUDED.island_name,
+                 region_name  = EXCLUDED.region_name,
+                 total_region = EXCLUDED.total_region
+           RETURNING id`,
+          // We use a deterministic UUID from region_code via a sub-select
+          // Actually fasih_regions has no unique on region_code in the schema,
+          // so we check first then upsert by id.
+          [row.regionCode, row.islandName, row.regionName, row.totalRegion]
+        );
+
+        // region_code has no unique constraint — check existence first
+        const existingRegion = await pool.query(
+          `SELECT id FROM public.fasih_regions WHERE region_code = $1`,
+          [row.regionCode]
+        );
+
+        let regionId: string;
+        if (existingRegion.rows.length > 0) {
+          regionId = existingRegion.rows[0].id;
+          // Update other fields
+          await pool.query(
+            `UPDATE public.fasih_regions
+             SET island_name = $1, region_name = $2, total_region = $3
+             WHERE id = $4`,
+            [row.islandName, row.regionName, row.totalRegion, regionId]
+          );
+          // Rollback the incorrect INSERT above
+          await pool.query("ROLLBACK");
+          await pool.query("BEGIN");
+        } else {
+          regionId = regionRes.rows[0].id;
+        }
+
+        // 3. Upsert assignment — unique on (pencacah_id, region_id)
+        const assignmentRes = await pool.query(
+          `INSERT INTO public.fasih_assignments
+             (region_id, pencacah_id, pengawas_id)
+           VALUES ($1, $2, NULL)
+           ON CONFLICT (pencacah_id, region_id) DO UPDATE
+             SET updated_at = now()
+           RETURNING id`,
+          [regionId, officerId]
+        );
+        const assignmentId = assignmentRes.rows[0].id;
+
+        // 4. Upsert status — unique on assignment_id
+        await pool.query(
+          `INSERT INTO public.fasih_region_status
+             (assignment_id, approved, draft, open, submitted, rejected,
+              edited_admin, revoked, submitted_respondent, edited_supervisor)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+           ON CONFLICT (assignment_id) DO UPDATE
+             SET approved            = EXCLUDED.approved,
+                 draft               = EXCLUDED.draft,
+                 open                = EXCLUDED.open,
+                 submitted           = EXCLUDED.submitted,
+                 rejected            = EXCLUDED.rejected,
+                 edited_admin        = EXCLUDED.edited_admin,
+                 revoked             = EXCLUDED.revoked,
+                 submitted_respondent = EXCLUDED.submitted_respondent,
+                 edited_supervisor   = EXCLUDED.edited_supervisor,
+                 updated_at          = now()`,
+          [
+            assignmentId,
+            row.approved, row.draft, row.open, row.submitted,
+            row.rejected, row.editedAdmin, row.revoked,
+            row.submittedRespondent, row.editedSupervisor,
+          ]
+        );
+
+        await pool.query("COMMIT");
+        successCount++;
+      } catch (rowErr) {
+        await pool.query("ROLLBACK");
+        rowErrors.push({
+          rowNumber: row.rowNumber,
+          errorType: "DB_ERROR",
+          errorMessage: rowErr instanceof Error ? rowErr.message : "Database error",
+          rawData: { name: row.name, regionCode: row.regionCode },
+        });
+      }
+    }
+
+    // ── Save row errors ────────────────────────────────────────────────────
+    if (rowErrors.length > 0) {
+      for (const e of rowErrors) {
+        await pool.query(
+          `INSERT INTO public.fasih_import_errors
+             (import_id, row_number, error_type, error_message, raw_data)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [importId, e.rowNumber, e.errorType, e.errorMessage, JSON.stringify(e.rawData)]
+        );
+      }
+    }
+
+    // ── Finalise import record ─────────────────────────────────────────────
+    const finalStatus =
+      rowErrors.length === 0
+        ? "completed"
+        : successCount === 0
+        ? "failed"
+        : "completed_with_errors";
+
+    await pool.query(
+      `UPDATE public.fasih_imports
+       SET status       = $1,
+           success_rows = $2,
+           failed_rows  = $3
+       WHERE id = $4`,
+      [finalStatus, successCount, rowErrors.length, importId]
+    );
+
+    // Activity log
+    await writeFasihActivityLog({
+      userId: user.id,
+      action: "IMPORT",
+      tableName: "fasih_imports",
+      recordId: importId,
+      newData: {
+        file_name:    file.name,
+        total_rows:   totalRows,
+        success_rows: successCount,
+        failed_rows:  rowErrors.length,
+        status:       finalStatus,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      importId,
+      totalRows,
+      successRows: successCount,
+      failedRows:  rowErrors.length,
+      status:      finalStatus,
+    });
+  } catch (err) {
+    console.error("[FASIH] import POST error:", err);
+
+    // Mark import as failed if record was created
+    if (importId) {
+      await pool.query(
+        `UPDATE public.fasih_imports
+         SET status = 'failed', error_message = $1
+         WHERE id = $2`,
+        [err instanceof Error ? err.message : "Unknown error", importId]
+      ).catch(() => null);
+    }
+
+    return NextResponse.json({ error: "Terjadi kesalahan saat import" }, { status: 500 });
+  }
+}
