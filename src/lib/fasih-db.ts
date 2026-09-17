@@ -358,8 +358,10 @@ export async function getFasihAssignments(params: {
   pencacahId?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 }): Promise<{ rows: AssignmentRow[]; total: number }> {
-  const { search = '', island = '', pencacahId = '', page = 1, pageSize = 50 } = params;
+  const { search = '', island = '', pencacahId = '', page = 1, pageSize = 50, sortBy = '', sortDir = 'asc' } = params;
   const offset = (page - 1) * pageSize;
 
   const conditions: string[] = [];
@@ -385,6 +387,32 @@ export async function getFasihAssignments(params: {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  // Build ORDER BY clause — only allow specific columns for safety
+  const validSortColumns = ['region_code', 'island_name', 'region_name', 'total_region', 'pencacah_name', 'pengawas_name', 'approved', 'draft', 'open', 'submitted', 'rejected', 'edited_admin', 'revoked', 'submitted_respondent', 'edited_supervisor'];
+  let orderBy = 'ORDER BY r.island_name ASC, r.region_name ASC';
+  
+  if (sortBy && validSortColumns.includes(sortBy)) {
+    const columnMap: Record<string, string> = {
+      'region_code': 'r.region_code',
+      'island_name': 'r.island_name',
+      'region_name': 'r.region_name',
+      'total_region': 'r.total_region',
+      'pencacah_name': 'pc.name',
+      'pengawas_name': 'pw.name',
+      'approved': 's.approved',
+      'draft': 's.draft',
+      'open': 's.open',
+      'submitted': 's.submitted',
+      'rejected': 's.rejected',
+      'edited_admin': 's.edited_admin',
+      'revoked': 's.revoked',
+      'submitted_respondent': 's.submitted_respondent',
+      'edited_supervisor': 's.edited_supervisor',
+    };
+    const direction = sortDir === 'desc' ? 'DESC' : 'ASC';
+    orderBy = `ORDER BY ${columnMap[sortBy]} ${direction}`;
+  }
 
   const countResult = await pool.query(
     `SELECT COUNT(*)::int AS total
@@ -424,7 +452,7 @@ export async function getFasihAssignments(params: {
      LEFT JOIN public.fasih_officers pw ON pw.id = a.pengawas_id
      LEFT JOIN public.fasih_region_status s ON s.assignment_id = a.id
      ${where}
-     ORDER BY r.island_name ASC, r.region_name ASC
+     ${orderBy}
      LIMIT $${idx} OFFSET $${idx + 1}`,
     [...values, pageSize, offset]
   );

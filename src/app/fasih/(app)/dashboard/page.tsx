@@ -171,7 +171,7 @@ export default function FasihDashboardPage() {
         </div>
       ) : null}
 
-      {/* Rekap per Pencacah */}
+      {/* Rekap per Pencacah
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Rekap per Pencacah</CardTitle>
@@ -253,9 +253,9 @@ export default function FasihDashboardPage() {
             )
           )}
         </CardContent>
-      </Card>
+      </Card> */}
 
-      {/* Catatan Pengawas */}
+      {/* Catatan Pengawas
       <Card className="border-dashed">
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
@@ -268,7 +268,7 @@ export default function FasihDashboardPage() {
             otomatis setelah mapping Pengawas diisi.
           </p>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

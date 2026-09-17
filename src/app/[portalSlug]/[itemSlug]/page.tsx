@@ -9,6 +9,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 
 interface Portal {
   id: number;
@@ -45,6 +46,7 @@ export default function ItemDetailPage() {
   const [currentItem, setCurrentItem] = useState<PortalItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
+  const [notFoundState, setNotFoundState] = useState(false);
 
   const [headerError, setHeaderError] = useState<string | null>(null);
   const [itemError, setItemError] = useState<string | null>(null);
@@ -95,9 +97,8 @@ export default function ItemDetailPage() {
         setHeaderLoading(false);
 
         if (!portalsRes.ok) {
-          setItemError(ERROR_MESSAGES.DB_CONNECTION);
-          setIsLoading(false);
-          setItemsLoading(false);
+          setNotFoundState(true);
+          setHeaderLoading(false);
           return;
         }
 
@@ -108,9 +109,8 @@ export default function ItemDetailPage() {
         });
 
         if (!matchedPortal) {
-          setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
-          setIsLoading(false);
-          setItemsLoading(false);
+          setNotFoundState(true);
+          setHeaderLoading(false);
           return;
         }
 
@@ -133,7 +133,8 @@ export default function ItemDetailPage() {
         if (matchedItem) {
           setCurrentItem(matchedItem);
         } else {
-          setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
+          setNotFoundState(true);
+          return;
         }
         setItemsLoading(false);
       } catch {
@@ -152,19 +153,12 @@ export default function ItemDetailPage() {
     document.getElementById("content-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  if (notFoundState) {
+    notFound();
+  }
+
   if ((!portal || !currentItem) && !isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar isScrolled={isScrolled} />
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-gray-500 mb-4">Item tidak ditemukan</p>
-            <Link href="/" className="text-blue-600 hover:underline">Kembali ke halaman utama</Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    notFound();
   }
 
   const portalHref = `/${portalSlug}`;

@@ -14,10 +14,19 @@ export async function GET(request: NextRequest) {
     const island     = searchParams.get("island")     ?? "";
     const pencacahId = searchParams.get("pencacahId") ?? "";
     const page       = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
-    const pageSize   = Math.min(100, Math.max(10, parseInt(searchParams.get("pageSize") ?? "50", 10)));
+    const pageSize   = parseInt(searchParams.get("pageSize") ?? "10", 10);
+    
+    // Limit page size — jika > total data, fetch semua
+    let finalPageSize = pageSize;
+    if (pageSize > 10000) finalPageSize = 999999; // "Semua" — fetch semua data
+    else if (pageSize < 1) finalPageSize = 10;
+    else if (pageSize > 500) finalPageSize = 500; // Cap at 500 untuk safety
+    
+    const sortBy     = searchParams.get("sortBy")     ?? "";
+    const sortDir    = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
 
     const [result, islands, pencacahList] = await Promise.all([
-      getFasihAssignments({ search, island, pencacahId, page, pageSize }),
+      getFasihAssignments({ search, island, pencacahId, page, pageSize, sortBy, sortDir }),
       getDistinctIslands(),
       getFasihOfficers("pencacah"),
     ]);

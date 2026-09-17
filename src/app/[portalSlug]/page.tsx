@@ -8,6 +8,7 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   BookOpen, Archive, FileText, Package, Laptop, DollarSign,
   BarChart3, Award, FileSpreadsheet, Megaphone, ShoppingCart, Users,
@@ -45,6 +46,7 @@ export default function DynamicPortalPage() {
   const [portal, setPortal] = useState<Portal | null>(null);
   const [items, setItems] = useState<PortalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [notFoundState, setNotFoundState] = useState(false);
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
 
   const [headerError, setHeaderError] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export default function DynamicPortalPage() {
         setHeaderLoading(false);
 
         if (!portalsRes.ok) {
-          setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
+          setNotFoundState(true);
           setIsLoading(false);
           setItemsLoading(false);
           return;
@@ -110,7 +112,7 @@ export default function DynamicPortalPage() {
         });
 
         if (!currentPortal) {
-          setPortalError(ERROR_MESSAGES.PORTALS_UNAVAILABLE);
+          setNotFoundState(true);
           setIsLoading(false);
           setItemsLoading(false);
           return;
@@ -150,18 +152,7 @@ export default function DynamicPortalPage() {
   const getIconComponent = (iconName: string) => iconMap[iconName] || FileSpreadsheet;
 
   if (!portal && !isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar isScrolled={isScrolled} />
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-gray-500 mb-4">Portal tidak ditemukan</p>
-            <Link href="/" className="text-blue-600 hover:underline">Kembali ke halaman utama</Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    notFound();
   }
 
   return (

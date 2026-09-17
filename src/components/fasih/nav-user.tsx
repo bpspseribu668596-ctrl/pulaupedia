@@ -6,6 +6,7 @@ import { ChevronsUpDown, LogOut, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -74,29 +75,31 @@ export function FasihNavUser({ user }: FasihNavUserProps) {
 
           <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
             {/* User info header */}
-            <DropdownMenuLabel>
-              <div className="flex items-center gap-2 px-1 py-1.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-bold">
-                  {initials || <User className="h-4 w-4" />}
-                </span>
-                <div className="grid flex-1 text-sm leading-tight min-w-0">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    @{user.username}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <div className="flex items-center gap-2 px-1 py-1.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-bold">
+                    {initials || <User className="h-4 w-4" />}
                   </span>
+                  <div className="grid flex-1 text-sm leading-tight min-w-0">
+                    <span className="truncate font-semibold">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      @{user.username}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuLabel>
+              </DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>{isLoggingOut ? "Keluar..." : "Logout"}</span>
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>{isLoggingOut ? "Keluar..." : "Logout"}</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
