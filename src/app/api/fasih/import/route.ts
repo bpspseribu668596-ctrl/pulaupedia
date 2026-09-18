@@ -295,44 +295,19 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // 2. Upsert region — keyed on region_code (TEXT)
+        // 2. Upsert region — keyed on region_code
         const regionRes = await pool.query(
           `INSERT INTO public.fasih_regions
              (region_code, island_name, region_name, total_region)
            VALUES ($1, $2, $3, $4)
-           ON CONFLICT (id) DO UPDATE
+           ON CONFLICT (region_code) DO UPDATE
              SET island_name  = EXCLUDED.island_name,
                  region_name  = EXCLUDED.region_name,
                  total_region = EXCLUDED.total_region
            RETURNING id`,
-          // We use a deterministic UUID from region_code via a sub-select
-          // Actually fasih_regions has no unique on region_code in the schema,
-          // so we check first then upsert by id.
           [row.regionCode, row.islandName, row.regionName, row.totalRegion]
         );
-
-        // region_code has no unique constraint — check existence first
-        const existingRegion = await pool.query(
-          `SELECT id FROM public.fasih_regions WHERE region_code = $1`,
-          [row.regionCode]
-        );
-
-        let regionId: string;
-        if (existingRegion.rows.length > 0) {
-          regionId = existingRegion.rows[0].id;
-          // Update other fields
-          await pool.query(
-            `UPDATE public.fasih_regions
-             SET island_name = $1, region_name = $2, total_region = $3
-             WHERE id = $4`,
-            [row.islandName, row.regionName, row.totalRegion, regionId]
-          );
-          // Rollback the incorrect INSERT above
-          await pool.query("ROLLBACK");
-          await pool.query("BEGIN");
-        } else {
-          regionId = regionRes.rows[0].id;
-        }
+        const regionId: string = regionRes.rows[0].id;
 
         // 3. Upsert assignment — unique on (pencacah_id, region_id)
         const assignmentRes = await pool.query(

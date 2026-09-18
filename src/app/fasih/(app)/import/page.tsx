@@ -37,7 +37,25 @@ import {
   XCircle,
   AlertTriangle,
   Info,
+  Download,
 } from "lucide-react";
+
+async function downloadTemplate() {
+  const res = await fetch("/api/fasih/export");
+  if (!res.ok) {
+    alert("Gagal download template. Coba lagi.");
+    return;
+  }
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  a.download = match?.[1] ?? "template_fasih.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 interface ImportRecord {
   id: string;
@@ -207,9 +225,20 @@ export default function FasihImportPage() {
       {/* ── Format panduan ────────────────────────────────────────────────── */}
       <Card className="border-dashed">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-medium">Format CSV yang Diperlukan</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Format CSV yang Diperlukan</CardTitle>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs shrink-0"
+              onClick={() => void downloadTemplate()}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download Template
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

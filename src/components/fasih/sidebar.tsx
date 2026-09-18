@@ -1,12 +1,6 @@
 "use client";
 
 import * as React from "react";
-import {
-  LayoutDashboard,
-  Users,
-  MapPin,
-  Upload,
-} from "lucide-react";
 import { FasihNavMain } from "@/components/fasih/nav-main";
 import { FasihNavUser } from "@/components/fasih/nav-user";
 import {
@@ -14,14 +8,35 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-const navItems = [
-  { title: "Dashboard", url: "/fasih/dashboard", icon: LayoutDashboard },
-  { title: "Petugas",   url: "/fasih/petugas",   icon: Users },
-  { title: "Wilayah",   url: "/fasih/wilayah",   icon: MapPin },
-  { title: "Import Data", url: "/fasih/import",  icon: Upload },
+const navSections = [
+  {
+    title: "Overview",
+    url: "#",
+    items: [
+      { title: "Dashboard", url: "/fasih/dashboard" },
+    ],
+  },
+  {
+    title: "Data",
+    url: "#",
+    items: [
+      { title: "Petugas", url: "/fasih/petugas" },
+      { title: "Wilayah", url: "/fasih/wilayah" },
+    ],
+  },
+  {
+    title: "Import",
+    url: "#",
+    items: [
+      { title: "Import Data", url: "/fasih/import" },
+    ],
+  },
 ];
 
 interface FasihSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -34,23 +49,30 @@ interface FasihSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function FasihSidebar({ user, ...props }: FasihSidebarProps) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
-          {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs shrink-0">
-            F
-          </div> */}
-          <div className="flex flex-col gap-0.5 leading-none min-w-0">
-            <span className="font-semibold text-sm truncate">FASIH</span>
-            <span className="text-xs text-muted-foreground truncate">
-              Monitoring Status
-            </span>
-          </div>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              render={<a href="/fasih/dashboard" />}
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs shrink-0">
+                F
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold text-sm">FASIH</span>
+                <span className="text-xs text-muted-foreground">
+                  Monitoring Status
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        <FasihNavMain items={navItems} />
+        <FasihNavMain sections={navSections} />
       </SidebarContent>
 
       <SidebarFooter>
