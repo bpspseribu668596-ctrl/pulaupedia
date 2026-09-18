@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { validateFasihSession } from "@/lib/fasih-auth";
 import pool from "@/lib/db";
-
-const CSV_HEADER =
-  "username,name,regionCode,islandName,regionName,totalRegion,approved,draft,open,submitted,rejected,editedAdmin,revoked,submittedRespondent,editedSupervisor";
-
-function escapeCSVField(value: string | number | null | undefined): string {
-  const str = String(value ?? "");
-  if (str.includes(",") || str.includes("\n") || str.includes('"')) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
+import { Workbook } from "exceljs";
 
 export async function GET() {
   try {
@@ -60,15 +50,48 @@ export async function GET() {
        ORDER BY r.island_name ASC, r.region_name ASC`
     );
 
-    const lines: string[] = [CSV_HEADER];
+    // Create workbook
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet("Data");
 
-    for (const row of rows) {
-      const fields = [
-        escapeCSVField(row.pencacah_username ?? ""),
-        escapeCSVField(row.pencacah_name),
-        escapeCSVField(row.region_code),
-        escapeCSVField(row.island_name),
-        escapeCSVField(row.region_name),
+    // Header row
+    const headers = [
+      "username",
+      "name",
+      "regionCode",
+      "islandName",
+      "regionName",
+      "totalRegion",
+      "approved",
+      "draft",
+      "open",
+      "submitted",
+      "rejected",
+      "editedAdmin",
+      "revoked",
+      "submittedRespondent",
+      "editedSupervisor",
+    ];
+    worksheet.addRow(headers);
+
+    // Set header style
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, size: 11 };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD3D3D3" },
+    };
+    headerRow.alignment = { horizontal: "center", vertical: "middle" };
+
+    // Add data rows
+    rows.forEach((row) => {
+      worksheet.addRow([
+        row.pencacah_username || "",
+        row.pencacah_name,
+        row.region_code,
+        row.island_name,
+        row.region_name,
         row.total_region,
         row.approved,
         row.draft,
@@ -79,29 +102,71 @@ export async function GET() {
         row.revoked,
         row.submitted_respondent,
         row.edited_supervisor,
-      ];
-      lines.push(fields.join(","));
-    }
+      ]);
+    });
 
-    // Jika DB kosong, kembalikan template dengan 1 baris contoh
+    // Jika DB kosong, tambahkan 1 baris contoh
     if (rows.length === 0) {
-      lines.push(
-        "petugas@example.com,Nama Petugas,3101020001000600,PULAU PANGGANG,RT 006 RW 01,179,0,0,0,0,0,0,0,0,0"
-      );
+      worksheet.addRow([
+        "petugas@example.com",
+        "Nama Petugas",
+        "3101020001000600",
+        "PULAU PANGGANG",
+        "RT 006 RW 01",
+        179,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ]);
     }
 
-    const csv = lines.join("\n");
+    // Set column formatting
+    // Column C (regionCode) — TEXT format (@)
+    worksheet.getColumn(3).numFmt = "@"; // Text format
+    worksheet.getColumn(3).width = 18;
+
+    // Columns F-O (numbers) — number format 0 (no decimals)
+    for (let col = 6; col <= 15; col++) {
+      worksheet.getColumn(col).numFmt = "0";
+      worksheet.getColumn(col).alignment = { horizontal: "center" };
+      worksheet.getColumn(col).width = 12;
+    }
+
+    // Set text columns width
+    worksheet.getColumn(1).width = 22; // username
+    worksheet.getColumn(2).width = 20; // name
+    worksheet.getColumn(4).width = 16; // islandName
+    worksheet.getColumn(5).width = 18; // regionName
+
+    // Freeze header row
+    worksheet.views = [
+      {
+        state: "frozen",
+        ypSplit: 1,
+      } as any,
+    ];
+
+    // Generate buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+
     const now = new Date()
       .toISOString()
-      .replace("T", "_")
+      .replace(/T/, "_")
       .replace(/:/g, "-")
       .slice(0, 16);
 
-    return new NextResponse(csv, {
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="template_fasih_${now}.csv"`,
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="template_fasih_${now}.xlsx"`,
         "Cache-Control": "no-store",
       },
     });

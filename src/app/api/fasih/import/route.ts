@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateFasihSession } from "@/lib/fasih-auth";
 import { getFasihImports, writeFasihActivityLog } from "@/lib/fasih-db";
 import pool from "@/lib/db";
+import { Workbook } from "exceljs";
 
 // ─── GET: list import history ─────────────────────────────────────────────────
 export async function GET() {
@@ -109,6 +110,25 @@ function parseCSV(text: string): string[][] {
   });
 }
 
+// Parse XLSX file
+async function parseXLSX(data: any): Promise<string[][]> {
+  const workbook = new Workbook();
+  await workbook.xlsx.load(data);
+  const worksheet = workbook.worksheets[0];
+
+  const rows: string[][] = [];
+  worksheet.eachRow({ includeEmpty: false }, (row) => {
+    const values: string[] = row.values as any[];
+    rows.push(
+      values.slice(1).map((v) =>
+        v === null || v === undefined ? "" : String(v).trim()
+      )
+    );
+  });
+
+  return rows;
+}
+
 // ─── POST: process import ─────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const user = await validateFasihSession();
@@ -124,15 +144,23 @@ export async function POST(request: NextRequest) {
     if (!file) return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (ext !== "csv") {
-      return NextResponse.json({ error: "Hanya file CSV (.csv) yang didukung" }, { status: 400 });
+    if (ext !== "csv" && ext !== "xlsx") {
+      return NextResponse.json({ error: "Hanya file CSV (.csv) atau XLSX (.xlsx) yang didukung" }, { status: 400 });
     }
     if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json({ error: "Ukuran file maksimal 10MB" }, { status: 400 });
     }
 
-    const text = await file.text();
-    const rows = parseCSV(text).filter((r) => r.some((c) => c !== ""));
+    let rows: string[][];
+    if (ext === "csv") {
+      const text = await file.text();
+      rows = parseCSV(text).filter((r) => r.some((c) => c !== ""));
+    } else {
+      // XLSX
+      const arrayBuffer = await file.arrayBuffer();
+      rows = await parseXLSX(arrayBuffer);
+      rows = rows.filter((r) => r.some((c) => c !== ""));
+    }
 
     if (rows.length < 2) {
       return NextResponse.json({ error: "File kosong atau tidak memiliki data" }, { status: 400 });

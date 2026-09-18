@@ -146,7 +146,7 @@ export default function FasihImportPage() {
     e.preventDefault();
     setIsDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f && f.name.endsWith(".csv")) setSelectedFile(f);
+    if (f && (f.name.endsWith(".csv") || f.name.endsWith(".xlsx"))) setSelectedFile(f);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,7 +228,7 @@ export default function FasihImportPage() {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Info className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-medium">Format CSV yang Diperlukan</CardTitle>
+              <CardTitle className="text-sm font-medium">Format CSV/XLSX yang Diperlukan</CardTitle>
             </div>
             <Button
               variant="outline"
@@ -250,6 +250,7 @@ export default function FasihImportPage() {
             </code>
           </div>
           <ul className="mt-3 space-y-1 text-xs text-muted-foreground list-disc list-inside">
+            <li>Format: CSV (.csv) atau XLSX (.xlsx)</li>
             <li>Header tidak peka huruf besar/kecil dan spasi</li>
             <li>
               <code className="bg-muted px-1 rounded">regionCode</code> diperlakukan
@@ -268,8 +269,8 @@ export default function FasihImportPage() {
       {/* ── Upload area ───────────────────────────────────────────────────── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Upload File CSV</CardTitle>
-          <CardDescription>Format: .csv · Maks. 10 MB</CardDescription>
+          <CardTitle className="text-base">Upload File CSV/XLSX</CardTitle>
+          <CardDescription>Format: .csv atau .xlsx · Maks. 10 MB</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Drag & Drop zone */}
@@ -301,7 +302,7 @@ export default function FasihImportPage() {
             <input
               ref={fileRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx"
               className="sr-only"
               onChange={handleFileChange}
             />
