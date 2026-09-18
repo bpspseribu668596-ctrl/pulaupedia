@@ -4,9 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -92,7 +90,7 @@ export default function FasihWilayahPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  // Column visibility — default semua kecuali rejected dan edited_admin
+  // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
     const cols = new Set(STATUS_COLS.map(s => String(s.key)));
     cols.delete("rejected");
@@ -131,7 +129,6 @@ export default function FasihWilayahPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Reset page when filters change
   useEffect(() => { setPage(1); }, [debouncedSearch, island, pencacahId, sortColumn, sortDirection, pageSize]);
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
@@ -158,18 +155,18 @@ export default function FasihWilayahPage() {
   };
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) return <ArrowUpDown className="h-4 w-4 opacity-40" />;
+    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 opacity-40 shrink-0" />;
     return sortDirection === "asc"
-      ? <ArrowUp className="h-4 w-4" />
-      : <ArrowDown className="h-4 w-4" />;
+      ? <ArrowUp className="h-3 w-3 shrink-0" />
+      : <ArrowDown className="h-3 w-3 shrink-0" />;
   };
 
   const SortHeader = ({ column, label }: { column: SortColumn; label: string | React.ReactNode }) => (
     <button
       onClick={() => handleSort(column)}
-      className="flex items-center justify-center gap-1 cursor-pointer hover:opacity-70 transition-opacity flex-col"
+      className="flex items-center justify-between gap-2 w-full text-left cursor-pointer hover:text-foreground transition-colors group select-none"
     >
-      {label}
+      <span className="truncate">{label}</span>
       <SortIcon column={column} />
     </button>
   );
@@ -200,81 +197,92 @@ export default function FasihWilayahPage() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            {/* Search */}
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-9"
-                placeholder="Cari kode, nama wilayah, pulau, pencacah..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+      <Card className="border shadow-sm bg-white">
+        {/* Header Filter & Toolbar: Dibuat Flex Wrap agar rapi di layar kecil */}
+        <CardHeader className="p-6 pb-4 border-b">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3 flex-1">
+              {/* Search */}
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9 h-9 text-sm"
+                  placeholder="Cari kode, nama wilayah..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Filter Pulau */}
+              <Select value={island} onValueChange={setIsland}>
+                <SelectTrigger className="w-full sm:w-44 h-9 text-sm">
+                  <SelectValue placeholder="Semua Pulau" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Semua Pulau</SelectItem>
+                  {(data?.islands ?? []).map((isl) => (
+                    <SelectItem key={isl} value={isl}>{isl}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 px-2 text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4 mr-1" /> Reset
+                </Button>
+              )}
             </div>
 
-            {/* Filter Pulau */}
-            <Select value={island} onValueChange={setIsland}>
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="Semua Pulau" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Semua Pulau</SelectItem>
-                {(data?.islands ?? []).map((isl) => (
-                  <SelectItem key={isl} value={isl}>{isl}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3 justify-end">
+              {/* Page Size */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Show</span>
+                <Select value={String(pageSize)} onValueChange={(val) => {
+                  setPageSize(parseInt(val, 10));
+                  setPage(1);
+                }}>
+                  <SelectTrigger className="w-20 h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZES.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={String(data?.total ?? 999999)}>
+                      Semua
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>entries</span>
+              </div>
 
-            {/* Page Size */}
-            <Select value={String(pageSize)} onValueChange={(val) => {
-              setPageSize(parseInt(val, 10));
-              setPage(1);
-            }}>
-              <SelectTrigger className="w-full sm:w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZES.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-                <SelectItem value={String(data?.total ?? 999999)}>
-                  Semua
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Column Visibility Toggle */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="px-3 py-2 h-9 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center text-sm font-medium gap-2 cursor-pointer">
-                <Settings className="h-4 w-4" />
-                Kolom
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Tampilkan Kolom</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  {STATUS_COLS.map((s) => (
-                    <DropdownMenuCheckboxItem
-                      key={s.key}
-                      checked={visibleColumns.has(String(s.key))}
-                      onCheckedChange={() => toggleColumnVisibility(String(s.key))}
-                    >
-                      <span className="text-sm">{s.label} {s.line2 && s.line3 ? `(${s.line2} ${s.line3})` : s.line2 ? `(${s.line2})` : ''}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {hasFilters && (
-              <Button variant="ghost" size="icon" onClick={clearFilters} title="Reset filter">
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+              {/* Column Visibility Toggle */}
+              <DropdownMenu>
+                <div className="inline-flex">
+                  <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 cursor-pointer">
+                    <Settings className="h-4 w-4" />
+                    Kolom
+                  </DropdownMenuTrigger>
+                </div>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Tampilkan Kolom</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    {STATUS_COLS.map((s) => (
+                      <DropdownMenuCheckboxItem
+                        key={s.key}
+                        checked={visibleColumns.has(String(s.key))}
+                        onCheckedChange={() => toggleColumnVisibility(String(s.key))}
+                      >
+                        <span className="text-sm">{s.label} {s.line2 && s.line3 ? `(${s.line2} ${s.line3})` : s.line2 ? `(${s.line2})` : ''}</span>
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardHeader>
 
@@ -287,37 +295,38 @@ export default function FasihWilayahPage() {
             </div>
           ) : (
             <>
-              <div className="w-full overflow-x-auto overflow-y-hidden max-h-full">
-                <Table className="w-full">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-32 min-w-fit">
+              {/* Wrapper dengan padding kanan untuk mencegah border terpotong */}
+              <div className="w-full overflow-x-auto border-b">
+                <div className="inline-block min-w-full align-middle pr-2">
+                  <Table className="w-full text-sm">
+                  <TableHeader className="bg-muted/50">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[120px]">
                         <SortHeader column="region_code" label="Kode" />
                       </TableHead>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-24 min-w-fit">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[100px]">
                         <SortHeader column="island_name" label="Pulau" />
                       </TableHead>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-40 min-w-fit">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[180px]">
                         <SortHeader column="region_name" label="Nama Wilayah" />
                       </TableHead>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-20 min-w-fit text-center">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[80px] text-center">
                         <SortHeader column="total_region" label="Total" />
                       </TableHead>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-32 min-w-fit">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[140px]">
                         <SortHeader column="pencacah_name" label="Pencacah" />
                       </TableHead>
-                      <TableHead className="px-2 py-2 whitespace-nowrap w-32 min-w-fit">
+                      <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[140px]">
                         <SortHeader column="pengawas_name" label="Pengawas" />
                       </TableHead>
                       {STATUS_COLS.map((s) => (
                         visibleColumns.has(String(s.key)) && (
-                          <TableHead key={s.key} className={`px-2 py-2 whitespace-normal w-24 min-w-fit text-center text-xs ${s.color} font-semibold leading-tight`}>
+                          <TableHead key={s.key} className={`px-3 py-3 whitespace-nowrap min-w-[110px] text-center text-xs ${s.color} font-bold`}>
                             <SortHeader column={s.key as SortColumn} label={
-                              <>
-                                <div>{s.label}</div>
-                                {s.line2 && <div>{s.line2}</div>}
-                                {s.line3 && <div>{s.line3}</div>}
-                              </>
+                              <div className="flex flex-col leading-tight items-center text-center w-full">
+                                <span>{s.label}</span>
+                                {s.line2 && <span className="text-[10px] opacity-80">{s.line2} {s.line3}</span>}
+                              </div>
                             } />
                           </TableHead>
                         )
@@ -333,25 +342,25 @@ export default function FasihWilayahPage() {
                       </TableRow>
                     ) : (
                       data?.assignments.map((row) => (
-                        <TableRow key={row.assignment_id}>
-                          <TableCell className="px-2 py-2 font-mono text-xs w-32 min-w-fit">
+                        <TableRow key={row.assignment_id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="px-4 py-3 font-mono text-xs whitespace-nowrap">
                             {row.region_code}
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-xs w-24 min-w-fit">
+                          <TableCell className="px-4 py-3 whitespace-nowrap">
                             {row.island_name}
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-xs font-medium w-40 min-w-fit">
+                          <TableCell className="px-4 py-3 font-medium whitespace-nowrap">
                             {row.region_name}
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-center tabular-nums text-xs w-20 min-w-fit">
+                          <TableCell className="px-4 py-3 text-center tabular-nums whitespace-nowrap">
                             {row.total_region.toLocaleString("id-ID")}
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-xs w-32 min-w-fit">
+                          <TableCell className="px-4 py-3 whitespace-nowrap">
                             {row.pencacah_name}
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-xs text-muted-foreground w-32 min-w-fit">
+                          <TableCell className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                             {row.pengawas_name ?? (
-                              <Badge variant="outline" className="text-xs text-slate-400">
+                              <Badge variant="outline" className="text-xs text-slate-400 font-normal">
                                 —
                               </Badge>
                             )}
@@ -360,8 +369,8 @@ export default function FasihWilayahPage() {
                             if (!visibleColumns.has(String(s.key))) return null;
                             const val = row[s.key] as number;
                             return (
-                              <TableCell key={s.key} className={`px-2 py-2 text-center tabular-nums text-xs w-24 min-w-fit ${s.color} font-semibold`}>
-                                {val > 0 ? val : <span className="text-muted-foreground/30">—</span>}
+                              <TableCell key={s.key} className={`px-3 py-3 text-center tabular-nums whitespace-nowrap ${s.color} font-semibold`}>
+                                {val > 0 ? val : <span className="text-muted-foreground/30 font-normal">—</span>}
                               </TableCell>
                             );
                           })}
@@ -370,35 +379,42 @@ export default function FasihWilayahPage() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-between gap-4 px-4 py-3 border-t flex-wrap">
+              {/* Footer / Pagination Section */}
+              <div className="flex items-center justify-between gap-4 px-6 py-4 flex-wrap">
                 <p className="text-sm text-muted-foreground">
                   {data
-                    ? `${((page - 1) * pageSize) + 1}–${Math.min(page * pageSize, data.total)} dari ${data.total.toLocaleString("id-ID")} assignment`
+                    ? `Showing ${((page - 1) * pageSize) + 1} to ${Math.min(page * pageSize, data.total)} of ${data.total.toLocaleString("id-ID")} entries`
                     : ""}
                 </p>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 px-3 text-sm"
                     onClick={() => setPage((p) => p - 1)}
                     disabled={page <= 1 || isLoading}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    Previous
                   </Button>
-                  <span className="text-sm tabular-nums">
-                    {page} / {totalPages}
-                  </span>
+                  
+                  <div className="flex items-center px-2 text-sm font-medium">
+                    <span className="bg-primary text-primary-foreground px-3 py-1 rounded text-xs">
+                      {page}
+                    </span>
+                  </div>
+
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 px-3 text-sm"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page >= totalPages || isLoading}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    Next
                   </Button>
                 </div>
               </div>

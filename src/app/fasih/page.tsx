@@ -52,16 +52,6 @@ export default function FasihLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-sm">
-        {/* Header branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600 text-white font-bold text-2xl mb-4">
-            F
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">FASIH</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sistem Monitoring Status Wilayah
-          </p>
-        </div>
 
         <Card>
           <CardHeader className="pb-4">

@@ -37,9 +37,9 @@ export function FasihSidebar({ user, ...props }: FasihSidebarProps) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs shrink-0">
+          {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs shrink-0">
             F
-          </div>
+          </div> */}
           <div className="flex flex-col gap-0.5 leading-none min-w-0">
             <span className="font-semibold text-sm truncate">FASIH</span>
             <span className="text-xs text-muted-foreground truncate">

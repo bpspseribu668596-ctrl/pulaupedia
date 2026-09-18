@@ -39,7 +39,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Plus, Pencil, Loader2 } from "lucide-react";
+import { AlertCircle, Plus, Pencil, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Officer {
   id: string;
@@ -76,6 +76,10 @@ export default function FasihPetugasPage() {
   // Edit form state
   const [editOfficer, setEditOfficer] = useState<Officer | null>(null);
   const [editForm, setEditForm] = useState({ name: "", username: "", is_active: true });
+
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<keyof Officer | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const fetchData = async () => {
     try {
@@ -144,52 +148,116 @@ export default function FasihPetugasPage() {
     setEditForm({ name: o.name, username: o.username ?? "", is_active: o.is_active });
   };
 
-  const OfficerTable = ({ officers }: { officers: Officer[] }) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nama</TableHead>
-          <TableHead>Username / Email</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="w-20">Aksi</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {officers.length === 0 ? (
+  const handleSort = (column: keyof Officer) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortIcon = ({ column }: { column: keyof Officer }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 opacity-40 shrink-0" />;
+    return sortDirection === "asc"
+      ? <ArrowUp className="h-3 w-3 shrink-0" />
+      : <ArrowDown className="h-3 w-3 shrink-0" />;
+  };
+
+  const SortHeader = ({ column, label }: { column: keyof Officer; label: string }) => (
+    <button
+      onClick={() => handleSort(column)}
+      className="flex items-center justify-between gap-2 w-full text-left cursor-pointer hover:text-foreground transition-colors group select-none"
+    >
+      <span className="truncate">{label}</span>
+      <SortIcon column={column} />
+    </button>
+  );
+
+  const sortData = (data: Officer[]) => {
+    if (!sortColumn) return data;
+    
+    const sorted = [...data].sort((a, b) => {
+      const aVal = a[sortColumn];
+      const bVal = b[sortColumn];
+      
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+      
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDirection === "asc"
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      
+      if (typeof aVal === "boolean" && typeof bVal === "boolean") {
+        return sortDirection === "asc"
+          ? (aVal === bVal ? 0 : aVal ? -1 : 1)
+          : (aVal === bVal ? 0 : aVal ? 1 : -1);
+      }
+      
+      return 0;
+    });
+    
+    return sorted;
+  };
+
+  const OfficerTable = ({ officers }: { officers: Officer[] }) => {
+    const sortedOfficers = sortData(officers);
+    
+    return (
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-              Tidak ada data
-            </TableCell>
+            <TableHead>
+              <SortHeader column="name" label="Nama" />
+            </TableHead>
+            <TableHead>
+              <SortHeader column="username" label="Username / Email" />
+            </TableHead>
+            <TableHead>
+              <SortHeader column="is_active" label="Status" />
+            </TableHead>
+            <TableHead className="w-20">Aksi</TableHead>
           </TableRow>
-        ) : (
-          officers.map((o) => (
-            <TableRow key={o.id}>
-              <TableCell className="font-medium">{o.name}</TableCell>
-              <TableCell className="text-muted-foreground text-sm">
-                {o.username ?? <span className="italic">—</span>}
-              </TableCell>
-              <TableCell>
-                {o.is_active ? (
-                  <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50">Aktif</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-slate-500">Nonaktif</Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => openEditDialog(o)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
+        </TableHeader>
+        <TableBody>
+          {sortedOfficers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                Tidak ada data
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  );
+          ) : (
+            sortedOfficers.map((o) => (
+              <TableRow key={o.id}>
+                <TableCell className="font-medium">{o.name}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {o.username ?? <span className="italic">—</span>}
+                </TableCell>
+                <TableCell>
+                  {o.is_active ? (
+                    <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50">Aktif</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-slate-500">Nonaktif</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openEditDialog(o)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -387,7 +455,24 @@ export default function FasihPetugasPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Nama</TableHead>
+                        <TableHead>
+                          <button
+                            onClick={() => {
+                              if (sortColumn === "name" || sortColumn === "username") {
+                                setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                              } else {
+                                setSortColumn("name");
+                                setSortDirection("asc");
+                              }
+                            }}
+                            className="flex items-center justify-between gap-2 cursor-pointer hover:text-foreground transition-colors select-none"
+                          >
+                            <span>Nama</span>
+                            {sortColumn === "name" ? (
+                              sortDirection === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                            ) : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                          </button>
+                        </TableHead>
                         <TableHead>Username</TableHead>
                         <TableHead>Role Login</TableHead>
                         <TableHead>Terhubung ke</TableHead>
@@ -402,7 +487,12 @@ export default function FasihPetugasPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        fasihUsers.map((u) => {
+                        fasihUsers.sort((a, b) => {
+                          if (!sortColumn || sortColumn !== "name") return 0;
+                          const aVal = a.name || "";
+                          const bVal = b.name || "";
+                          return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                        }).map((u) => {
                           const linkedOfficer = [...pencacah, ...pengawas].find(
                             (o) => o.id === u.officer_id
                           );
