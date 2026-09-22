@@ -228,7 +228,7 @@ export default function FasihImportPage() {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Info className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-medium">Format CSV/XLSX yang Diperlukan</CardTitle>
+              <CardTitle className="text-sm font-medium">Format CSV/XLSX yang Didukung</CardTitle>
             </div>
             <Button
               variant="outline"
@@ -241,27 +241,42 @@ export default function FasihImportPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <code className="text-xs text-muted-foreground whitespace-nowrap">
-              username, name, regionCode, islandName, regionName, totalRegion,
-              approved, draft, open, submitted, rejected, editedAdmin, revoked,
-              submittedRespondent, editedSupervisor
-            </code>
+        <CardContent className="space-y-4">
+          {/* Format lama */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Format A (lengkap):</p>
+            <div className="overflow-x-auto">
+              <code className="text-xs text-muted-foreground whitespace-nowrap">
+                username, name, regionCode, islandName, regionName, totalRegion,
+                approved, draft, open, submitted, rejected, editedAdmin, revoked,
+                submittedRespondent, editedSupervisor
+              </code>
+            </div>
           </div>
-          <ul className="mt-3 space-y-1 text-xs text-muted-foreground list-disc list-inside">
-            <li>Format: CSV (.csv) atau XLSX (.xlsx)</li>
+          {/* Format baru */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Format B (dari sistem sumber):</p>
+            <div className="overflow-x-auto">
+              <code className="text-xs text-muted-foreground whitespace-nowrap">
+                userId, username, email, roleName, totalPetugas, regionCode, totalRegion, statusBreakdown
+              </code>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Kolom <code className="bg-muted px-1 rounded">statusBreakdown</code> dibaca otomatis,
+              contoh: <code className="bg-muted px-1 rounded">SUBMITTED BY Pencacah:11 | DRAFT:6 | APPROVED BY Pengawas:1</code>
+            </p>
+          </div>
+          <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+            <li>Format file: CSV (.csv) atau XLSX (.xlsx)</li>
             <li>Header tidak peka huruf besar/kecil dan spasi</li>
             <li>
               <code className="bg-muted px-1 rounded">regionCode</code> diperlakukan
               sebagai teks (gunakan tanda kutip jika dimulai angka 0)
             </li>
-            <li>Kolom status harus berupa angka bulat ≥ 0</li>
             <li>
               Import bersifat <strong>idempotent</strong> — data yang sudah ada
               akan diperbarui, bukan digandakan
             </li>
-            <li>Mapping Pengawas <em>tidak diisi otomatis</em> dari import ini</li>
           </ul>
         </CardContent>
       </Card>

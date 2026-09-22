@@ -4,19 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -31,11 +19,10 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import type { DashboardStats, PencacahSummary } from "@/lib/fasih-db";
+import type { DashboardStats } from "@/lib/fasih-db";
 
 interface DashboardData {
   stats: DashboardStats;
-  pencacahSummary: PencacahSummary[];
 }
 
 const statusCards = (s: DashboardStats) => [
@@ -113,13 +100,12 @@ export default function FasihDashboardPage() {
         return r.json();
       })
       .then(setData)
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Terjadi kesalahan"))
       .finally(() => setIsLoading(false));
   }, []);
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -134,7 +120,6 @@ export default function FasihDashboardPage() {
         </Alert>
       )}
 
-      {/* Status cards */}
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -170,105 +155,6 @@ export default function FasihDashboardPage() {
           })}
         </div>
       ) : null}
-
-      {/* Rekap per Pencacah
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Rekap per Pencacah</CardTitle>
-          <CardDescription>
-            Distribusi status assignment berdasarkan Pencacah
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : data && data.pencacahSummary.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[180px]">Pencacah</TableHead>
-                    <TableHead className="text-center">Asgn</TableHead>
-                    <TableHead className="text-center text-emerald-700">Apv</TableHead>
-                    <TableHead className="text-center text-yellow-700">Drf</TableHead>
-                    <TableHead className="text-center text-blue-700">Opn</TableHead>
-                    <TableHead className="text-center text-indigo-700">Sub</TableHead>
-                    <TableHead className="text-center text-red-700">Rej</TableHead>
-                    <TableHead className="text-center text-orange-700">Rvk</TableHead>
-                    <TableHead className="text-center text-purple-700">SubR</TableHead>
-                    <TableHead className="text-center text-cyan-700">EdA</TableHead>
-                    <TableHead className="text-center text-teal-700">EdS</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.pencacahSummary.map((p) => (
-                    <TableRow key={p.pencacah_id}>
-                      <TableCell className="font-medium">
-                        {p.pencacah_name}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        <Badge variant="outline">{p.total_assignments}</Badge>
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-emerald-700 font-medium">
-                        {p.total_approved || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-yellow-700">
-                        {p.total_draft || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-blue-700">
-                        {p.total_open || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-indigo-700">
-                        {p.total_submitted || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-red-700">
-                        {p.total_rejected || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-orange-700">
-                        {p.total_revoked || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-purple-700">
-                        {p.total_submitted_respondent || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-cyan-700">
-                        {p.total_edited_admin || "—"}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums text-teal-700">
-                        {p.total_edited_supervisor || "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            !error && (
-              <p className="text-center text-muted-foreground py-8 text-sm">
-                Belum ada data
-              </p>
-            )
-          )}
-        </CardContent>
-      </Card> */}
-
-      {/* Catatan Pengawas
-      <Card className="border-dashed">
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Catatan:</span>{" "}
-            Rekap per Pengawas belum tersedia karena mapping{" "}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">
-              pengawas_id
-            </code>{" "}
-            pada data assignment saat ini masih kosong (NULL). Rekap akan tampil
-            otomatis setelah mapping Pengawas diisi.
-          </p>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }

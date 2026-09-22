@@ -17,7 +17,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -27,14 +26,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,9 +43,6 @@ import {
   ArrowUp,
   ArrowDown,
   Settings,
-  Pencil,
-  Trash2,
-  RefreshCw,
 } from "lucide-react";
 import type { AssignmentRow, FasihOfficer } from "@/lib/fasih-db";
 
@@ -75,34 +63,18 @@ type SortColumn =
 type SortDirection = "asc" | "desc";
 
 const STATUS_COLS: { key: keyof AssignmentRow; label: string; line2?: string; line3?: string; color: string }[] = [
-  { key: "approved",             label: "APPROVED",  line2: "BY",          line3: "Pengawas",        color: "text-emerald-700" },
-  { key: "draft",                label: "DRAFT",                                                       color: "text-yellow-700"  },
-  { key: "open",                 label: "OPEN",                                                        color: "text-blue-700"    },
-  { key: "submitted",            label: "SUBMITTED", line2: "BY",          line3: "Pencacah",        color: "text-indigo-700"  },
-  { key: "rejected",             label: "REJECTED",  line2: "BY",          line3: "Pengawas",        color: "text-red-700"     },
-  { key: "edited_admin",         label: "EDITED",    line2: "BY",          line3: "Admin Kabupaten", color: "text-cyan-700"    },
-  { key: "revoked",              label: "REVOKED",   line2: "BY",          line3: "Pengawas",        color: "text-orange-700"  },
-  { key: "submitted_respondent", label: "SUBMITTED", line2: "RESPONDENT",                            color: "text-purple-700"  },
-  { key: "edited_supervisor",    label: "EDITED",    line2: "BY",          line3: "Pengawas",        color: "text-teal-700"    },
-];
-
-// All editable numeric fields (total + status cols)
-const EDIT_FIELDS: { key: string; label: string }[] = [
-  { key: "total_assignments",     label: "Total" },
-  { key: "approved",              label: "Approved (by Pengawas)" },
-  { key: "draft",                 label: "Draft" },
-  { key: "open",                  label: "Open" },
-  { key: "submitted",             label: "Submitted (by Pencacah)" },
-  { key: "rejected",              label: "Rejected (by Pengawas)" },
-  { key: "edited_admin",          label: "Edited (by Admin Kabupaten)" },
-  { key: "revoked",               label: "Revoked (by Pengawas)" },
-  { key: "submitted_respondent",  label: "Submitted Respondent" },
-  { key: "edited_supervisor",     label: "Edited (by Pengawas)" },
+  { key: "approved",             label: "APPROVED",  line2: "BY",       line3: "Pengawas",        color: "text-emerald-700" },
+  { key: "draft",                label: "DRAFT",                                                    color: "text-yellow-700"  },
+  { key: "open",                 label: "OPEN",                                                     color: "text-blue-700"    },
+  { key: "submitted",            label: "SUBMITTED", line2: "BY",       line3: "Pencacah",        color: "text-indigo-700"  },
+  { key: "rejected",             label: "REJECTED",  line2: "BY",       line3: "Pengawas",        color: "text-red-700"     },
+  { key: "edited_admin",         label: "EDITED",    line2: "BY",       line3: "Admin Kabupaten", color: "text-cyan-700"    },
+  { key: "revoked",              label: "REVOKED",   line2: "BY",       line3: "Pengawas",        color: "text-orange-700"  },
+  { key: "submitted_respondent", label: "SUBMITTED", line2: "RESPONDENT",                         color: "text-purple-700"  },
+  { key: "edited_supervisor",    label: "EDITED",    line2: "BY",       line3: "Pengawas",        color: "text-teal-700"    },
 ];
 
 const PAGE_SIZES = [10, 20, 50, 100];
-
-type EditForm = Record<string, number>;
 
 export default function FasihWilayahPage() {
   const [data, setData] = useState<WilayahResponse | null>(null);
@@ -134,17 +106,6 @@ export default function FasihWilayahPage() {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
   }, [search]);
-
-  // ── Edit state ─────────────────────────────────────────────────────────────
-  const [editRow, setEditRow] = useState<AssignmentRow | null>(null);
-  const [editForm, setEditForm] = useState<EditForm>({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  // ── Delete state ───────────────────────────────────────────────────────────
-  const [deleteRow, setDeleteRow] = useState<AssignmentRow | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -210,66 +171,6 @@ export default function FasihWilayahPage() {
     if (newVisible.has(columnKey)) newVisible.delete(columnKey);
     else newVisible.add(columnKey);
     setVisibleColumns(newVisible);
-  };
-
-  // ── Open edit modal ────────────────────────────────────────────────────────
-  const openEdit = (row: AssignmentRow) => {
-    setEditRow(row);
-    setEditError(null);
-    setEditForm({
-      total_assignments:    row.total_assignments,
-      approved:             row.approved,
-      draft:                row.draft,
-      open:                 row.open,
-      submitted:            row.submitted,
-      rejected:             row.rejected,
-      edited_admin:         row.edited_admin,
-      revoked:              row.revoked,
-      submitted_respondent: row.submitted_respondent,
-      edited_supervisor:    row.edited_supervisor,
-    });
-  };
-
-  // ── Submit edit ────────────────────────────────────────────────────────────
-  const handleEdit = async () => {
-    if (!editRow) return;
-    setIsEditing(true);
-    setEditError(null);
-    try {
-      const res = await fetch(`/api/fasih/wilayah/${editRow.assignment_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Gagal menyimpan");
-      setEditRow(null);
-      fetchData();
-    } catch (e: unknown) {
-      setEditError(e instanceof Error ? e.message : "Terjadi kesalahan");
-    } finally {
-      setIsEditing(false);
-    }
-  };
-
-  // ── Submit delete ──────────────────────────────────────────────────────────
-  const handleDelete = async () => {
-    if (!deleteRow) return;
-    setIsDeleting(true);
-    setDeleteError(null);
-    try {
-      const res = await fetch(`/api/fasih/wilayah/${deleteRow.assignment_id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Gagal menghapus");
-      setDeleteRow(null);
-      fetchData();
-    } catch (e: unknown) {
-      setDeleteError(e instanceof Error ? e.message : "Terjadi kesalahan");
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   return (
@@ -406,16 +307,12 @@ export default function FasihWilayahPage() {
                             </TableHead>
                           ) : null
                         )}
-                        {/* Kolom Aksi */}
-                        <TableHead className="px-4 py-3 font-semibold whitespace-nowrap w-24 text-center">
-                          Aksi
-                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {data?.assignments.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7 + STATUS_COLS.length} className="text-center text-muted-foreground py-12">
+                          <TableCell colSpan={6 + STATUS_COLS.length} className="text-center text-muted-foreground py-12">
                             Tidak ada data yang sesuai filter
                           </TableCell>
                         </TableRow>
@@ -450,29 +347,6 @@ export default function FasihWilayahPage() {
                                 </TableCell>
                               );
                             })}
-                            {/* Aksi per baris */}
-                            <TableCell className="px-4 py-3 text-center whitespace-nowrap">
-                              <div className="flex items-center justify-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
-                                  title="Edit"
-                                  onClick={() => openEdit(row)}
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                                  title="Hapus"
-                                  onClick={() => { setDeleteRow(row); setDeleteError(null); }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
                           </TableRow>
                         ))
                       )}
@@ -506,103 +380,6 @@ export default function FasihWilayahPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* ── Modal Edit ──────────────────────────────────────────────────────── */}
-      <Dialog open={!!editRow} onOpenChange={(open) => { if (!open) setEditRow(null); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Data Wilayah</DialogTitle>
-            <DialogDescription>
-              {editRow && (
-                <span className="font-medium text-foreground">
-                  {editRow.region_code} — {editRow.region_name} ({editRow.pencacah_name})
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-2 gap-3 py-2">
-            {EDIT_FIELDS.map((f) => (
-              <div key={f.key} className={f.key === "total_assignments" ? "col-span-2" : ""}>
-                <Label htmlFor={`edit-${f.key}`} className="text-xs font-medium text-muted-foreground mb-1 block">
-                  {f.label}
-                </Label>
-                <Input
-                  id={`edit-${f.key}`}
-                  type="number"
-                  min={0}
-                  value={editForm[f.key] ?? 0}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      [f.key]: Math.max(0, parseInt(e.target.value, 10) || 0),
-                    }))
-                  }
-                  className="h-8 text-sm"
-                />
-              </div>
-            ))}
-          </div>
-
-          {editError && (
-            <Alert variant="destructive" className="mt-2">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{editError}</AlertDescription>
-            </Alert>
-          )}
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setEditRow(null)} disabled={isEditing}>
-              Batal
-            </Button>
-            <Button onClick={handleEdit} disabled={isEditing}>
-              {isEditing ? (
-                <><RefreshCw className="mr-2 h-4 w-4 animate-spin" />Menyimpan…</>
-              ) : "Simpan"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dialog Hapus ────────────────────────────────────────────────────── */}
-      <Dialog open={!!deleteRow} onOpenChange={(open) => { if (!open) setDeleteRow(null); }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Hapus Assignment</DialogTitle>
-            <DialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Assignment berikut akan dihapus permanen beserta seluruh data statusnya.
-            </DialogDescription>
-          </DialogHeader>
-
-          {deleteRow && (
-            <div className="rounded-md bg-muted px-4 py-3 text-sm space-y-1">
-              <p><span className="text-muted-foreground">Kode:</span> <span className="font-mono font-medium">{deleteRow.region_code}</span></p>
-              <p><span className="text-muted-foreground">Wilayah:</span> {deleteRow.region_name}</p>
-              <p><span className="text-muted-foreground">Pencacah:</span> {deleteRow.pencacah_name}</p>
-            </div>
-          )}
-
-          {deleteError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
-          )}
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteRow(null)} disabled={isDeleting}>
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? (
-                <><RefreshCw className="mr-2 h-4 w-4 animate-spin" />Menghapus…</>
-              ) : (
-                <><Trash2 className="mr-2 h-4 w-4" />Hapus</>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

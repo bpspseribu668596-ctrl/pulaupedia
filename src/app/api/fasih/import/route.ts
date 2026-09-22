@@ -18,8 +18,8 @@ export async function GET() {
   }
 }
 
-// ─── Expected CSV/Excel columns (order-independent, trimmed) ─────────────────
-const REQUIRED_HEADERS = [
+// ─── Expected CSV/Excel columns — FORMAT LAMA (order-independent, trimmed) ───
+const REQUIRED_HEADERS_OLD = [
   "username",
   "name",
   "regioncode",
@@ -37,12 +37,22 @@ const REQUIRED_HEADERS = [
   "editedsupervisor",
 ];
 
+// ─── Expected CSV/Excel columns — FORMAT BARU ────────────────────────────────
+// userId, username, email, roleName, totalPetugas, regionCode, totalRegion, statusBreakdown
+const REQUIRED_HEADERS_NEW = [
+  "userid",
+  "username",
+  "regioncode",
+  "totalregion",
+  "statusbreakdown",
+];
+
 function normalizeHeader(h: string): string {
   return h.toLowerCase().replace(/[\s_\-\/]/g, "").replace(/[^a-z0-9]/g, "");
 }
 
-// Map normalised header → DB field name
-const HEADER_MAP: Record<string, string> = {
+// Map normalised header → DB field name (format lama)
+const HEADER_MAP_OLD: Record<string, string> = {
   username:             "username",
   name:                 "name",
   regioncode:           "regionCode",
@@ -59,6 +69,77 @@ const HEADER_MAP: Record<string, string> = {
   submittedrespondent:  "submittedRespondent",
   editedsupervisor:     "editedSupervisor",
 };
+
+// Map normalised header → DB field name (format baru)
+const HEADER_MAP_NEW: Record<string, string> = {
+  userid:          "userId",
+  username:        "username",
+  email:           "email",
+  rolename:        "roleName",
+  totalpetugas:    "totalPetugas",
+  regioncode:      "regionCode",
+  totalregion:     "totalRegion",
+  statusbreakdown: "statusBreakdown",
+};
+
+// ─── Parse statusBreakdown string → status object ────────────────────────────
+// Contoh: "SUBMITTED BY Pencacah:11 | DRAFT:6 | APPROVED BY Pengawas:1"
+function parseStatusBreakdown(raw: string): {
+  approved: number;
+  draft: number;
+  open: number;
+  submitted: number;
+  rejected: number;
+  editedAdmin: number;
+  revoked: number;
+  submittedRespondent: number;
+  editedSupervisor: number;
+} {
+  const result = {
+    approved: 0, draft: 0, open: 0, submitted: 0,
+    rejected: 0, editedAdmin: 0, revoked: 0,
+    submittedRespondent: 0, editedSupervisor: 0,
+  };
+
+  if (!raw?.trim()) return result;
+
+  // Split by | separator
+  const parts = raw.split("|").map((p) => p.trim());
+
+  for (const part of parts) {
+    // Extract label and value — format: "LABEL:number"
+    const colonIdx = part.lastIndexOf(":");
+    if (colonIdx === -1) continue;
+
+    const label = part.substring(0, colonIdx).trim().toLowerCase();
+    const val   = parseInt(part.substring(colonIdx + 1).trim(), 10);
+    if (isNaN(val)) continue;
+
+    if (label.includes("approved"))                result.approved            = val;
+    else if (label.includes("draft"))              result.draft               = val;
+    else if (label.includes("open"))               result.open                = val;
+    else if (label.includes("submitted respondent") || label.includes("submittedrespondent"))
+                                                   result.submittedRespondent = val;
+    else if (label.includes("submitted"))          result.submitted           = val;
+    else if (label.includes("rejected"))           result.rejected            = val;
+    else if (label.includes("edited") && label.includes("admin"))
+                                                   result.editedAdmin         = val;
+    else if (label.includes("edited") && (label.includes("supervisor") || label.includes("pengawas")))
+                                                   result.editedSupervisor    = val;
+    else if (label.includes("revoked"))            result.revoked             = val;
+  }
+
+  return result;
+}
+
+// ─── Detect which format the CSV uses ────────────────────────────────────────
+function detectFormat(normHeaders: string[]): "old" | "new" | null {
+  const hasOld = REQUIRED_HEADERS_OLD.every((h) => normHeaders.includes(h));
+  if (hasOld) return "old";
+  const hasNew = REQUIRED_HEADERS_NEW.every((h) => normHeaders.includes(h));
+  if (hasNew) return "new";
+  return null;
+}
 
 interface ParsedRow {
   rowNumber: number;
@@ -166,19 +247,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File kosong atau tidak memiliki data" }, { status: 400 });
     }
 
-    // ── Header validation ──────────────────────────────────────────────────
+    // ── Header detection & validation ──────────────────────────────────────
     const rawHeaders = rows[0];
     const normHeaders = rawHeaders.map(normalizeHeader);
 
-    const missingHeaders = REQUIRED_HEADERS.filter((h) => !normHeaders.includes(h));
-    if (missingHeaders.length > 0) {
+    const format = detectFormat(normHeaders);
+    if (!format) {
+      // Coba tebak format mana yang paling dekat untuk error message yang berguna
+      const missingOld = REQUIRED_HEADERS_OLD.filter((h) => !normHeaders.includes(h));
+      const missingNew = REQUIRED_HEADERS_NEW.filter((h) => !normHeaders.includes(h));
+      const missing = missingOld.length <= missingNew.length ? missingOld : missingNew;
       return NextResponse.json(
-        { error: `Header kolom tidak lengkap. Kolom yang kurang: ${missingHeaders.join(", ")}` },
+        { error: `Header kolom tidak lengkap. Kolom yang kurang: ${missing.join(", ")}` },
         { status: 400 }
       );
     }
 
     // Build column index map
+    const HEADER_MAP = format === "old" ? HEADER_MAP_OLD : HEADER_MAP_NEW;
     const colIdx: Record<string, number> = {};
     normHeaders.forEach((h, i) => {
       if (HEADER_MAP[h]) colIdx[HEADER_MAP[h]] = i;
@@ -203,7 +289,7 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < dataRows.length; i++) {
       const cols = dataRows[i];
-      const rowNum = i + 2; // 1-indexed, row 1 is header
+      const rowNum = i + 2;
 
       const raw: Record<string, string> = {};
       Object.entries(colIdx).forEach(([field, idx]) => {
@@ -215,53 +301,83 @@ export async function POST(request: NextRequest) {
 
       const errors: string[] = [];
 
-      // Required text fields
-      if (!raw.name?.trim()) errors.push("name tidak boleh kosong");
-      if (!raw.regionCode?.trim()) errors.push("regionCode tidak boleh kosong");
-      if (!raw.islandName?.trim()) errors.push("islandName tidak boleh kosong");
-      if (!raw.regionName?.trim()) errors.push("regionName tidak boleh kosong");
+      if (format === "old") {
+        // ── Format lama — validasi lengkap ──────────────────────────────
+        if (!raw.name?.trim())       errors.push("name tidak boleh kosong");
+        if (!raw.regionCode?.trim()) errors.push("regionCode tidak boleh kosong");
+        if (!raw.islandName?.trim()) errors.push("islandName tidak boleh kosong");
+        if (!raw.regionName?.trim()) errors.push("regionName tidak boleh kosong");
 
-      // Integer fields
-      const intFields = ["totalRegion","approved","draft","open","submitted",
-                         "rejected","editedAdmin","revoked","submittedRespondent","editedSupervisor"];
-      const intValues: Record<string, number> = {};
-      for (const f of intFields) {
-        const v = parseInt(raw[f] ?? "0", 10);
-        if (isNaN(v) || v < 0) {
-          errors.push(`${f} harus berupa angka >= 0`);
-        } else {
-          intValues[f] = v;
+        const intFields = ["totalRegion","approved","draft","open","submitted",
+                           "rejected","editedAdmin","revoked","submittedRespondent","editedSupervisor"];
+        const intValues: Record<string, number> = {};
+        for (const f of intFields) {
+          const v = parseInt(raw[f] ?? "0", 10);
+          if (isNaN(v) || v < 0) errors.push(`${f} harus berupa angka >= 0`);
+          else intValues[f] = v;
         }
-      }
 
-      if (errors.length > 0) {
-        rowErrors.push({
-          rowNumber: rowNum,
-          errorType: "VALIDATION_ERROR",
-          errorMessage: errors.join("; "),
-          rawData: raw,
+        if (errors.length > 0) {
+          rowErrors.push({ rowNumber: rowNum, errorType: "VALIDATION_ERROR", errorMessage: errors.join("; "), rawData: raw });
+          continue;
+        }
+
+        parsed.push({
+          rowNumber:           rowNum,
+          username:            raw.username?.trim() ?? "",
+          name:                raw.name.trim(),
+          regionCode:          raw.regionCode.trim(),
+          islandName:          raw.islandName.trim(),
+          regionName:          raw.regionName.trim(),
+          totalRegion:         intValues.totalRegion,
+          approved:            intValues.approved,
+          draft:               intValues.draft,
+          open:                intValues.open,
+          submitted:           intValues.submitted,
+          rejected:            intValues.rejected,
+          editedAdmin:         intValues.editedAdmin,
+          revoked:             intValues.revoked,
+          submittedRespondent: intValues.submittedRespondent,
+          editedSupervisor:    intValues.editedSupervisor,
         });
-        continue;
-      }
 
-      parsed.push({
-        rowNumber: rowNum,
-        username:            raw.username?.trim() ?? "",
-        name:                raw.name.trim(),
-        regionCode:          raw.regionCode.trim(),
-        islandName:          raw.islandName.trim(),
-        regionName:          raw.regionName.trim(),
-        totalRegion:         intValues.totalRegion,
-        approved:            intValues.approved,
-        draft:               intValues.draft,
-        open:                intValues.open,
-        submitted:           intValues.submitted,
-        rejected:            intValues.rejected,
-        editedAdmin:         intValues.editedAdmin,
-        revoked:             intValues.revoked,
-        submittedRespondent: intValues.submittedRespondent,
-        editedSupervisor:    intValues.editedSupervisor,
-      });
+      } else {
+        // ── Format baru — username sebagai name, regionCode wajib ────────
+        const username = (raw.username ?? raw.email ?? "").trim();
+        if (!username) errors.push("username/email tidak boleh kosong");
+        if (!raw.regionCode?.trim()) errors.push("regionCode tidak boleh kosong");
+
+        const totalRegion = parseInt(raw.totalRegion ?? "0", 10);
+        if (isNaN(totalRegion) || totalRegion < 0) errors.push("totalRegion harus berupa angka >= 0");
+
+        if (errors.length > 0) {
+          rowErrors.push({ rowNumber: rowNum, errorType: "VALIDATION_ERROR", errorMessage: errors.join("; "), rawData: raw });
+          continue;
+        }
+
+        const statuses = parseStatusBreakdown(raw.statusBreakdown ?? "");
+
+        parsed.push({
+          rowNumber:           rowNum,
+          username,
+          // Pakai username sebagai name — bisa diupdate manual lewat halaman Petugas
+          name:                username,
+          regionCode:          raw.regionCode.trim(),
+          // islandName & regionName tidak ada di format baru — kosong, perlu diisi manual
+          islandName:          "",
+          regionName:          "",
+          totalRegion:         isNaN(totalRegion) ? 0 : totalRegion,
+          approved:            statuses.approved,
+          draft:               statuses.draft,
+          open:                statuses.open,
+          submitted:           statuses.submitted,
+          rejected:            statuses.rejected,
+          editedAdmin:         statuses.editedAdmin,
+          revoked:             statuses.revoked,
+          submittedRespondent: statuses.submittedRespondent,
+          editedSupervisor:    statuses.editedSupervisor,
+        });
+      }
     }
 
     // ── DB upsert (idempotent, keyed on pencacah username + region_code) ──
@@ -331,12 +447,17 @@ export async function POST(request: NextRequest) {
         let regionId: string;
         if (existingRegion.rows.length > 0) {
           regionId = existingRegion.rows[0].id;
-          await pool.query(
-            `UPDATE public.fasih_regions
-               SET island_name = $1, region_name = $2
-             WHERE id = $3`,
-            [row.islandName, row.regionName, regionId]
-          );
+          // Only overwrite island_name / region_name if the incoming values are non-empty
+          if (row.islandName || row.regionName) {
+            await pool.query(
+              `UPDATE public.fasih_regions
+                 SET island_name = CASE WHEN $1 <> '' THEN $1 ELSE island_name END,
+                     region_name = CASE WHEN $2 <> '' THEN $2 ELSE region_name END,
+                     updated_at  = now()
+               WHERE id = $3`,
+              [row.islandName, row.regionName, regionId]
+            );
+          }
         } else {
           const ins = await pool.query(
             `INSERT INTO public.fasih_regions (region_code, island_name, region_name)
