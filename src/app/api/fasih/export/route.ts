@@ -16,7 +16,7 @@ export async function GET() {
       region_code: string;
       island_name: string;
       region_name: string;
-      total_region: number;
+      total_assignments: number;
       approved: number;
       draft: number;
       open: number;
@@ -28,21 +28,21 @@ export async function GET() {
       edited_supervisor: number;
     }>(
       `SELECT
-         pc.username                          AS pencacah_username,
-         pc.name                              AS pencacah_name,
+         pc.username                               AS pencacah_username,
+         pc.name                                   AS pencacah_name,
          r.region_code,
          r.island_name,
          r.region_name,
-         r.total_region,
-         COALESCE(s.approved, 0)              AS approved,
-         COALESCE(s.draft, 0)                 AS draft,
-         COALESCE(s.open, 0)                  AS open,
-         COALESCE(s.submitted, 0)             AS submitted,
-         COALESCE(s.rejected, 0)              AS rejected,
-         COALESCE(s.edited_admin, 0)          AS edited_admin,
-         COALESCE(s.revoked, 0)               AS revoked,
-         COALESCE(s.submitted_respondent, 0)  AS submitted_respondent,
-         COALESCE(s.edited_supervisor, 0)     AS edited_supervisor
+         COALESCE(s.total_assignments, 0)          AS total_assignments,
+         COALESCE(s.approved, 0)                   AS approved,
+         COALESCE(s.draft, 0)                      AS draft,
+         COALESCE(s.open, 0)                       AS open,
+         COALESCE(s.submitted, 0)                  AS submitted,
+         COALESCE(s.rejected, 0)                   AS rejected,
+         COALESCE(s.edited_admin, 0)               AS edited_admin,
+         COALESCE(s.revoked, 0)                    AS revoked,
+         COALESCE(s.submitted_respondent, 0)       AS submitted_respondent,
+         COALESCE(s.edited_supervisor, 0)          AS edited_supervisor
        FROM public.fasih_assignments a
        JOIN public.fasih_regions r          ON r.id = a.region_id
        JOIN public.fasih_officers pc        ON pc.id = a.pencacah_id
@@ -92,7 +92,7 @@ export async function GET() {
         row.region_code,
         row.island_name,
         row.region_name,
-        row.total_region,
+        row.total_assignments,
         row.approved,
         row.draft,
         row.open,

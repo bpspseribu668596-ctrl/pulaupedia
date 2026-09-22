@@ -34,7 +34,7 @@ export function FasihNavUser({ user }: FasihNavUserProps) {
     setIsLoggingOut(true);
     try {
       await fetch("/api/fasih/auth/logout", { method: "POST" });
-      router.push("/fasih");
+      router.push("/login?tab=fasih");
       router.refresh();
     } catch {
       // ignore

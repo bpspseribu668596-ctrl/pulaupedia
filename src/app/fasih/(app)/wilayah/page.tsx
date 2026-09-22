@@ -68,7 +68,7 @@ interface WilayahResponse {
 }
 
 type SortColumn =
-  | "region_code" | "island_name" | "region_name" | "total_region"
+  | "region_code" | "island_name" | "region_name" | "total_assignments"
   | "pencacah_name" | "pengawas_name" | "approved" | "draft" | "open"
   | "submitted" | "rejected" | "edited_admin" | "revoked"
   | "submitted_respondent" | "edited_supervisor" | null;
@@ -88,7 +88,7 @@ const STATUS_COLS: { key: keyof AssignmentRow; label: string; line2?: string; li
 
 // All editable numeric fields (total + status cols)
 const EDIT_FIELDS: { key: string; label: string }[] = [
-  { key: "total_region",          label: "Total" },
+  { key: "total_assignments",     label: "Total" },
   { key: "approved",              label: "Approved (by Pengawas)" },
   { key: "draft",                 label: "Draft" },
   { key: "open",                  label: "Open" },
@@ -217,7 +217,7 @@ export default function FasihWilayahPage() {
     setEditRow(row);
     setEditError(null);
     setEditForm({
-      total_region:         row.total_region,
+      total_assignments:    row.total_assignments,
       approved:             row.approved,
       draft:                row.draft,
       open:                 row.open,
@@ -386,7 +386,7 @@ export default function FasihWilayahPage() {
                           <SortHeader column="region_name" label="Nama Wilayah" />
                         </TableHead>
                         <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[80px] text-center">
-                          <SortHeader column="total_region" label="Total" />
+                          <SortHeader column="total_assignments" label="Total" />
                         </TableHead>
                         <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[140px]">
                           <SortHeader column="pencacah_name" label="Pencacah" />
@@ -426,9 +426,16 @@ export default function FasihWilayahPage() {
                             <TableCell className="px-4 py-3 whitespace-nowrap">{row.island_name}</TableCell>
                             <TableCell className="px-4 py-3 font-medium whitespace-nowrap">{row.region_name}</TableCell>
                             <TableCell className="px-4 py-3 text-center tabular-nums whitespace-nowrap">
-                              {row.total_region.toLocaleString("id-ID")}
+                              {row.total_assignments.toLocaleString("id-ID")}
                             </TableCell>
-                            <TableCell className="px-4 py-3 whitespace-nowrap">{row.pencacah_name}</TableCell>
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex flex-col leading-tight">
+                                <span className="font-medium">{row.pencacah_name}</span>
+                                {row.pencacah_username && (
+                                  <span className="text-xs text-muted-foreground">{row.pencacah_username}</span>
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                               {row.pengawas_name ?? (
                                 <Badge variant="outline" className="text-xs text-slate-400 font-normal">—</Badge>
@@ -516,7 +523,7 @@ export default function FasihWilayahPage() {
 
           <div className="grid grid-cols-2 gap-3 py-2">
             {EDIT_FIELDS.map((f) => (
-              <div key={f.key} className={f.key === "total_region" ? "col-span-2" : ""}>
+              <div key={f.key} className={f.key === "total_assignments" ? "col-span-2" : ""}>
                 <Label htmlFor={`edit-${f.key}`} className="text-xs font-medium text-muted-foreground mb-1 block">
                   {f.label}
                 </Label>

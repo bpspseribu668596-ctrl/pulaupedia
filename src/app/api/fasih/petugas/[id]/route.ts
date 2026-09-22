@@ -14,20 +14,19 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, username, is_active } = body;
+    const { name, username } = body;
 
     const existing = await getFasihOfficerById(id);
     if (!existing) return NextResponse.json({ error: "Petugas tidak ditemukan" }, { status: 404 });
 
     const { rows } = await pool.query(
       `UPDATE public.fasih_officers
-       SET name = $1, username = $2, is_active = $3
-       WHERE id = $4
-       RETURNING id, username, name, officer_role, is_active, updated_at`,
+       SET name = $1, username = $2, updated_at = now()
+       WHERE id = $3
+       RETURNING id, username, name, officer_role, updated_at`,
       [
         name ?? existing.name,
-        username !== undefined ? username : existing.username,
-        is_active !== undefined ? is_active : existing.is_active,
+        username !== undefined ? (username || null) : existing.username,
         id,
       ]
     );
@@ -37,7 +36,7 @@ export async function PUT(
       action: "UPDATE",
       tableName: "fasih_officers",
       recordId: id,
-      oldData: { name: existing.name, username: existing.username, is_active: existing.is_active },
+      oldData: { name: existing.name, username: existing.username },
       newData: rows[0],
     });
 

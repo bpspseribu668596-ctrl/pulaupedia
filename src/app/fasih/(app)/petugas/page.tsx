@@ -46,7 +46,6 @@ interface Officer {
   username: string | null;
   name: string;
   officer_role: "pencacah" | "pengawas";
-  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -75,7 +74,7 @@ export default function FasihPetugasPage() {
 
   // Edit form state
   const [editOfficer, setEditOfficer] = useState<Officer | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", username: "", is_active: true });
+  const [editForm, setEditForm] = useState({ name: "", username: "" });
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState<keyof Officer | null>(null);
@@ -145,7 +144,7 @@ export default function FasihPetugasPage() {
 
   const openEditDialog = (o: Officer) => {
     setEditOfficer(o);
-    setEditForm({ name: o.name, username: o.username ?? "", is_active: o.is_active });
+    setEditForm({ name: o.name, username: o.username ?? "" });
   };
 
   const handleSort = (column: keyof Officer) => {
@@ -190,12 +189,6 @@ export default function FasihPetugasPage() {
           : bVal.localeCompare(aVal);
       }
       
-      if (typeof aVal === "boolean" && typeof bVal === "boolean") {
-        return sortDirection === "asc"
-          ? (aVal === bVal ? 0 : aVal ? -1 : 1)
-          : (aVal === bVal ? 0 : aVal ? 1 : -1);
-      }
-      
       return 0;
     });
     
@@ -215,16 +208,13 @@ export default function FasihPetugasPage() {
             <TableHead>
               <SortHeader column="username" label="Username / Email" />
             </TableHead>
-            <TableHead>
-              <SortHeader column="is_active" label="Status" />
-            </TableHead>
             <TableHead className="w-20">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedOfficers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                 Tidak ada data
               </TableCell>
             </TableRow>
@@ -234,13 +224,6 @@ export default function FasihPetugasPage() {
                 <TableCell className="font-medium">{o.name}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">
                   {o.username ?? <span className="italic">—</span>}
-                </TableCell>
-                <TableCell>
-                  {o.is_active ? (
-                    <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50">Aktif</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-slate-500">Nonaktif</Badge>
-                  )}
                 </TableCell>
                 <TableCell>
                   <Button
@@ -360,21 +343,6 @@ export default function FasihPetugasPage() {
                 value={editForm.username}
                 onChange={(e) => setEditForm((f) => ({ ...f, username: e.target.value }))}
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={editForm.is_active ? "aktif" : "nonaktif"}
-                onValueChange={(v: string) => setEditForm((f) => ({ ...f, is_active: v === "aktif" }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="aktif">Aktif</SelectItem>
-                  <SelectItem value="nonaktif">Nonaktif</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>

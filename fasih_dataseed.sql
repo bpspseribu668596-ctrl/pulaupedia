@@ -8,177 +8,195 @@
 -- pengawas_id intentionally NULL: source data has no mapping
 -- ============================================================
 
+-- 0. FASIH USERS
+-- password default: admin123
+insert into public.fasih_users (id, username, password_hash, name, role, is_active)
+values (
+  gen_random_uuid(),
+  'admin',
+  '$2b$10$thQ.xgnbw6CNWZEThRJJMePV0sadWe21mavPT/qw9Dx43IQdNNcMa',
+  'Admin FASIH',
+  'admin',
+  true
+)
+on conflict (username) do update set
+  password_hash = excluded.password_hash,
+  name          = excluded.name,
+  role          = excluded.role,
+  is_active     = excluded.is_active,
+  updated_at    = now();
+
 -- 1. PENCACAH
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('93add754-d76f-5b72-9fb3-23071e48d5aa'::uuid, 'alfirdausi89\@gmail.com', 'Nurul Fatihah Al Firdausi', 'pencacah')
+values ('93add754-d76f-5b72-9fb3-23071e48d5aa'::uuid, 'alfirdausi89@gmail.com', 'Nurul Fatihah Al Firdausi', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('71fd95e2-6699-51c0-9032-a294559260b4'::uuid, 'alr53057\@gmail.com', 'ANJILIRROHMAH', 'pencacah')
+values ('71fd95e2-6699-51c0-9032-a294559260b4'::uuid, 'alr53057@gmail.com', 'ANJILIRROHMAH', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('c2a03991-3b8b-5b2f-8071-4927c2b47765'::uuid, 'asniati377\@gmail.com', 'Asniati', 'pencacah')
+values ('c2a03991-3b8b-5b2f-8071-4927c2b47765'::uuid, 'asniati377@gmail.com', 'Asniati', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('537f5c2a-96a8-5e77-bfc3-ca5f2e79031a'::uuid, 'hilmaacenk\@gmail.com', 'Hilma', 'pencacah')
+values ('537f5c2a-96a8-5e77-bfc3-ca5f2e79031a'::uuid, 'hilmaacenk@gmail.com', 'Hilma', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('f0286bc4-e90f-5aa8-89d4-490899fde7df'::uuid, 'karlinahzakar\@gmail.com', 'Karlinah', 'pencacah')
+values ('f0286bc4-e90f-5aa8-89d4-490899fde7df'::uuid, 'karlinahzakar@gmail.com', 'Karlinah', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('94d2a9ee-8670-5244-8dab-e02081cc8204'::uuid, 'komalasarisiti867\@gmail.com', 'Siti komalasari', 'pencacah')
+values ('94d2a9ee-8670-5244-8dab-e02081cc8204'::uuid, 'komalasarisiti867@gmail.com', 'Siti komalasari', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('73746725-fc63-5247-bf9a-e753cb092a20'::uuid, 'kusumaningsimamik\@gmail.com', 'Mamik kusumaningsih', 'pencacah')
+values ('73746725-fc63-5247-bf9a-e753cb092a20'::uuid, 'kusumaningsimamik@gmail.com', 'Mamik kusumaningsih', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('55234a7c-7e0e-592f-a3c9-e5bed703c135'::uuid, 'laiylatulkodria13\@gmail.com', 'Laiylatul Kodria', 'pencacah')
+values ('55234a7c-7e0e-592f-a3c9-e5bed703c135'::uuid, 'laiylatulkodria13@gmail.com', 'Laiylatul Kodria', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('7ed1a49f-dade-513c-bd94-c1fe53401f7b'::uuid, 'mafakhirmz05\@gmail.com', 'Muhammad Zainul Mafakhir', 'pencacah')
+values ('7ed1a49f-dade-513c-bd94-c1fe53401f7b'::uuid, 'mafakhirmz05@gmail.com', 'Muhammad Zainul Mafakhir', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('124e7a39-1c2a-5111-a88c-bf017dbe19e9'::uuid, 'mahranienanie9\@gmail.com', 'MAHRANI', 'pencacah')
+values ('124e7a39-1c2a-5111-a88c-bf017dbe19e9'::uuid, 'mahranienanie9@gmail.com', 'MAHRANI', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('005e717e-4672-5b3b-b2d6-2a9ce72685f6'::uuid, 'mawadah.skn18\@gmail.com', 'Sakina mawadah', 'pencacah')
+values ('005e717e-4672-5b3b-b2d6-2a9ce72685f6'::uuid, 'mawadah.skn18@gmail.com', 'Sakina mawadah', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('6894f3fb-d92a-5fbe-9436-d89ffd699243'::uuid, 'milasarmila62808\@gmail.com', 'sarmila', 'pencacah')
+values ('6894f3fb-d92a-5fbe-9436-d89ffd699243'::uuid, 'milasarmila62808@gmail.com', 'sarmila', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('0edcb8a2-e6a6-5b09-ab78-53c5a5b06101'::uuid, 'miminkomala9\@gmail.com', 'Mimin komala', 'pencacah')
+values ('0edcb8a2-e6a6-5b09-ab78-53c5a5b06101'::uuid, 'miminkomala9@gmail.com', 'Mimin komala', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('6a61f534-1e2c-5457-8d5b-711f92170777'::uuid, 'pulo0405\@gmail.com', 'Astri Meilisa Puteri', 'pencacah')
+values ('6a61f534-1e2c-5457-8d5b-711f92170777'::uuid, 'pulo0405@gmail.com', 'Astri Meilisa Puteri', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('b1035dd8-732a-5b67-9f85-177b7a556b62'::uuid, 'raynzico1010\@gmail.com', 'Siti Rosilah', 'pencacah')
+values ('b1035dd8-732a-5b67-9f85-177b7a556b62'::uuid, 'raynzico1010@gmail.com', 'Siti Rosilah', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('a7256d1e-6dd2-561a-a3ea-dfc2872849e4'::uuid, 'riamubarok2010\@gmail.com', 'Ria Anggraini', 'pencacah')
+values ('a7256d1e-6dd2-561a-a3ea-dfc2872849e4'::uuid, 'riamubarok2010@gmail.com', 'Ria Anggraini', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('450e9c90-66a6-5c60-a0b6-73f3aea05c9b'::uuid, 'rifkanabillah\@gmail.com', 'Rifka nabila', 'pencacah')
+values ('450e9c90-66a6-5c60-a0b6-73f3aea05c9b'::uuid, 'rifkanabillah@gmail.com', 'Rifka nabila', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('13c33a9c-ccbf-5dff-b7e3-ad1f717d4b32'::uuid, 'sjuhroh12\@gmail.com', 'Siti Juhroh', 'pencacah')
+values ('13c33a9c-ccbf-5dff-b7e3-ad1f717d4b32'::uuid, 'sjuhroh12@gmail.com', 'Siti Juhroh', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('6a32904f-13d6-50a4-9a4e-47bba000a581'::uuid, 'srirahayupujiutami303\@gmail.com', 'SRI RAHAYU PUJI UTAMI', 'pencacah')
+values ('6a32904f-13d6-50a4-9a4e-47bba000a581'::uuid, 'srirahayupujiutami303@gmail.com', 'SRI RAHAYU PUJI UTAMI', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('8dca7e1b-a128-5508-b638-cbc7e9e2dd9e'::uuid, 'tantridianasari004\@gmail.com', 'Tantri diana sari', 'pencacah')
+values ('8dca7e1b-a128-5508-b638-cbc7e9e2dd9e'::uuid, 'tantridianasari004@gmail.com', 'Tantri diana sari', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('39506e9e-d348-5610-bd69-7080c50b78cf'::uuid, 'uddy2828\@gmail.com', 'Muhammad Shalahuddin', 'pencacah')
+values ('39506e9e-d348-5610-bd69-7080c50b78cf'::uuid, 'uddy2828@gmail.com', 'Muhammad Shalahuddin', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('a3938aa2-b405-51a2-88d8-e7d1b2e5cf30'::uuid, 'umayy6139\@gmail.com', 'Nur Humairoh', 'pencacah')
+values ('a3938aa2-b405-51a2-88d8-e7d1b2e5cf30'::uuid, 'umayy6139@gmail.com', 'Nur Humairoh', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('5fe6cdeb-9319-520b-8864-ea4866b610c4'::uuid, 'uswatunzema13\@gmail.com', 'Uswatun khasanah', 'pencacah')
+values ('5fe6cdeb-9319-520b-8864-ea4866b610c4'::uuid, 'uswatunzema13@gmail.com', 'Uswatun khasanah', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('687d1856-c67a-5149-8937-7c36d5f7db25'::uuid, 'windipopyg\@gmail.com', 'Windi Popy Guntari', 'pencacah')
+values ('687d1856-c67a-5149-8937-7c36d5f7db25'::uuid, 'windipopyg@gmail.com', 'Windi Popy Guntari', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,
   officer_role = excluded.officer_role,
   updated_at = now();
 insert into public.fasih_officers (id, username, name, officer_role)
-values ('c0620ea0-ac8f-5733-a2bd-1dfe37c972fa'::uuid, 'yudatongkii\@gmail.com', 'Hasan wirayuda', 'pencacah')
+values ('c0620ea0-ac8f-5733-a2bd-1dfe37c972fa'::uuid, 'yudatongkii@gmail.com', 'Hasan wirayuda', 'pencacah')
 on conflict (id) do update set
   username = excluded.username,
   name = excluded.name,

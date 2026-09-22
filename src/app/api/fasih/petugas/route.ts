@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO public.fasih_officers (username, name, officer_role, is_active)
-       VALUES ($1, $2, $3, true)
-       RETURNING id, username, name, officer_role, is_active, created_at`,
+      `INSERT INTO public.fasih_officers (username, name, officer_role)
+       VALUES ($1, $2, $3)
+       RETURNING id, username, name, officer_role, created_at`,
       [username || null, name, officer_role]
     );
 

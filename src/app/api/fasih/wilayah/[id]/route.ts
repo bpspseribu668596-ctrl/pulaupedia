@@ -3,7 +3,7 @@ import { validateFasihSession } from "@/lib/fasih-auth";
 import { writeFasihActivityLog } from "@/lib/fasih-db";
 import pool from "@/lib/db";
 
-// ─── PUT: update status angka + total_region ─────────────────────────────────
+// ─── PUT: update status angka + total_assignments ────────────────────────────
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,7 +17,7 @@ export async function PUT(
     const body = await request.json();
 
     const {
-      total_region,
+      total_assignments,
       approved,
       draft,
       open,
@@ -31,7 +31,7 @@ export async function PUT(
 
     // Validate all are non-negative integers
     const intFields = {
-      total_region, approved, draft, open, submitted,
+      total_assignments, approved, draft, open, submitted,
       rejected, edited_admin, revoked, submitted_respondent, edited_supervisor,
     };
     for (const [key, val] of Object.entries(intFields)) {
@@ -59,43 +59,42 @@ export async function PUT(
 
     await pool.query("BEGIN");
     try {
-      // Update total_region di fasih_regions
-      await pool.query(
-        `UPDATE public.fasih_regions
-         SET total_region = $1
-         WHERE id = (
-           SELECT region_id FROM public.fasih_assignments WHERE id = $2
-         )`,
-        [total_region, id]
-      );
-
       if (status_id) {
         // Update existing status
         await pool.query(
           `UPDATE public.fasih_region_status
-           SET approved             = $1,
-               draft                = $2,
-               open                 = $3,
-               submitted            = $4,
-               rejected             = $5,
-               edited_admin         = $6,
-               revoked              = $7,
-               submitted_respondent = $8,
-               edited_supervisor    = $9,
+           SET total_assignments     = $1,
+               approved             = $2,
+               draft                = $3,
+               open                 = $4,
+               submitted            = $5,
+               rejected             = $6,
+               edited_admin         = $7,
+               revoked              = $8,
+               submitted_respondent = $9,
+               edited_supervisor    = $10,
                updated_at           = now()
-           WHERE assignment_id = $10`,
-          [approved, draft, open, submitted, rejected,
-           edited_admin, revoked, submitted_respondent, edited_supervisor, id]
+           WHERE assignment_id = $11`,
+          [
+            total_assignments,
+            approved, draft, open, submitted, rejected,
+            edited_admin, revoked, submitted_respondent, edited_supervisor,
+            id,
+          ]
         );
       } else {
         // Insert status if not exists
         await pool.query(
           `INSERT INTO public.fasih_region_status
-             (assignment_id, approved, draft, open, submitted, rejected,
+             (assignment_id, total_assignments, approved, draft, open, submitted, rejected,
               edited_admin, revoked, submitted_respondent, edited_supervisor)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-          [id, approved, draft, open, submitted, rejected,
-           edited_admin, revoked, submitted_respondent, edited_supervisor]
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+          [
+            id,
+            total_assignments,
+            approved, draft, open, submitted, rejected,
+            edited_admin, revoked, submitted_respondent, edited_supervisor,
+          ]
         );
       }
 
@@ -136,7 +135,7 @@ export async function DELETE(
     const existing = await pool.query(
       `SELECT a.id, pc.name AS pencacah_name, r.region_code, r.region_name
        FROM public.fasih_assignments a
-       JOIN public.fasih_regions r  ON r.id = a.region_id
+       JOIN public.fasih_regions r   ON r.id = a.region_id
        JOIN public.fasih_officers pc ON pc.id = a.pencacah_id
        WHERE a.id = $1`,
       [id]

@@ -24,9 +24,11 @@ export function middleware(request: NextRequest) {
   }
 
   // If accessing /login while admin session is active, redirect to admin
+  // (but not if explicitly requesting the fasih tab)
   if (path === '/login') {
     const sessionCookie = request.cookies.get('admin-session');
-    if (sessionCookie) {
+    const tab = request.nextUrl.searchParams.get('tab');
+    if (sessionCookie && tab !== 'fasih') {
       try {
         JSON.parse(sessionCookie.value);
         return NextResponse.redirect(new URL('/admin', request.url));
@@ -48,7 +50,8 @@ export function middleware(request: NextRequest) {
   if (fasihProtected) {
     const token = request.cookies.get(FASIH_SESSION_COOKIE)?.value;
     if (!token) {
-      const loginUrl = new URL('/fasih', request.url);
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('tab', 'fasih');
       loginUrl.searchParams.set('redirect', path);
       return NextResponse.redirect(loginUrl);
     }
@@ -56,12 +59,14 @@ export function middleware(request: NextRequest) {
     // Middleware only checks cookie presence to avoid DB calls on every request.
   }
 
-  // If accessing /fasih (login) while FASIH session cookie exists, redirect to dashboard
+  // If accessing /fasih (old login) while FASIH session cookie exists, redirect to dashboard
+  // If accessing /fasih (old login) without session, redirect to /login?tab=fasih
   if (path === '/fasih') {
     const token = request.cookies.get(FASIH_SESSION_COOKIE)?.value;
     if (token) {
       return NextResponse.redirect(new URL('/fasih/dashboard', request.url));
     }
+    return NextResponse.redirect(new URL('/login?tab=fasih', request.url));
   }
 
   return NextResponse.next();

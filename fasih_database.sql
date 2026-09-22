@@ -21,6 +21,7 @@ create table if not exists public.fasih_users (
   id uuid primary key default gen_random_uuid(),
   officer_id uuid references public.fasih_officers(id) on delete set null,
   username text unique not null,
+  password_hash text not null,
   name text not null,
   role text not null check (role in ('admin','viewer')),
   is_active boolean not null default true,
@@ -102,12 +103,23 @@ create table if not exists public.fasih_activity_logs (
   created_at timestamptz not null default now()
 );
 
+-- Sessions table for FASIH authentication
+create table if not exists public.fasih_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.fasih_users(id) on delete cascade,
+  session_token text not null unique,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
 -- Recommended indexes
 create index if not exists idx_fasih_regions_region_code on public.fasih_regions(region_code);
 create index if not exists idx_fasih_regions_island_name on public.fasih_regions(island_name);
 create index if not exists idx_fasih_assignments_pencacah on public.fasih_assignments(pencacah_id);
 create index if not exists idx_fasih_assignments_pengawas on public.fasih_assignments(pengawas_id);
 create index if not exists idx_fasih_status_assignment on public.fasih_region_status(assignment_id);
+create index if not exists idx_fasih_sessions_token on public.fasih_sessions(session_token);
+create index if not exists idx_fasih_sessions_user on public.fasih_sessions(user_id);
 
 -- IMPORTANT:
 -- No trigger is created to recalculate total_assignments from status.

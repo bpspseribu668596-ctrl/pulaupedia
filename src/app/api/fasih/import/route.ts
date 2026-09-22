@@ -287,8 +287,8 @@ export async function POST(request: NextRequest) {
             );
           } else {
             const ins = await pool.query(
-              `INSERT INTO public.fasih_officers (username, name, officer_role, is_active)
-               VALUES ($1, $2, 'pencacah', true)
+              `INSERT INTO public.fasih_officers (username, name, officer_role)
+               VALUES ($1, $2, 'pencacah')
                ON CONFLICT DO NOTHING
                RETURNING id`,
               [row.username, row.name]
@@ -314,8 +314,8 @@ export async function POST(request: NextRequest) {
             officerId = existing.rows[0].id;
           } else {
             const ins = await pool.query(
-              `INSERT INTO public.fasih_officers (name, officer_role, is_active)
-               VALUES ($1, 'pencacah', true)
+              `INSERT INTO public.fasih_officers (name, officer_role)
+               VALUES ($1, 'pencacah')
                RETURNING id`,
               [row.name]
             );
@@ -323,19 +323,29 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // 2. Upsert region — keyed on region_code
-        const regionRes = await pool.query(
-          `INSERT INTO public.fasih_regions
-             (region_code, island_name, region_name, total_region)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (region_code) DO UPDATE
-             SET island_name  = EXCLUDED.island_name,
-                 region_name  = EXCLUDED.region_name,
-                 total_region = EXCLUDED.total_region
-           RETURNING id`,
-          [row.regionCode, row.islandName, row.regionName, row.totalRegion]
+        // 2. Upsert region — keyed on region_code (no unique constraint, use SELECT+INSERT)
+        const existingRegion = await pool.query(
+          `SELECT id FROM public.fasih_regions WHERE region_code = $1`,
+          [row.regionCode]
         );
-        const regionId: string = regionRes.rows[0].id;
+        let regionId: string;
+        if (existingRegion.rows.length > 0) {
+          regionId = existingRegion.rows[0].id;
+          await pool.query(
+            `UPDATE public.fasih_regions
+               SET island_name = $1, region_name = $2
+             WHERE id = $3`,
+            [row.islandName, row.regionName, regionId]
+          );
+        } else {
+          const ins = await pool.query(
+            `INSERT INTO public.fasih_regions (region_code, island_name, region_name)
+             VALUES ($1, $2, $3)
+             RETURNING id`,
+            [row.regionCode, row.islandName, row.regionName]
+          );
+          regionId = ins.rows[0].id;
+        }
 
         // 3. Upsert assignment — unique on (pencacah_id, region_id)
         const assignmentRes = await pool.query(
@@ -352,11 +362,12 @@ export async function POST(request: NextRequest) {
         // 4. Upsert status — unique on assignment_id
         await pool.query(
           `INSERT INTO public.fasih_region_status
-             (assignment_id, approved, draft, open, submitted, rejected,
+             (assignment_id, total_assignments, approved, draft, open, submitted, rejected,
               edited_admin, revoked, submitted_respondent, edited_supervisor)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
            ON CONFLICT (assignment_id) DO UPDATE
-             SET approved            = EXCLUDED.approved,
+             SET total_assignments   = EXCLUDED.total_assignments,
+                 approved            = EXCLUDED.approved,
                  draft               = EXCLUDED.draft,
                  open                = EXCLUDED.open,
                  submitted           = EXCLUDED.submitted,
@@ -368,6 +379,7 @@ export async function POST(request: NextRequest) {
                  updated_at          = now()`,
           [
             assignmentId,
+            row.totalRegion,
             row.approved, row.draft, row.open, row.submitted,
             row.rejected, row.editedAdmin, row.revoked,
             row.submittedRespondent, row.editedSupervisor,

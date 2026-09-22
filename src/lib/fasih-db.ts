@@ -26,7 +26,6 @@ export interface FasihOfficer {
   username: string | null;
   name: string;
   officer_role: 'pencacah' | 'pengawas';
-  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -36,7 +35,6 @@ export interface FasihRegion {
   region_code: string;
   island_name: string;
   region_name: string;
-  total_region: number;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +51,7 @@ export interface FasihAssignment {
 export interface FasihRegionStatus {
   id: string;
   assignment_id: string;
+  total_assignments: number;
   approved: number;
   draft: number;
   open: number;
@@ -233,7 +232,7 @@ export async function getFasihOfficers(
   role?: 'pencacah' | 'pengawas'
 ): Promise<FasihOfficer[]> {
   const { rows } = await pool.query<FasihOfficer>(
-    `SELECT id, username, name, officer_role, is_active, created_at, updated_at
+    `SELECT id, username, name, officer_role, created_at, updated_at
      FROM public.fasih_officers
      ${role ? 'WHERE officer_role = $1' : ''}
      ORDER BY name ASC`,
@@ -246,7 +245,7 @@ export async function getFasihOfficerById(
   id: string
 ): Promise<FasihOfficer | null> {
   const { rows } = await pool.query<FasihOfficer>(
-    `SELECT id, username, name, officer_role, is_active, created_at, updated_at
+    `SELECT id, username, name, officer_role, created_at, updated_at
      FROM public.fasih_officers
      WHERE id = $1`,
     [id]
@@ -334,13 +333,14 @@ export interface AssignmentRow {
   assignment_id: string;
   pencacah_id: string;
   pencacah_name: string;
+  pencacah_username: string | null;
   pengawas_id: string | null;
   pengawas_name: string | null;
   region_id: string;
   region_code: string;
   island_name: string;
   region_name: string;
-  total_region: number;
+  total_assignments: number;
   approved: number;
   draft: number;
   open: number;
@@ -389,7 +389,7 @@ export async function getFasihAssignments(params: {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
   // Build ORDER BY clause — only allow specific columns for safety
-  const validSortColumns = ['region_code', 'island_name', 'region_name', 'total_region', 'pencacah_name', 'pengawas_name', 'approved', 'draft', 'open', 'submitted', 'rejected', 'edited_admin', 'revoked', 'submitted_respondent', 'edited_supervisor'];
+  const validSortColumns = ['region_code', 'island_name', 'region_name', 'total_assignments', 'pencacah_name', 'pengawas_name', 'approved', 'draft', 'open', 'submitted', 'rejected', 'edited_admin', 'revoked', 'submitted_respondent', 'edited_supervisor'];
   let orderBy = 'ORDER BY r.island_name ASC, r.region_name ASC';
   
   if (sortBy && validSortColumns.includes(sortBy)) {
@@ -397,7 +397,7 @@ export async function getFasihAssignments(params: {
       'region_code': 'r.region_code',
       'island_name': 'r.island_name',
       'region_name': 'r.region_name',
-      'total_region': 'r.total_region',
+      'total_assignments': 's.total_assignments',
       'pencacah_name': 'pc.name',
       'pengawas_name': 'pw.name',
       'approved': 's.approved',
@@ -430,13 +430,14 @@ export async function getFasihAssignments(params: {
        a.id   AS assignment_id,
        pc.id  AS pencacah_id,
        pc.name AS pencacah_name,
+       pc.username AS pencacah_username,
        pw.id  AS pengawas_id,
        pw.name AS pengawas_name,
        r.id   AS region_id,
        r.region_code,
        r.island_name,
        r.region_name,
-       r.total_region,
+       COALESCE(s.total_assignments,0) AS total_assignments,
        COALESCE(s.approved,0)             AS approved,
        COALESCE(s.draft,0)               AS draft,
        COALESCE(s.open,0)                AS open,

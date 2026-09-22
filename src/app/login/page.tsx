@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogIn, AlertCircle, Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+// ── CMS login form ────────────────────────────────────────────────────────────
+
+function CmsLoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,102 +29,228 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push('/admin');
+      const data = await res.json();
+      if (res.ok) {
+        router.push("/admin");
         router.refresh();
       } else {
-        setError(data.error || 'Login gagal');
+        setError(data.error ?? "Login gagal");
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Terjadi kesalahan saat login');
+    } catch {
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-              <LogIn className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-          <CardDescription>Masuk ke halaman admin Pulau Pedia</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {error}
-              </div>
-            )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="cms-username">Username</Label>
+        <Input
+          id="cms-username"
+          type="text"
+          autoComplete="username"
+          placeholder="Masukkan username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          disabled={isLoading}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="cms-password">Password</Label>
+        <Input
+          id="cms-password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Masukkan password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
+          required
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Memproses...
+          </>
+        ) : (
+          <>
+            <LogIn className="mr-2 h-4 w-4" />
+            Masuk
+          </>
+        )}
+      </Button>
+    </form>
+  );
+}
 
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Masukkan username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
+// ── FASIH login form ──────────────────────────────────────────────────────────
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Masukkan password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
+function FasihLoginForm() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-            <Button 
-              type="submit" 
-              className="w-full gap-2" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  Login
-                </>
-              )}
-            </Button>
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/fasih/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push("/fasih/dashboard");
+        router.refresh();
+      } else {
+        setError(data.error ?? "Login gagal");
+      }
+    } catch {
+      setError("Terjadi kesalahan. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            {/* <div className="text-center text-sm text-gray-500 pt-2">
-              <p>Default: username = <strong>admin</strong>, password = <strong>admin123</strong></p>
-            </div> */}
-          </form>
-        </CardContent>
-      </Card>
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <Label htmlFor="fasih-username">Username</Label>
+        <Input
+          id="fasih-username"
+          type="text"
+          autoComplete="username"
+          placeholder="Masukkan username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          disabled={isLoading}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="fasih-password">Password</Label>
+        <Input
+          id="fasih-password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Masukkan password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
+          required
+        />
+      </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Memproses...
+          </>
+        ) : (
+          <>
+            <LogIn className="mr-2 h-4 w-4" />
+            Masuk
+          </>
+        )}
+      </Button>
+    </form>
+  );
+}
+
+// ── Main page — reads ?tab= from URL ─────────────────────────────────────────
+
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "fasih" ? "fasih" : "cms";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync tab if URL param changes (e.g. navigating back)
+  useEffect(() => {
+    setActiveTab(searchParams.get("tab") === "fasih" ? "fasih" : "cms");
+  }, [searchParams]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+      <div className="w-full max-w-sm space-y-4">
+        <div className="text-center space-y-1">
+          <h1 className="text-xl font-bold tracking-tight">BPS Kepulauan Seribu</h1>
+          <p className="text-sm text-muted-foreground">Sistem Informasi Internal</p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="cms">Admin Pulau Pedia</TabsTrigger>
+            <TabsTrigger value="fasih">FASIH</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="cms" className="mt-0">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base">Masuk sebagai Admin Pulau Pedia</CardTitle>
+                <CardDescription>
+                  Gunakan akun admin Pulau Pedia yang telah diberikan
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CmsLoginForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="fasih" className="mt-0">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base">Masuk ke FASIH</CardTitle>
+                <CardDescription>
+                  Gunakan akun FASIH Monitoring yang telah diberikan
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FasihLoginForm />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <p className="text-center text-xs text-muted-foreground">
+          BPS Kabupaten Kepulauan Seribu
+        </p>
+      </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

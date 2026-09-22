@@ -12,7 +12,7 @@ export default async function FasihAppLayout({
   // Server-side session validation — full DB check
   const user = await validateFasihSession();
   if (!user) {
-    redirect("/fasih");
+    redirect("/login?tab=fasih");
   }
 
   return (
