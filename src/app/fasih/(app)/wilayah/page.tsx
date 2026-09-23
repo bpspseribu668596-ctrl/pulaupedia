@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   Card,
   CardContent,
@@ -77,6 +78,9 @@ const STATUS_COLS: { key: keyof AssignmentRow; label: string; line2?: string; li
 const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function FasihWilayahPage() {
+  const { state } = useSidebar();
+  const sidebarOpen = state === "expanded";
+
   const [data, setData] = useState<WilayahResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -189,7 +193,16 @@ export default function FasihWilayahPage() {
         </Alert>
       )}
 
-      <Card className="border shadow-sm bg-white">
+      <Card
+        className="border shadow-sm bg-white"
+        style={{
+          width: sidebarOpen
+            ? "calc(100vw - 16rem - 3rem)"   // sidebar expanded (16rem) + padding kiri (3rem)
+            : "calc(100vw - 3rem)",            // sidebar collapsed (icon 3rem) + padding kiri
+          maxWidth: "100%",
+          transition: "width 200ms ease",
+        }}
+      >
         <CardHeader className="p-6 pb-4 border-b">
           <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
             <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -286,14 +299,14 @@ export default function FasihWilayahPage() {
                         <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[180px]">
                           <SortHeader column="region_name" label="Nama Wilayah" />
                         </TableHead>
-                        <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[80px] text-center">
-                          <SortHeader column="total_assignments" label="Total" />
-                        </TableHead>
                         <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[140px]">
                           <SortHeader column="pencacah_name" label="Pencacah" />
                         </TableHead>
                         <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[140px]">
                           <SortHeader column="pengawas_name" label="Pengawas" />
+                        </TableHead>
+                        <TableHead className="px-4 py-3 font-semibold whitespace-nowrap min-w-[80px] text-center">
+                          <SortHeader column="total_assignments" label="Total" />
                         </TableHead>
                         {STATUS_COLS.map((s) =>
                           visibleColumns.has(String(s.key)) ? (
@@ -322,9 +335,6 @@ export default function FasihWilayahPage() {
                             <TableCell className="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.region_code}</TableCell>
                             <TableCell className="px-4 py-3 whitespace-nowrap">{row.island_name}</TableCell>
                             <TableCell className="px-4 py-3 font-medium whitespace-nowrap">{row.region_name}</TableCell>
-                            <TableCell className="px-4 py-3 text-center tabular-nums whitespace-nowrap">
-                              {row.total_assignments.toLocaleString("id-ID")}
-                            </TableCell>
                             <TableCell className="px-4 py-3 whitespace-nowrap">
                               <div className="flex flex-col leading-tight">
                                 <span className="font-medium">{row.pencacah_name}</span>
@@ -337,6 +347,9 @@ export default function FasihWilayahPage() {
                               {row.pengawas_name ?? (
                                 <Badge variant="outline" className="text-xs text-slate-400 font-normal">—</Badge>
                               )}
+                            </TableCell>
+                            <TableCell className="px-4 py-3 text-center tabular-nums whitespace-nowrap">
+                              {row.total_assignments.toLocaleString("id-ID")}
                             </TableCell>
                             {STATUS_COLS.map((s) => {
                               if (!visibleColumns.has(String(s.key))) return null;

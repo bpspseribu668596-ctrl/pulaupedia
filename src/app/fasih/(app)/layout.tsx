@@ -16,7 +16,7 @@ export default async function FasihAppLayout({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <FasihSidebar
         user={{
           name: user.name,
