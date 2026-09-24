@@ -360,7 +360,7 @@ export async function getFasihAssignments(params: {
   pageSize?: number;
   sortBy?: string;
   sortDir?: "asc" | "desc";
-}): Promise<{ rows: AssignmentRow[]; total: number }> {
+}): Promise<{ rows: AssignmentRow[]; total: number; filteredStats: DashboardStats }> {
   const { search = '', island = '', pencacahId = '', page = 1, pageSize = 50, sortBy = '', sortDir = 'asc' } = params;
   const offset = (page - 1) * pageSize;
 
@@ -370,7 +370,7 @@ export async function getFasihAssignments(params: {
 
   if (search) {
     conditions.push(
-      `(r.region_code ILIKE $${idx} OR r.region_name ILIKE $${idx} OR r.island_name ILIKE $${idx} OR pc.name ILIKE $${idx})`
+      `(r.region_code ILIKE $${idx} OR r.region_name ILIKE $${idx} OR r.island_name ILIKE $${idx} OR pc.name ILIKE $${idx} OR pc.username ILIKE $${idx})`
     );
     values.push(`%${search}%`);
     idx++;
@@ -414,19 +414,38 @@ export async function getFasihAssignments(params: {
     orderBy = `ORDER BY ${columnMap[sortBy]} ${direction}`;
   }
 
-  const countResult = await pool.query(
-    `SELECT COUNT(*)::int AS total
-     FROM public.fasih_assignments a
-     JOIN public.fasih_regions r ON r.id = a.region_id
-     JOIN public.fasih_officers pc ON pc.id = a.pencacah_id
-     LEFT JOIN public.fasih_officers pw ON pw.id = a.pengawas_id
-     LEFT JOIN public.fasih_region_status s ON s.assignment_id = a.id
-     ${where}`,
-    values
-  );
-
-  const dataResult = await pool.query<AssignmentRow>(
-    `SELECT
+  const [countResult, statsResult, dataResult] = await Promise.all([
+    pool.query(
+      `SELECT COUNT(*)::int AS total
+       FROM public.fasih_assignments a
+       JOIN public.fasih_regions r ON r.id = a.region_id
+       JOIN public.fasih_officers pc ON pc.id = a.pencacah_id
+       LEFT JOIN public.fasih_officers pw ON pw.id = a.pengawas_id
+       LEFT JOIN public.fasih_region_status s ON s.assignment_id = a.id
+       ${where}`,
+      values
+    ),
+    pool.query<DashboardStats>(
+      `SELECT
+         COUNT(a.id)::int                              AS total_assignments,
+         COALESCE(SUM(s.approved),0)::int             AS total_approved,
+         COALESCE(SUM(s.draft),0)::int                AS total_draft,
+         COALESCE(SUM(s.open),0)::int                 AS total_open,
+         COALESCE(SUM(s.submitted),0)::int            AS total_submitted,
+         COALESCE(SUM(s.rejected),0)::int             AS total_rejected,
+         COALESCE(SUM(s.edited_admin),0)::int         AS total_edited_admin,
+         COALESCE(SUM(s.revoked),0)::int              AS total_revoked,
+         COALESCE(SUM(s.submitted_respondent),0)::int AS total_submitted_respondent,
+         COALESCE(SUM(s.edited_supervisor),0)::int    AS total_edited_supervisor
+       FROM public.fasih_assignments a
+       JOIN public.fasih_regions r ON r.id = a.region_id
+       JOIN public.fasih_officers pc ON pc.id = a.pencacah_id
+       LEFT JOIN public.fasih_officers pw ON pw.id = a.pengawas_id
+       LEFT JOIN public.fasih_region_status s ON s.assignment_id = a.id
+       ${where}`,
+      values
+    ),
+    pool.query<AssignmentRow>(    `SELECT
        a.id   AS assignment_id,
        pc.id  AS pencacah_id,
        pc.name AS pencacah_name,
@@ -456,9 +475,14 @@ export async function getFasihAssignments(params: {
      ${orderBy}
      LIMIT $${idx} OFFSET $${idx + 1}`,
     [...values, pageSize, offset]
-  );
+  ),
+  ]);
 
-  return { rows: dataResult.rows, total: countResult.rows[0].total };
+  return {
+    rows: dataResult.rows,
+    total: countResult.rows[0].total,
+    filteredStats: statsResult.rows[0],
+  };
 }
 
 export async function getDistinctIslands(): Promise<string[]> {

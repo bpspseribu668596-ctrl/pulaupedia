@@ -69,7 +69,7 @@ const statusCards = (s: DashboardStats) => [
     color: "bg-orange-50 text-orange-700",
   },
   {
-    label: "Sub. Respondent",
+    label: "Submitted Respondent",
     value: s.total_submitted_respondent,
     icon: UserCheck,
     color: "bg-purple-50 text-purple-700",

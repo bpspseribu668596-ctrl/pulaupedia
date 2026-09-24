@@ -256,9 +256,26 @@ export default function Footer() {
             </div>
 
             <div className="border-t border-gray-800 pt-5 sm:pt-6">
-              <p className="text-center text-gray-400 text-xs sm:text-sm">
-                © 2026 {footerConfig?.companyName ?? 'BPS Kepulauan Seribu'}. All rights reserved.
-              </p>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <p className="text-center text-gray-400 text-xs sm:text-sm flex-1">
+                  © 2026 {footerConfig?.companyName ?? 'BPS Kepulauan Seribu'}. All rights reserved.
+                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <Link
+                    href="/login?tab=fasih"
+                    className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+                  >
+                    FASIH
+                  </Link>
+                  <span className="text-gray-700 text-[10px]">·</span>
+                  <Link
+                    href="/login"
+                    className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+                  >
+                    Admin
+                  </Link>
+                </div>
+              </div>
             </div>
           </>
         )}
