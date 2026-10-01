@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, icon, href, sortOrder } = body;
+    const { name, description, icon, iconImage, href, sortOrder } = body;
 
     if (!name || !icon || !href) {
       return NextResponse.json(
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { rows } = await pool.query(
-      'INSERT INTO main_portals (name, description, icon, href, "sortOrder", "isActive") VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id',
-      [name, description || null, icon, href, sortOrder || 0]
+      'INSERT INTO main_portals (name, description, icon, "iconImage", href, "sortOrder", "isActive") VALUES ($1, $2, $3, $4, $5, $6, TRUE) RETURNING id',
+      [name, description || null, icon, iconImage || null, href, sortOrder || 0]
     );
 
     return NextResponse.json(

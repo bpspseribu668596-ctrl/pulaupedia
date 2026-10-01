@@ -32,6 +32,7 @@ interface MainPortal {
   name: string;
   description: string;
   icon: string;
+  iconImage?: string | null;
   href: string;
 }
 
@@ -216,7 +217,15 @@ export default function Home() {
                       className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-3 sm:gap-4 transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
                     >
                       <div className="bg-white/20 p-3 sm:p-4 rounded-full group-hover:bg-white/30 transition-all">
-                        <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                        {item.iconImage ? (
+                          <img
+                            src={item.iconImage}
+                            alt={item.name}
+                            className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                          />
+                        ) : (
+                          <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                        )}
                       </div>
                       <div className="text-center min-w-0 w-full">
                         <h3 className="text-white text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 leading-tight break-words">

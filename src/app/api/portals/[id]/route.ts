@@ -37,7 +37,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, icon, href, sortOrder, isActive } = body;
+    const { name, description, icon, iconImage, href, sortOrder, isActive } = body;
 
     if (!name || !icon || !href) {
       return NextResponse.json(
@@ -47,8 +47,8 @@ export async function PUT(
     }
 
     await pool.query(
-      'UPDATE main_portals SET name = $1, description = $2, icon = $3, href = $4, "sortOrder" = $5, "isActive" = $6, "updatedAt" = NOW() WHERE id = $7',
-      [name, description || null, icon, href, sortOrder || 0, isActive !== undefined ? isActive : true, parseInt(id)]
+      'UPDATE main_portals SET name = $1, description = $2, icon = $3, "iconImage" = $4, href = $5, "sortOrder" = $6, "isActive" = $7, "updatedAt" = NOW() WHERE id = $8',
+      [name, description || null, icon, iconImage || null, href, sortOrder || 0, isActive !== undefined ? isActive : true, parseInt(id)]
     );
 
     return NextResponse.json(

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, Plus, Trash2, Edit2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Upload, ImageIcon } from "lucide-react";
 import {
   BookOpen,
   Archive,
@@ -27,6 +27,7 @@ interface Portal {
   name: string;
   description: string;
   icon: string;
+  iconImage?: string | null;
   href: string;
   sortOrder: number;
   isActive: boolean;
@@ -72,16 +73,22 @@ export default function AdminMainPortalPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [expandedPortalId, setExpandedPortalId] = useState<number | null>(null);
-  
+
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<'portal' | 'item'>('portal');
   const [selectedPortalId, setSelectedPortalId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
+
+  // Icon mode: 'lucide' atau 'image'
+  const [iconMode, setIconMode] = useState<'lucide' | 'image'>('lucide');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [portalFormData, setPortalFormData] = useState<Portal>({
     name: "",
     description: "",
     icon: "BookOpen",
+    iconImage: null,
     href: "",
     sortOrder: 0,
     isActive: true,
@@ -106,7 +113,6 @@ export default function AdminMainPortalPage() {
       const response = await fetch('/api/portals?all=true');
       if (response.ok) {
         const data = await response.json();
-        
         const portalsWithItems = await Promise.all(
           data.map(async (portal: Portal) => {
             try {
@@ -118,7 +124,6 @@ export default function AdminMainPortalPage() {
             }
           })
         );
-        
         setPortals(portalsWithItems);
       }
     } catch (error) {
@@ -133,6 +138,7 @@ export default function AdminMainPortalPage() {
       name: "",
       description: "",
       icon: "BookOpen",
+      iconImage: null,
       href: "",
       sortOrder: 0,
       isActive: true,
@@ -148,6 +154,9 @@ export default function AdminMainPortalPage() {
     });
     setEditingId(null);
     setSelectedPortalId(null);
+    setIconMode('lucide');
+    setSelectedFile(null);
+    setPreviewUrl(null);
   };
 
   const openPortalDialog = (portal?: Portal) => {
@@ -155,6 +164,15 @@ export default function AdminMainPortalPage() {
     if (portal) {
       setEditingId(portal.id || null);
       setPortalFormData(portal);
+      // Tentukan mode icon berdasarkan data existing
+      if (portal.iconImage) {
+        setIconMode('image');
+        setPreviewUrl(portal.iconImage);
+      } else {
+        setIconMode('lucide');
+        setPreviewUrl(null);
+      }
+      setSelectedFile(null);
     } else {
       resetForms();
     }
@@ -186,31 +204,65 @@ export default function AdminMainPortalPage() {
     resetForms();
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setSaveMessage("Error: Hanya file gambar yang diizinkan");
+      return;
+    }
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    // Kosongkan iconImage lama saat pilih file baru
+    setPortalFormData((prev) => ({ ...prev, iconImage: null }));
+  };
+
   const handleSavePortal = async () => {
-    if (!portalFormData.name || !portalFormData.description || !portalFormData.href || !portalFormData.icon) {
-      setSaveMessage("Error: Semua field portal harus diisi");
+    if (!portalFormData.name || !portalFormData.description || !portalFormData.href) {
+      setSaveMessage("Error: Nama, deskripsi, dan URL harus diisi");
+      return;
+    }
+    if (iconMode === 'lucide' && !portalFormData.icon) {
+      setSaveMessage("Error: Pilih icon");
       return;
     }
 
     setIsSaving(true);
     setSaveMessage("");
+
     try {
+      let iconImage = portalFormData.iconImage || null;
+
+      // Upload file baru jika ada
+      if (iconMode === 'image' && selectedFile) {
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        const uploadRes = await fetch('/api/uploads/portals', { method: 'POST', body: fd });
+        if (!uploadRes.ok) throw new Error('Upload gagal');
+        const result = await uploadRes.json();
+        iconImage = result.url;
+      }
+
+      // Kalau mode lucide, hapus iconImage
+      if (iconMode === 'lucide') {
+        iconImage = null;
+      }
+
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId ? `/api/portals/${editingId}` : '/api/portals';
-      
-      const response = await fetch(url, {
-        method: method,
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(portalFormData),
+        body: JSON.stringify({ ...portalFormData, iconImage }),
       });
 
-      if (!response.ok) throw new Error('Failed to save portal');
+      if (!res.ok) throw new Error('Gagal menyimpan');
 
       setSaveMessage(editingId ? "Portal berhasil diperbarui!" : "Portal berhasil ditambahkan!");
       closeDialog();
       fetchPortals();
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
+    } catch {
       setSaveMessage("Error: Gagal menyimpan portal");
     } finally {
       setIsSaving(false);
@@ -222,7 +274,6 @@ export default function AdminMainPortalPage() {
       setSaveMessage("Error: Semua field item harus diisi");
       return;
     }
-
     if (!selectedPortalId) {
       setSaveMessage("Error: Portal tidak dipilih");
       return;
@@ -232,12 +283,12 @@ export default function AdminMainPortalPage() {
     setSaveMessage("");
     try {
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId 
+      const url = editingId
         ? `/api/portals/${selectedPortalId}/items/${editingId}`
         : `/api/portals/${selectedPortalId}/items`;
-      
+
       const response = await fetch(url, {
-        method: method,
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(itemFormData),
       });
@@ -248,7 +299,7 @@ export default function AdminMainPortalPage() {
       closeDialog();
       fetchPortals();
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
+    } catch {
       setSaveMessage("Error: Gagal menyimpan item");
     } finally {
       setIsSaving(false);
@@ -257,16 +308,14 @@ export default function AdminMainPortalPage() {
 
   const handleDeletePortal = async (id: number) => {
     if (!confirm('Apakah Anda yakin ingin menghapus portal ini beserta semua itemnya?')) return;
-
     setIsSaving(true);
     try {
       const response = await fetch(`/api/portals/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete portal');
-
       setSaveMessage("Portal berhasil dihapus!");
       fetchPortals();
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
+    } catch {
       setSaveMessage("Error: Gagal menghapus portal");
     } finally {
       setIsSaving(false);
@@ -275,16 +324,14 @@ export default function AdminMainPortalPage() {
 
   const handleDeleteItem = async (portalId: number, itemId: number) => {
     if (!confirm('Apakah Anda yakin ingin menghapus item ini?')) return;
-
     setIsSaving(true);
     try {
       const response = await fetch(`/api/portals/${portalId}/items/${itemId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete item');
-
       setSaveMessage("Item berhasil dihapus!");
       fetchPortals();
       setTimeout(() => setSaveMessage(""), 3000);
-    } catch (error) {
+    } catch {
       setSaveMessage("Error: Gagal menghapus item");
     } finally {
       setIsSaving(false);
@@ -296,32 +343,22 @@ export default function AdminMainPortalPage() {
     return option ? option.Icon : BookOpen;
   };
 
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .trim()
+  const generateSlug = (text: string) =>
+    text.toLowerCase().trim()
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
-  };
 
   const generateSuggestedPortalHref = () => {
     if (!portalFormData.name) return '';
-    
-    const slug = generateSlug(portalFormData.name);
-    return `/${slug}`;
+    return `/${generateSlug(portalFormData.name)}`;
   };
 
   const generateSuggestedLink = () => {
     if (!itemFormData.name || !selectedPortalId) return '';
-    
     const portal = portals.find(p => p.id === selectedPortalId);
     if (!portal) return '';
-    
-    const portalHref = portal.href;
-    const itemSlug = generateSlug(itemFormData.name);
-    
-    return `${portalHref}/${itemSlug}`;
+    return `${portal.href}/${generateSlug(itemFormData.name)}`;
   };
 
   if (isLoading) {
@@ -337,8 +374,8 @@ export default function AdminMainPortalPage() {
 
       {saveMessage && (
         <div className={`p-4 rounded-lg ${
-          saveMessage.includes("berhasil") 
-            ? "bg-green-50 border border-green-200 text-green-800" 
+          saveMessage.includes("berhasil")
+            ? "bg-green-50 border border-green-200 text-green-800"
             : "bg-red-50 border border-red-200 text-red-800"
         }`}>
           {saveMessage}
@@ -361,44 +398,30 @@ export default function AdminMainPortalPage() {
             <div className="space-y-2">
               {portals.map((portal) => (
                 <div key={portal.id} className="border rounded-lg overflow-hidden">
-                  <div className="p-4 bg-gray-50 flex items-center justify-between hover:bg-gray-100 cursor-pointer"
-                    onClick={() => setExpandedPortalId(expandedPortalId === portal.id ? null : (portal.id || null))}>
+                  <div
+                    className="p-4 bg-gray-50 flex items-center justify-between hover:bg-gray-100 cursor-pointer"
+                    onClick={() => setExpandedPortalId(expandedPortalId === portal.id ? null : (portal.id || null))}
+                  >
                     <div className="flex-1 flex items-center gap-3">
-                      {(() => {
-                        const Icon = getIconComponent(portal.icon);
-                        return <Icon className="w-5 h-5 text-gray-400" />;
-                      })()}
+                      {/* Preview icon — gambar atau lucide */}
+                      {portal.iconImage ? (
+                        <img src={portal.iconImage} alt={portal.name} className="w-6 h-6 object-contain rounded" />
+                      ) : (
+                        (() => { const Icon = getIconComponent(portal.icon); return <Icon className="w-5 h-5 text-gray-400" />; })()
+                      )}
                       <div>
                         <p className="font-semibold text-sm">{portal.name}</p>
                         <p className="text-xs text-gray-500">{portal.items?.length || 0} items</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openPortalDialog(portal);
-                        }}
-                      >
+                      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openPortalDialog(portal); }}>
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePortal(portal.id || 0);
-                        }}
-                        disabled={isSaving}
-                      >
+                      <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleDeletePortal(portal.id || 0); }} disabled={isSaving}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      {expandedPortalId === portal.id ? 
-                        <ChevronUp className="w-5 h-5" /> : 
-                        <ChevronDown className="w-5 h-5" />
-                      }
+                      {expandedPortalId === portal.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                   </div>
 
@@ -406,44 +429,27 @@ export default function AdminMainPortalPage() {
                     <div className="p-4 bg-white border-t space-y-3">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-sm">Items untuk {portal.name}</h4>
-                        <Button
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => openItemDialog(portal.id || 0)}
-                        >
+                        <Button size="sm" className="gap-2" onClick={() => openItemDialog(portal.id || 0)}>
                           <Plus className="w-3 h-3" />
                           Tambah Item
                         </Button>
                       </div>
-                      
                       {portal.items && portal.items.length > 0 ? (
                         <div className="space-y-2">
                           {portal.items.map((item) => (
                             <div key={item.id} className="p-3 bg-gray-50 rounded flex items-center justify-between">
                               <div className="flex-1 flex items-center gap-2">
-                                {(() => {
-                                  const Icon = getIconComponent(item.icon);
-                                  return <Icon className="w-4 h-4 text-gray-400" />;
-                                })()}
+                                {(() => { const Icon = getIconComponent(item.icon); return <Icon className="w-4 h-4 text-gray-400" />; })()}
                                 <div>
                                   <p className="text-sm font-medium">{item.name}</p>
                                   <p className="text-xs text-gray-500">{item.link}</p>
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => openItemDialog(portal.id || 0, item)}
-                                >
+                                <Button size="sm" variant="outline" onClick={() => openItemDialog(portal.id || 0, item)}>
                                   <Edit2 className="w-3 h-3" />
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteItem(portal.id || 0, item.id || 0)}
-                                  disabled={isSaving}
-                                >
+                                <Button size="sm" variant="destructive" onClick={() => handleDeleteItem(portal.id || 0, item.id || 0)} disabled={isSaving}>
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
                               </div>
@@ -457,7 +463,6 @@ export default function AdminMainPortalPage() {
                   )}
                 </div>
               ))}
-              
               {portals.length === 0 && (
                 <p className="text-center text-gray-400 py-8">Belum ada portals</p>
               )}
@@ -466,15 +471,15 @@ export default function AdminMainPortalPage() {
         </Card>
       </div>
 
+      {/* ── Dialog ── */}
       {showDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>
-                {dialogMode === 'portal' 
+                {dialogMode === 'portal'
                   ? (editingId ? 'Edit Portal' : 'Tambah Portal Baru')
-                  : (editingId ? 'Edit Item' : 'Tambah Item Baru')
-                }
+                  : (editingId ? 'Edit Item' : 'Tambah Item Baru')}
               </CardTitle>
               <button onClick={closeDialog} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
@@ -483,6 +488,7 @@ export default function AdminMainPortalPage() {
             <CardContent className="space-y-4">
               {dialogMode === 'portal' ? (
                 <>
+                  {/* Nama */}
                   <div>
                     <Label>Nama Portal</Label>
                     <Input
@@ -493,6 +499,7 @@ export default function AdminMainPortalPage() {
                     />
                   </div>
 
+                  {/* Deskripsi */}
                   <div>
                     <Label>Deskripsi</Label>
                     <Textarea
@@ -503,29 +510,110 @@ export default function AdminMainPortalPage() {
                     />
                   </div>
 
+                  {/* Icon — toggle lucide vs upload */}
                   <div>
                     <Label>Icon</Label>
-                    <div className="grid grid-cols-4 gap-2 mt-2">
-                      {iconOptions.map((option) => {
-                        const Icon = option.Icon;
-                        return (
-                          <button
-                            key={option.value}
-                            onClick={() => setPortalFormData({ ...portalFormData, icon: option.value })}
-                            className={`p-3 rounded border-2 flex items-center justify-center transition-all ${
-                              portalFormData.icon === option.value
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            title={option.label}
-                          >
-                            <Icon className="w-5 h-5" />
-                          </button>
-                        );
-                      })}
+                    {/* Toggle tabs */}
+                    <div className="flex gap-2 mt-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setIconMode('lucide')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                          iconMode === 'lucide'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Pilih Icon
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIconMode('image')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                          iconMode === 'image'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        Upload Gambar
+                      </button>
                     </div>
+
+                    {/* Lucide grid */}
+                    {iconMode === 'lucide' && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {iconOptions.map((option) => {
+                          const Icon = option.Icon;
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => setPortalFormData({ ...portalFormData, icon: option.value })}
+                              className={`p-3 rounded border-2 flex flex-col items-center gap-1 transition-all ${
+                                portalFormData.icon === option.value
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                              title={option.label}
+                            >
+                              <Icon className="w-5 h-5" />
+                              <span className="text-[10px] text-gray-500">{option.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Upload gambar */}
+                    {iconMode === 'image' && (
+                      <div className="space-y-3">
+                        <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                          <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                          <span className="text-sm text-gray-500">Klik untuk pilih gambar</span>
+                          <span className="text-xs text-gray-400">PNG, JPG, SVG, WebP</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileSelect}
+                          />
+                        </label>
+
+                        {previewUrl && (
+                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                            <img src={previewUrl} alt="Preview" className="w-12 h-12 object-contain rounded" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-green-700">
+                                {selectedFile ? `✓ Siap diupload: ${selectedFile.name}` : '✓ Gambar saat ini'}
+                              </p>
+                              {!selectedFile && portalFormData.iconImage && (
+                                <p className="text-xs text-gray-400 truncate">{portalFormData.iconImage}</p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFile(null);
+                                setPreviewUrl(null);
+                                setPortalFormData((prev) => ({ ...prev, iconImage: null }));
+                              }}
+                              className="text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-gray-400">
+                          Gambar akan ditampilkan sebagai icon portal di halaman utama. Rekomendasi: ukuran 64×64px atau lebih, format transparan (PNG/SVG).
+                        </p>
+                      </div>
+                    )}
                   </div>
 
+                  {/* URL */}
                   <div>
                     <Label>URL/Href</Label>
                     <div className="space-y-2 mt-1">
@@ -540,13 +628,8 @@ export default function AdminMainPortalPage() {
                             <p className="text-xs text-blue-600 font-medium">Saran:</p>
                             <p className="text-sm text-blue-800">{generateSuggestedPortalHref()}</p>
                           </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setPortalFormData({ ...portalFormData, href: generateSuggestedPortalHref() })}
-                            className="shrink-0"
-                          >
+                          <Button type="button" size="sm" variant="outline"
+                            onClick={() => setPortalFormData({ ...portalFormData, href: generateSuggestedPortalHref() })}>
                             Gunakan
                           </Button>
                         </div>
@@ -554,6 +637,7 @@ export default function AdminMainPortalPage() {
                     </div>
                   </div>
 
+                  {/* Sort order */}
                   <div>
                     <Label>Sort Order</Label>
                     <Input
@@ -567,11 +651,9 @@ export default function AdminMainPortalPage() {
                   <div className="flex gap-2 pt-4">
                     <Button onClick={handleSavePortal} disabled={isSaving} className="flex-1 gap-2">
                       <Save className="w-4 h-4" />
-                      {editingId ? 'Simpan Perubahan' : 'Tambah Portal'}
+                      {isSaving ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Portal'}
                     </Button>
-                    <Button variant="outline" onClick={closeDialog} className="flex-1">
-                      Batal
-                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">Batal</Button>
                   </div>
                 </>
               ) : (
@@ -604,8 +686,9 @@ export default function AdminMainPortalPage() {
                         return (
                           <button
                             key={option.value}
+                            type="button"
                             onClick={() => setItemFormData({ ...itemFormData, icon: option.value })}
-                            className={`p-3 rounded border-2 flex items-center justify-center transition-all ${
+                            className={`p-3 rounded border-2 flex flex-col items-center gap-1 transition-all ${
                               itemFormData.icon === option.value
                                 ? 'border-blue-500 bg-blue-50'
                                 : 'border-gray-200 hover:border-gray-300'
@@ -613,6 +696,7 @@ export default function AdminMainPortalPage() {
                             title={option.label}
                           >
                             <Icon className="w-5 h-5" />
+                            <span className="text-[10px] text-gray-500">{option.label}</span>
                           </button>
                         );
                       })}
@@ -633,13 +717,8 @@ export default function AdminMainPortalPage() {
                             <p className="text-xs text-blue-600 font-medium">Saran:</p>
                             <p className="text-sm text-blue-800">{generateSuggestedLink()}</p>
                           </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setItemFormData({ ...itemFormData, link: generateSuggestedLink() })}
-                            className="shrink-0"
-                          >
+                          <Button type="button" size="sm" variant="outline"
+                            onClick={() => setItemFormData({ ...itemFormData, link: generateSuggestedLink() })}>
                             Gunakan
                           </Button>
                         </div>
@@ -647,96 +726,66 @@ export default function AdminMainPortalPage() {
                     </div>
                   </div>
 
-                   <div>
-                     <Label>Sort Order</Label>
-                     <Input
-                       type="number"
-                       value={itemFormData.sortOrder}
-                       onChange={(e) => setItemFormData({ ...itemFormData, sortOrder: parseInt(e.target.value) || 0 })}
-                       className="mt-1"
-                     />
-                   </div>
+                  <div>
+                    <Label>Sort Order</Label>
+                    <Input
+                      type="number"
+                      value={itemFormData.sortOrder}
+                      onChange={(e) => setItemFormData({ ...itemFormData, sortOrder: parseInt(e.target.value) || 0 })}
+                      className="mt-1"
+                    />
+                  </div>
 
-                   <div>
-                     <Label>Documents</Label>
-                     <div className="mt-2 space-y-2 p-3 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
-                       {itemFormData.documents && itemFormData.documents.length > 0 ? (
-                         itemFormData.documents.map((doc, index) => (
-                           <div key={index} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
-                             <div className="flex-1 min-w-0">
-                               <p className="text-sm font-medium truncate">{doc.title}</p>
-                               <p className="text-xs text-gray-500 truncate">{doc.link}</p>
-                             </div>
-                             <Button
-                               type="button"
-                               size="sm"
-                               variant="destructive"
-                               onClick={() => {
-                                 setItemFormData({
-                                   ...itemFormData,
-                                   documents: itemFormData.documents?.filter((_, i) => i !== index) || [],
-                                 });
-                               }}
-                               className="ml-2 shrink-0"
-                             >
-                               <Trash2 className="w-3 h-3" />
-                             </Button>
-                           </div>
-                         ))
-                       ) : (
-                         <p className="text-sm text-gray-500 text-center py-2">Belum ada dokumen</p>
-                       )}
-                     </div>
-                   </div>
+                  <div>
+                    <Label>Documents</Label>
+                    <div className="mt-2 space-y-2 p-3 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                      {itemFormData.documents && itemFormData.documents.length > 0 ? (
+                        itemFormData.documents.map((doc, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{doc.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{doc.link}</p>
+                            </div>
+                            <Button type="button" size="sm" variant="destructive"
+                              onClick={() => setItemFormData({ ...itemFormData, documents: itemFormData.documents?.filter((_, i) => i !== index) || [] })}
+                              className="ml-2 shrink-0">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-2">Belum ada dokumen</p>
+                      )}
+                    </div>
+                  </div>
 
-                   <div className="border-t pt-4">
-                     <Label>Tambah Dokumen Baru</Label>
-                     <div className="space-y-2 mt-2">
-                       <Input
-                         placeholder="Judul dokumen"
-                         id="doc-title"
-                         className="mt-1"
-                       />
-                       <Input
-                         placeholder="Link dokumen (https://...)"
-                         id="doc-link"
-                         className="mt-1"
-                       />
-                       <Button
-                         type="button"
-                         variant="outline"
-                         className="w-full gap-2"
-                         onClick={() => {
-                           const titleInput = document.getElementById('doc-title') as HTMLInputElement;
-                           const linkInput = document.getElementById('doc-link') as HTMLInputElement;
-                           
-                           if (titleInput?.value && linkInput?.value) {
-                             setItemFormData({
-                               ...itemFormData,
-                               documents: [
-                                 ...(itemFormData.documents || []),
-                                 { title: titleInput.value, link: linkInput.value },
-                               ],
-                             });
-                             titleInput.value = '';
-                             linkInput.value = '';
-                           }
-                         }}
-                       >
-                         <Plus className="w-4 h-4" />
-                         Tambah Dokumen
-                       </Button>
-                     </div>
-                   </div>
+                  <div className="border-t pt-4">
+                    <Label>Tambah Dokumen Baru</Label>
+                    <div className="space-y-2 mt-2">
+                      <Input placeholder="Judul dokumen" id="doc-title" className="mt-1" />
+                      <Input placeholder="Link dokumen (https://...)" id="doc-link" className="mt-1" />
+                      <Button type="button" variant="outline" className="w-full gap-2"
+                        onClick={() => {
+                          const titleInput = document.getElementById('doc-title') as HTMLInputElement;
+                          const linkInput = document.getElementById('doc-link') as HTMLInputElement;
+                          if (titleInput?.value && linkInput?.value) {
+                            setItemFormData({ ...itemFormData, documents: [...(itemFormData.documents || []), { title: titleInput.value, link: linkInput.value }] });
+                            titleInput.value = '';
+                            linkInput.value = '';
+                          }
+                        }}>
+                        <Plus className="w-4 h-4" />
+                        Tambah Dokumen
+                      </Button>
+                    </div>
+                  </div>
 
-                   <div className="flex gap-2 pt-4">
-                     <Button onClick={handleSaveItem} disabled={isSaving} className="flex-1 gap-2">
-                       <Save className="w-4 h-4" />
-                       {editingId ? 'Simpan Perubahan' : 'Tambah Item'}
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleSaveItem} disabled={isSaving} className="flex-1 gap-2">
+                      <Save className="w-4 h-4" />
+                      {isSaving ? 'Menyimpan...' : editingId ? 'Simpan Perubahan' : 'Tambah Item'}
                     </Button>
-                    <Button variant="outline" onClick={closeDialog} className="flex-1">
-                      Batal
-                    </Button>
+                    <Button variant="outline" onClick={closeDialog} className="flex-1">Batal</Button>
                   </div>
                 </>
               )}
