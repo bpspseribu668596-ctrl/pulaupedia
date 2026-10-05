@@ -175,38 +175,80 @@ export default function Home() {
         </button>
       </header>
 
+      {/* ── Stats Bar ───────────────────────────────────────────── */}
+      {!headerError && (
+        <div id="stats-bar" className="bg-white border-gray-100 shadow-sm">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-3 divide-x divide-gray-100">
+              {headerLoading ? (
+                // Skeleton
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2 gap-1.5 animate-pulse">
+                    <div className="h-6 sm:h-7 w-10 bg-gray-200 rounded-md" />
+                    <div className="h-3 w-16 bg-gray-100 rounded" />
+                  </div>
+                ))
+              ) : (
+                [
+                  { value: mainMenuItems.length || "—", label: "Portal Aktif" },
+                  { value: serviceCategories.length || "—", label: "Layanan Digital" },
+                  { value: "2026", label: "Tahun Aktif" },
+                ].map((stat, i) => (
+                  <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
+                    <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">{stat.value}</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 mt-0.5 text-center">{stat.label}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <AnnouncementModalComponent />
 
-      {/* Portal Section */}
-      <section id="portal-pulau-pedia" className="bg-[#D83F3F] py-12 sm:py-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5 pointer-events-none">
-          <div className="absolute top-0 left-0 w-48 sm:w-64 h-48 sm:h-64 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-white rounded-full blur-3xl" />
-        </div>
+      {/* ── Wave Divider ────────────────────────────────────────── */}
+      <div className="bg-white overflow-hidden leading-none">
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,0 C360,48 1080,48 1440,0 L1440,48 L0,48 Z" fill="#D83F3F" />
+        </svg>
+      </div>
+
+      {/* ── Portal Section ──────────────────────────────────────── */}
+      <section id="portal-pulau-pedia" className="bg-[#D83F3F] py-10 sm:py-14 relative overflow-hidden">
+        {/* Subtle texture */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        />
+
         <div className="container mx-auto px-4 relative z-10">
-          <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-3 sm:mb-4">
-            Portal Pulau Pedia
-          </h2>
-          <p className="text-white/90 text-sm sm:text-base text-center mb-8 sm:mb-12 max-w-xl mx-auto px-2">
-            Akses cepat ke berbagai portal dan layanan informasi
-          </p>
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+              Portal Pulau Pedia
+            </h2>
+            <p className="text-white/70 text-sm sm:text-base max-w-md mx-auto">
+              Akses cepat ke berbagai portal dan layanan informasi
+            </p>
+          </div>
 
           {portalsError && <ErrorMessage message={portalsError} />}
 
+          {/* Skeleton */}
           {portalsLoading && !portalsError && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto animate-pulse">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto animate-pulse">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="bg-white/10 rounded-xl p-4 sm:p-6 h-32 sm:h-40 flex flex-col items-center justify-center gap-2 sm:gap-3">
-                  <div className="bg-white/20 rounded-full w-12 sm:w-16 h-12 sm:h-16" />
-                  <div className="bg-white/20 rounded h-3 sm:h-4 w-20 sm:w-24" />
-                  <div className="bg-white/10 rounded h-2 sm:h-3 w-16 sm:w-20" />
+                <div key={i} className="bg-white/10 rounded-2xl p-5 h-36 flex flex-col items-center justify-center gap-3">
+                  <div className="bg-white/20 rounded-xl w-12 h-12" />
+                  <div className="bg-white/20 rounded h-3 w-20" />
+                  <div className="bg-white/10 rounded h-2.5 w-16" />
                 </div>
               ))}
             </div>
           )}
 
+          {/* Portal cards — putih solid */}
           {!portalsLoading && !portalsError && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
               {mainMenuItems.length > 0 ? (
                 mainMenuItems.map((item, index) => {
                   const Icon = iconMap[item.icon] || BookOpen;
@@ -214,24 +256,23 @@ export default function Home() {
                     <Link
                       key={index}
                       href={item.href}
-                      className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-3 sm:gap-4 transition-all hover:scale-105 hover:shadow-2xl border border-white/20"
+                      className="group bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 border border-white/80"
                     >
-                      <div className="bg-white/20 p-3 sm:p-4 rounded-full group-hover:bg-white/30 transition-all">
+                      {/* Icon container — background merah muda */}
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                        style={{ background: "rgba(216,63,63,0.1)" }}
+                      >
                         {item.iconImage ? (
-                          <img
-                            src={item.iconImage}
-                            alt={item.name}
-                            className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
-                          />
+                          <img src={item.iconImage} alt={item.name} className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
                         ) : (
-                          <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                          <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#D83F3F]" />
                         )}
                       </div>
                       <div className="text-center min-w-0 w-full">
-                        <h3 className="text-white text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 leading-tight break-words">
+                        <h3 className="text-[#111111] text-xs sm:text-sm font-bold leading-tight break-words line-clamp-2">
                           {item.name}
                         </h3>
-                        <p className="text-white/80 text-xs leading-relaxed hidden sm:block">
+                        <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed mt-1 hidden sm:block line-clamp-2">
                           {item.description}
                         </p>
                       </div>
@@ -239,8 +280,8 @@ export default function Home() {
                   );
                 })
               ) : (
-                <div className="col-span-2 sm:col-span-3 md:col-span-4 text-center py-12">
-                  <p className="text-white/80 text-base sm:text-lg">Portal tidak tersedia</p>
+                <div className="col-span-full text-center py-12">
+                  <p className="text-white/70">Portal tidak tersedia</p>
                 </div>
               )}
             </div>
@@ -248,85 +289,82 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BPS Services Section */}
-      <section className="bg-gradient-to-b from-gray-50 to-white py-12 sm:py-16">
+      {/* ── Wave Divider (bawah portal) ─────────────────────────── */}
+      <div className="overflow-hidden leading-none" style={{ background: "rgb(249,250,251)" }}>
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,48 C360,0 1080,0 1440,48 L1440,0 L0,0 Z" fill="#D83F3F" />
+        </svg>
+      </div>
+
+      {/* ── BPS Services Section ────────────────────────────────── */}
+      <section className="bg-gray-50 py-10 sm:py-14">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-[#111111] text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-[#111111] text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
               BPS Services Web-App
             </h2>
-            <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto px-2">
-              Kumpulan layanan dan aplikasi digital untuk mendukung operasional BPS Kepulauan Seribu
+            <p className="text-gray-500 text-sm sm:text-base max-w-md mx-auto">
+              Kumpulan layanan dan aplikasi digital BPS Kepulauan Seribu
             </p>
           </div>
 
           {servicesError && <ErrorMessage message={servicesError} />}
 
+          {/* Skeleton */}
           {servicesLoading && !servicesError && (
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 animate-pulse">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="bg-white border-2 border-gray-100 rounded-xl p-3 sm:p-4 md:p-6 flex flex-col items-center justify-between min-h-[200px] sm:min-h-[240px] md:min-h-[280px]">
-                    <div className="bg-gray-200 rounded h-4 w-24 sm:w-28 mb-4" />
-                    <div className="bg-gray-200 rounded-full w-16 sm:w-24 h-16 sm:h-24 mb-4" />
-                    <div className="w-px h-10 sm:h-12 bg-gray-200 mb-4" />
-                    <div className="bg-gray-200 rounded-lg h-8 sm:h-9 w-full" />
+            <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-pulse">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-4 border border-gray-100">
+                  <div className="bg-gray-200 rounded-xl w-14 h-14 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="bg-gray-200 rounded h-3.5 w-3/4" />
+                    <div className="bg-gray-100 rounded h-3 w-1/2" />
                   </div>
-                ))}
-              </div>
+                  <div className="bg-gray-200 rounded-lg h-8 w-20 shrink-0" />
+                </div>
+              ))}
             </div>
           )}
 
+          {/* Service cards — horizontal compact */}
           {!servicesLoading && !servicesError && (
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-                {serviceCategories.map((service, index) => (
-                  <div
-                    key={index}
-                    className="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 md:p-6 flex flex-col items-center justify-between min-h-[200px] sm:min-h-[240px] md:min-h-[280px]"
-                  >
-                    <div className="text-center mb-2 sm:mb-3 md:mb-4 w-full min-w-0">
-                      <h3 className="text-xs sm:text-sm font-bold text-[#111111] leading-tight break-words line-clamp-2">
-                        {service.title}
-                      </h3>
-                    </div>
-
-                    <div className="flex-1 flex items-center justify-center mb-2 sm:mb-3 md:mb-4">
-                      <a href={service.link} className="block w-14 sm:w-16 md:w-24 h-14 sm:h-16 md:h-24 cursor-pointer">
-                        {service.logo?.startsWith('http') ? (
-                          <img
-                            src={service.logo}
-                            alt={service.name}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center rounded-lg bg-gray-100 border border-gray-200">
-                            <span className="text-gray-400 text-[10px] sm:text-xs text-center leading-tight px-1">Gambar<br />tidak tersedia</span>
-                          </div>
-                        )}
-                      </a>
-                    </div>
-
-                    <div className="w-px h-6 sm:h-8 md:h-12 bg-gray-300 mb-2 sm:mb-3 md:mb-4" />
-
-                    <div className="w-full">
-                      <a
-                        href={service.link}
-                        className="block bg-white border-2 border-[#0072BC] hover:bg-[#0072BC] rounded-lg py-1.5 sm:py-2 px-2 sm:px-3 md:px-4 text-center transition-all group"
-                      >
-                        <span className="text-[#0072BC] group-hover:text-white font-bold text-[10px] sm:text-xs md:text-sm uppercase transition-colors">
-                          {service.name}
-                        </span>
-                      </a>
-                    </div>
+            <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {serviceCategories.map((service, index) => (
+                <a
+                  key={index}
+                  href={service.link}
+                  target={service.link?.startsWith('http') ? '_blank' : '_self'}
+                  rel={service.link?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="group bg-white hover:bg-gray-50 rounded-2xl p-4 flex items-center gap-4 border border-gray-100 hover:border-[#0072BC]/30 hover:shadow-md transition-all duration-200"
+                >
+                  {/* Logo */}
+                  <div className="w-12 h-12 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center">
+                    {service.logo?.startsWith('http') ? (
+                      <img src={service.logo} alt={service.name} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <span className="text-gray-300 text-[10px] text-center leading-tight px-1">No Logo</span>
+                    )}
                   </div>
-                ))}
-                {serviceCategories.length === 0 && (
-                  <div className="col-span-full text-center py-12 text-gray-500">
-                    Tidak ada layanan tersedia
+
+                  {/* Teks */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-[#111111] leading-tight line-clamp-2">{service.title}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">{service.name}</p>
                   </div>
-                )}
-              </div>
+
+                  {/* CTA */}
+                  <div className="shrink-0">
+                    <span className="inline-flex items-center text-[10px] font-bold text-[#0072BC] group-hover:text-white bg-transparent group-hover:bg-[#0072BC] border border-[#0072BC] rounded-lg px-2.5 py-1.5 transition-all duration-200 whitespace-nowrap">
+                      Buka
+                    </span>
+                  </div>
+                </a>
+              ))}
+              {serviceCategories.length === 0 && (
+                <div className="col-span-full text-center py-12 text-gray-400">
+                  Tidak ada layanan tersedia
+                </div>
+              )}
             </div>
           )}
         </div>
