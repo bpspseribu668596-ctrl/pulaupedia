@@ -13,13 +13,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogIn, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  LogIn,
+  AlertCircle,
+  Loader2,
+  Home,
+} from "lucide-react";
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+
+const FASIH_COLOR = "#f69139";
+const FASIH_HOVER_COLOR = "#df7e2d";
 
 // ── CMS login form ────────────────────────────────────────────────────────────
 
 function CmsLoginForm() {
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,15 +43,24 @@ function CmsLoginForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     setError("");
     setIsLoading(true);
+
     try {
       const res = await fetch("/api/public/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         router.push("/admin");
         router.refresh();
@@ -57,8 +82,12 @@ function CmsLoginForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
       <div className="space-y-2">
-        <Label htmlFor="cms-username">Username</Label>
+        <Label htmlFor="cms-username">
+          Username
+        </Label>
+
         <Input
           id="cms-username"
           type="text"
@@ -70,8 +99,12 @@ function CmsLoginForm() {
           required
         />
       </div>
+
       <div className="space-y-2">
-        <Label htmlFor="cms-password">Password</Label>
+        <Label htmlFor="cms-password">
+          Password
+        </Label>
+
         <Input
           id="cms-password"
           type="password"
@@ -83,7 +116,12 @@ function CmsLoginForm() {
           required
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isLoading}
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -104,6 +142,7 @@ function CmsLoginForm() {
 
 function FasihLoginForm() {
   const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -111,15 +150,24 @@ function FasihLoginForm() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     setError("");
     setIsLoading(true);
+
     try {
       const res = await fetch("/api/fasih/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         router.push("/fasih/dashboard");
         router.refresh();
@@ -141,8 +189,12 @@ function FasihLoginForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
       <div className="space-y-2">
-        <Label htmlFor="fasih-username">Username</Label>
+        <Label htmlFor="fasih-username">
+          Username
+        </Label>
+
         <Input
           id="fasih-username"
           type="text"
@@ -152,10 +204,15 @@ function FasihLoginForm() {
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}
           required
+          className="focus-visible:ring-[#f69139] focus-visible:border-[#f69139]"
         />
       </div>
+
       <div className="space-y-2">
-        <Label htmlFor="fasih-password">Password</Label>
+        <Label htmlFor="fasih-password">
+          Password
+        </Label>
+
         <Input
           id="fasih-password"
           type="password"
@@ -165,9 +222,26 @@ function FasihLoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           required
+          className="focus-visible:ring-[#f69139] focus-visible:border-[#f69139]"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+
+      <Button
+        type="submit"
+        className="w-full text-white hover:text-white"
+        style={{
+          backgroundColor: FASIH_COLOR,
+        }}
+        disabled={isLoading}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor =
+            FASIH_HOVER_COLOR;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor =
+            FASIH_COLOR;
+        }}
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -184,54 +258,145 @@ function FasihLoginForm() {
   );
 }
 
-// ── Main page — reads ?tab= from URL ─────────────────────────────────────────
+// ── Main login content ────────────────────────────────────────────────────────
 
 function LoginContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "fasih" ? "fasih" : "cms";
+
+  const initialTab =
+    searchParams.get("tab") === "fasih"
+      ? "fasih"
+      : "cms";
+
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Sync tab if URL param changes (e.g. navigating back)
+  const isFasih = activeTab === "fasih";
+
+  // Sync tab jika URL berubah
   useEffect(() => {
-    setActiveTab(searchParams.get("tab") === "fasih" ? "fasih" : "cms");
+    setActiveTab(
+      searchParams.get("tab") === "fasih"
+        ? "fasih"
+        : "cms"
+    );
   }, [searchParams]);
 
+  // Navigasi ke halaman beranda
+  const handleGoHome = () => {
+    router.push("/");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+    <div
+      className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${
+        isFasih
+          ? "bg-[#f69139]/5"
+          : "bg-muted/40"
+      }`}
+    >
       <div className="w-full max-w-sm space-y-4">
+
+        {/* Header */}
         <div className="text-center space-y-1">
-          <h1 className="text-xl font-bold tracking-tight">BPS Kepulauan Seribu</h1>
-          <p className="text-sm text-muted-foreground">Sistem Informasi Internal</p>
+          <h1
+            className={`text-xl font-bold tracking-tight transition-colors duration-300 ${
+              isFasih
+                ? "text-[#f69139]"
+                : ""
+            }`}
+          >
+            BPS Kepulauan Seribu
+          </h1>
+
+          <p className="text-sm text-muted-foreground">
+            Sistem Informasi Internal
+          </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {/* Login Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cms">Admin Pulau Pedia</TabsTrigger>
-            <TabsTrigger value="fasih">FASIH</TabsTrigger>
+            <TabsTrigger
+              value="cms"
+              className={
+                activeTab === "cms"
+                  ? ""
+                  : ""
+              }
+            >
+              Admin Pulau Pedia
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="fasih"
+              className={
+                activeTab === "fasih"
+                  ? "data-[state=active]:bg-[#f69139] data-[state=active]:text-white"
+                  : ""
+              }
+            >
+              FASIH
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="cms" className="mt-0">
+          {/* CMS */}
+          <TabsContent
+            value="cms"
+            className="mt-0"
+          >
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Masuk sebagai Admin Pulau Pedia</CardTitle>
+                <CardTitle className="text-base">
+                  Masuk sebagai Admin Pulau Pedia
+                </CardTitle>
+
                 <CardDescription>
-                  Gunakan akun admin Pulau Pedia yang telah diberikan
+                  Gunakan akun admin Pulau Pedia
+                  yang telah diberikan
                 </CardDescription>
               </CardHeader>
+
               <CardContent>
                 <CmsLoginForm />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="fasih" className="mt-0">
-            <Card>
+          {/* FASIH */}
+          <TabsContent
+            value="fasih"
+            className="mt-0"
+          >
+            <Card
+              className="transition-colors duration-300"
+              style={{
+                borderColor: isFasih
+                  ? `${FASIH_COLOR}40`
+                  : undefined,
+              }}
+            >
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">Masuk ke FASIH</CardTitle>
+                <CardTitle
+                  className="text-base transition-colors duration-300"
+                  style={{
+                    color: isFasih
+                      ? FASIH_COLOR
+                      : undefined,
+                  }}
+                >
+                  Masuk ke FASIH
+                </CardTitle>
+
                 <CardDescription>
-                  Gunakan akun FASIH Monitoring yang telah diberikan
+                  Gunakan akun FASIH Monitoring
+                  yang telah diberikan
                 </CardDescription>
               </CardHeader>
+
               <CardContent>
                 <FasihLoginForm />
               </CardContent>
@@ -239,6 +404,18 @@ function LoginContent() {
           </TabsContent>
         </Tabs>
 
+        {/* Kembali ke Beranda */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={handleGoHome}
+        >
+          <Home className="mr-2 h-4 w-4" />
+          Kembali ke Beranda
+        </Button>
+
+        {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
           BPS Kabupaten Kepulauan Seribu
         </p>
@@ -246,6 +423,8 @@ function LoginContent() {
     </div>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   return (
