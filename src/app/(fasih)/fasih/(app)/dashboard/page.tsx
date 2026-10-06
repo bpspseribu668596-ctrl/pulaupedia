@@ -27,82 +27,51 @@ const statusCards = (s: DashboardStats) => [
     label: "Total Assignment",
     value: s.total_assignments,
     icon: Users,
-    iconBg: "bg-orange-100",
-    iconColor: "text-[#F9882B]",
-    border: "border-orange-100",
-    highlight: true,
   },
   {
     label: "Approved",
     value: s.total_approved,
     icon: CheckCircle2,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    border: "border-emerald-100",
   },
   {
     label: "Draft",
     value: s.total_draft,
     icon: FileText,
-    iconBg: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-    border: "border-yellow-100",
   },
   {
     label: "Open",
     value: s.total_open,
     icon: FolderOpen,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    border: "border-blue-100",
   },
   {
     label: "Submitted",
     value: s.total_submitted,
     icon: Send,
-    iconBg: "bg-indigo-100",
-    iconColor: "text-indigo-600",
-    border: "border-indigo-100",
   },
   {
     label: "Rejected",
     value: s.total_rejected,
     icon: XCircle,
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    border: "border-red-100",
   },
   {
     label: "Revoked",
     value: s.total_revoked,
     icon: RotateCcw,
-    iconBg: "bg-orange-100",
-    iconColor: "text-orange-600",
-    border: "border-orange-100",
   },
   {
     label: "Submitted Respondent",
     value: s.total_submitted_respondent,
     icon: UserCheck,
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
-    border: "border-purple-100",
   },
   {
     label: "Edited Admin",
     value: s.total_edited_admin,
     icon: Edit,
-    iconBg: "bg-cyan-100",
-    iconColor: "text-cyan-600",
-    border: "border-cyan-100",
   },
   {
     label: "Edited Supervisor",
     value: s.total_edited_supervisor,
     icon: Edit,
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
-    border: "border-teal-100",
   },
 ];
 
@@ -173,9 +142,11 @@ export default function FasihDashboardPage() {
           </div>
 
           {/* Approved progress card */}
-          <div className="rounded-2xl border border-emerald-100 bg-white p-5 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-7 h-7 text-emerald-600" />
+          <div className="rounded-2xl border bg-white p-5 flex items-center gap-4"
+            style={{ borderColor: "#F9882B33" }}>
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#F9882B1A" }}>
+              <TrendingUp className="w-7 h-7" style={{ color: "#F9882B" }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-gray-500 text-sm font-medium">Progress Approved</p>
@@ -184,8 +155,8 @@ export default function FasihDashboardPage() {
               </p>
               <div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-                  style={{ width: `${approvedPct}%` }}
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${approvedPct}%`, backgroundColor: "#F9882B" }}
                 />
               </div>
             </div>
@@ -212,10 +183,14 @@ export default function FasihDashboardPage() {
               return (
                 <div
                   key={card.label}
-                  className={`group bg-white rounded-2xl border ${card.border} p-4 flex flex-col gap-3 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5`}
+                  className="group bg-white rounded-2xl border p-4 flex flex-col gap-3 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                  style={{ borderColor: "#F9882B22" }}
                 >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.iconBg} transition-transform duration-200 group-hover:scale-110`}>
-                    <Icon className={`w-4 h-4 ${card.iconColor}`} />
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                    style={{ backgroundColor: "#F9882B1A" }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: "#F9882B" }} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold tabular-nums text-gray-900">

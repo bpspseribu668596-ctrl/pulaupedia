@@ -4,12 +4,12 @@ import Link from "next/link";
 import {
   Bell,
   Image,
-  Settings,
   Grid3x3,
   Package,
   Layout,
   ArrowRight,
   FileText,
+  Settings,
 } from "lucide-react";
 
 const menuItems = [
@@ -18,48 +18,36 @@ const menuItems = [
     description: "Kelola pengumuman dan berita penting yang ditampilkan di halaman utama.",
     href: "/admin/announcement",
     icon: Bell,
-    color: "bg-orange-50 text-orange-600 border-orange-100",
-    iconBg: "bg-orange-100",
   },
   {
     title: "Header",
     description: "Atur judul, subtitle, dan background image header halaman utama.",
     href: "/admin/header",
     icon: Image,
-    color: "bg-blue-50 text-blue-600 border-blue-100",
-    iconBg: "bg-blue-100",
   },
   {
     title: "Navbar",
     description: "Konfigurasi logo dan nama brand yang muncul di navigation bar.",
     href: "/admin/navbar",
     icon: Layout,
-    color: "bg-violet-50 text-violet-600 border-violet-100",
-    iconBg: "bg-violet-100",
   },
   {
     title: "Footer",
     description: "Atur informasi perusahaan, alamat, kontak, dan tautan di footer.",
     href: "/admin/footer",
     icon: FileText,
-    color: "bg-teal-50 text-teal-600 border-teal-100",
-    iconBg: "bg-teal-100",
   },
   {
     title: "Main Portal",
     description: "Kelola portal utama dan sub-item yang tampil di halaman beranda.",
     href: "/admin/main-portal",
     icon: Grid3x3,
-    color: "bg-red-50 text-red-600 border-red-100",
-    iconBg: "bg-red-100",
   },
   {
     title: "Services",
     description: "Tambah dan kelola layanan digital BPS yang ditampilkan di beranda.",
     href: "/admin/services",
     icon: Package,
-    color: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    iconBg: "bg-emerald-100",
   },
 ];
 
@@ -81,12 +69,18 @@ export default function AdminDashboard() {
           return (
             <div
               key={item.href}
-              className={`rounded-xl border p-4 flex flex-col items-center gap-2 ${item.color}`}
+              className="rounded-xl border p-4 flex flex-col items-center gap-2"
+              style={{ backgroundColor: "#D83F3F0D", borderColor: "#D83F3F22" }}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.iconBg}`}>
-                <Icon className="w-5 h-5" />
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: "#D83F3F1A" }}
+              >
+                <Icon className="w-5 h-5" style={{ color: "#D83F3F" }} />
               </div>
-              <span className="text-xs font-semibold text-center leading-tight">{item.title}</span>
+              <span className="text-xs font-semibold text-center leading-tight text-gray-700">
+                {item.title}
+              </span>
             </div>
           );
         })}
@@ -107,8 +101,11 @@ export default function AdminDashboard() {
                 className="group relative bg-white rounded-2xl border border-gray-100 p-5 flex flex-col gap-4 hover:border-[#D83F3F]/30 hover:shadow-lg transition-all duration-200"
               >
                 {/* Icon */}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${item.iconBg} transition-transform duration-200 group-hover:scale-110`}>
-                  <Icon className={`w-5 h-5 ${item.color.split(" ")[1]}`} />
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                  style={{ backgroundColor: "#D83F3F1A" }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: "#D83F3F" }} />
                 </div>
 
                 {/* Text */}
