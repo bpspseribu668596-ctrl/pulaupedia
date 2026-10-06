@@ -43,10 +43,11 @@ export default function ItemDetailPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [portal, setPortal] = useState<Portal | null>(null);
+  const [allItems, setAllItems] = useState<PortalItem[]>([]);
   const [currentItem, setCurrentItem] = useState<PortalItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // "loading" = sedang fetch, "found" = data ada, "notfound" = data tidak ada
+  const [fetchStatus, setFetchStatus] = useState<"loading" | "found" | "notfound">("loading");
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
-  const [notFoundState, setNotFoundState] = useState(false);
 
   const [headerError, setHeaderError] = useState<string | null>(null);
   const [itemError, setItemError] = useState<string | null>(null);
@@ -79,7 +80,7 @@ export default function ItemDetailPage() {
       clearTimeout(retryTimer);
       observer?.disconnect();
     };
-  }, [isLoading]);
+  }, [fetchStatus]);
 
   useEffect(() => {
     const fetchItemData = async () => {
@@ -94,11 +95,9 @@ export default function ItemDetailPage() {
         } else {
           setHeaderError(ERROR_MESSAGES.HEADER_UNAVAILABLE);
         }
-        setHeaderLoading(false);
 
         if (!portalsRes.ok) {
-          setNotFoundState(true);
-          setHeaderLoading(false);
+          setFetchStatus("notfound");
           return;
         }
 
@@ -109,40 +108,43 @@ export default function ItemDetailPage() {
         });
 
         if (!matchedPortal) {
-          setNotFoundState(true);
-          setHeaderLoading(false);
+          setFetchStatus("notfound");
           return;
         }
 
         setPortal(matchedPortal);
-        setIsLoading(false);
 
         const itemsRes = await fetch(`/api/portals/${matchedPortal.id}/items`);
         if (!itemsRes.ok) {
           setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
-          setItemsLoading(false);
+          setFetchStatus("notfound");
           return;
         }
 
-        const itemsData = await itemsRes.json();
-        const matchedItem = itemsData.find((item: PortalItem) => {
-          const itemLinkSlug = item.link.split('/').pop()?.toLowerCase();
-          return itemLinkSlug === itemSlug;
+        const itemsData: PortalItem[] = await itemsRes.json();
+        setAllItems(itemsData);
+
+        // Cocokkan itemSlug dengan segment terakhir dari item.link
+        // Normalisasi: buang query string dan trailing slash sebelum split
+        const matchedItem = itemsData.find((item) => {
+          const cleanLink = item.link.replace(/\?.*$/, '').replace(/\/$/, '');
+          const lastSegment = cleanLink.split('/').pop()?.toLowerCase() ?? '';
+          return lastSegment === itemSlug.toLowerCase();
         });
 
         if (matchedItem) {
           setCurrentItem(matchedItem);
+          setFetchStatus("found");
         } else {
-          setNotFoundState(true);
+          setFetchStatus("notfound");
           return;
         }
-        setItemsLoading(false);
       } catch {
         setItemError(ERROR_MESSAGES.DB_CONNECTION);
+        setFetchStatus("notfound");
+      } finally {
         setHeaderLoading(false);
         setItemsLoading(false);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -153,21 +155,20 @@ export default function ItemDetailPage() {
     document.getElementById("content-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (notFoundState) {
-    notFound();
-  }
+  // Hanya panggil notFound() setelah fetch benar-benar selesai dan status jelas "notfound"
+  if (fetchStatus === "notfound") notFound();
 
-  if ((!portal || !currentItem) && !isLoading) {
-    notFound();
-  }
+  // Masih loading — render skeleton/null, jangan trigger notFound
+  if (fetchStatus === "loading") return null;
 
   const portalHref = `/${portalSlug}`;
+  const docCount = currentItem?.documents?.length ?? 0;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar isScrolled={isScrolled} />
 
-      {/* Hero Header */}
+      {/* ── Hero Header ─────────────────────────────────────────── */}
       <header
         id="main-header"
         className="relative h-[40vh] min-h-[240px] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
@@ -211,22 +212,62 @@ export default function ItemDetailPage() {
         </button>
       </header>
 
-      {/* Content */}
-      <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-12 sm:py-16 flex-1">
+      {/* ── Stats Bar ───────────────────────────────────────────── */}
+      <div className="bg-white shadow-sm border-b border-gray-100">
         <div className="container mx-auto px-4">
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            {itemsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2 gap-1.5 animate-pulse">
+                  <div className="h-6 sm:h-7 w-10 bg-gray-200 rounded-md" />
+                  <div className="h-3 w-16 bg-gray-100 rounded" />
+                </div>
+              ))
+            ) : (
+              [
+                { value: docCount || "—", label: "Dokumen" },
+                { value: allItems.length || "—", label: "Menu di Portal" },
+                { value: "2026", label: "Tahun Aktif" },
+              ].map((stat, i) => (
+                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
+                  <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">{stat.value}</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 mt-0.5 text-center">{stat.label}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
-          {/* Breadcrumb — wrappable di mobile kecil */}
-          <nav className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs sm:text-sm mb-6 sm:mb-8 text-gray-500">
-            <Link href="/" className="flex items-center gap-1 hover:text-[#0072BC] transition-colors shrink-0">
+      {/* ── Wave Divider ────────────────────────────────────────── */}
+      <div className="bg-white overflow-hidden leading-none">
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,0 C360,48 1080,48 1440,0 L1440,48 L0,48 Z" fill="#D83F3F" />
+        </svg>
+      </div>
+
+      {/* ── Content ─────────────────────────────────────────────── */}
+      <section id="content-section" className="bg-[#D83F3F] py-10 sm:py-14 relative overflow-hidden flex-1">
+        {/* Dot texture */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        />
+
+        <div className="container mx-auto px-4 relative z-10">
+
+          {/* Breadcrumb */}
+          <nav className="flex items-center flex-wrap gap-x-1.5 gap-y-1 text-xs sm:text-sm mb-6 sm:mb-8 text-white/60">
+            <Link href="/" className="flex items-center gap-1 hover:text-white transition-colors shrink-0">
               <House className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Beranda</span>
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 shrink-0" />
-            <Link href={portalHref} className="hover:text-[#0072BC] transition-colors shrink-0 max-w-[120px] sm:max-w-none truncate">
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30 shrink-0" />
+            <Link href={portalHref} className="hover:text-white transition-colors shrink-0 max-w-[120px] sm:max-w-none truncate">
               {portal?.name ?? portalSlug}
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-300 shrink-0" />
-            <span className="text-[#111111] font-medium truncate max-w-[140px] sm:max-w-[200px]">
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30 shrink-0" />
+            <span className="text-white font-medium truncate max-w-[140px] sm:max-w-[200px]">
               {currentItem?.name ?? itemSlug}
             </span>
           </nav>
@@ -234,33 +275,23 @@ export default function ItemDetailPage() {
           {/* Layout: sidebar kiri, konten kanan */}
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
             <PortalSidebar />
+
             <div className="flex-1 min-w-0">
               {itemsLoading ? (
-                <div className="animate-pulse">
-                  <div className="text-center mb-8 sm:mb-12">
-                    <div className="h-7 sm:h-8 bg-gray-200 rounded max-w-[160px] sm:max-w-xs mx-auto mb-3" />
-                    <div className="h-3 sm:h-4 bg-gray-100 rounded max-w-[200px] sm:max-w-sm mx-auto" />
-                  </div>
-                  <div className="space-y-3 sm:space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 sm:gap-4 bg-white border-2 border-gray-100 rounded-lg p-4 sm:p-6">
-                        <div className="bg-gray-200 rounded-lg w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="h-4 sm:h-5 bg-gray-200 rounded w-3/4" />
-                        </div>
-                        <div className="bg-gray-100 rounded w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                      </div>
-                    ))}
-                  </div>
+                <div className="animate-pulse space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="bg-white/10 rounded-2xl h-16" />
+                  ))}
                 </div>
               ) : (
                 <div>
-                  <div className="text-center mb-8 sm:mb-12">
-                    <h2 className="text-[#111111] text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 break-words">
+                  {/* Section heading */}
+                  <div className="mb-6 sm:mb-8">
+                    <h2 className="text-white text-2xl sm:text-3xl font-bold mb-1 break-words">
                       Dokumen {currentItem?.name}
                     </h2>
-                    <p className="text-gray-600 text-sm sm:text-base px-2">
-                      Pilih dokumen untuk mengakses file yang tersimpan di Google Drive
+                    <p className="text-white/60 text-sm">
+                      Pilih dokumen untuk mengakses file yang tersimpan
                     </p>
                   </div>
 
@@ -274,23 +305,30 @@ export default function ItemDetailPage() {
                           href={doc.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="group flex items-center justify-between bg-white border-2 border-gray-200 hover:border-[#0072BC] rounded-lg p-4 sm:p-6 transition-all hover:shadow-lg gap-3"
+                          className="group flex items-center justify-between bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 border border-white/80 gap-3"
                         >
                           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                            <div className="bg-[#0072BC]/10 p-2 sm:p-3 rounded-lg group-hover:bg-[#0072BC]/20 transition-all shrink-0">
-                              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#0072BC]" />
+                            <div
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-110"
+                              style={{ background: "rgba(216,63,63,0.1)" }}
+                            >
+                              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#D83F3F]" />
                             </div>
-                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-[#111111] group-hover:text-[#0072BC] transition-colors break-words min-w-0">
+                            <h3 className="text-sm sm:text-base font-semibold text-[#111111] group-hover:text-[#D83F3F] transition-colors break-words min-w-0 line-clamp-2">
                               {doc.title}
                             </h3>
                           </div>
-                          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#0072BC] transition-colors shrink-0" />
+                          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300 group-hover:text-[#D83F3F] transition-colors shrink-0" />
                         </a>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <p className="text-gray-500 text-sm sm:text-base">Belum ada dokumen untuk item ini</p>
+                    <div className="text-center py-16">
+                      <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-4">
+                        <FileText className="h-8 w-8 text-white/30" />
+                      </div>
+                      <p className="text-white/70 font-semibold mb-1">Belum ada dokumen</p>
+                      <p className="text-white/40 text-sm">Dokumen untuk item ini belum tersedia</p>
                     </div>
                   )}
                 </div>
@@ -299,6 +337,13 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Wave Divider (bawah) ────────────────────────────────── */}
+      <div className="overflow-hidden leading-none" style={{ background: "rgb(249,250,251)" }}>
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,48 C360,0 1080,0 1440,48 L1440,0 L0,0 Z" fill="#D83F3F" />
+        </svg>
+      </div>
 
       <Footer />
     </div>

@@ -151,7 +151,7 @@ export default function DynamicPortalPage() {
   };
   const getIconComponent = (iconName: string) => iconMap[iconName] || FileSpreadsheet;
 
-  if (!portal && !isLoading) {
+  if (!portal && !isLoading && notFoundState) {
     notFound();
   }
 
@@ -159,7 +159,7 @@ export default function DynamicPortalPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar isScrolled={isScrolled} />
 
-      {/* Hero Header */}
+      {/* ── Hero Header ─────────────────────────────────────────── */}
       <header
         id="main-header"
         className="relative h-[40vh] min-h-[240px] flex items-center border-b-4 border-[#D83F3F] overflow-hidden"
@@ -203,64 +203,121 @@ export default function DynamicPortalPage() {
         </button>
       </header>
 
-      {/* Content */}
-      <section id="content-section" className="bg-gradient-to-b from-gray-50 to-white py-12 sm:py-16 flex-1">
+      {/* ── Stats Bar ───────────────────────────────────────────── */}
+      <div className="bg-white shadow-sm border-b border-gray-100">
         <div className="container mx-auto px-4">
-          {itemsLoading ? (
-            <div className="animate-pulse">
-              <div className="text-center mb-8 sm:mb-12">
-                <div className="h-7 sm:h-8 bg-gray-200 rounded max-w-[160px] sm:max-w-xs mx-auto mb-3 sm:mb-4" />
-                <div className="h-3 sm:h-4 bg-gray-100 rounded max-w-[200px] sm:max-w-sm mx-auto" />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-[#D83F3F]/20 rounded-xl p-4 sm:p-6 h-32 sm:h-40 flex flex-col items-center justify-center gap-2 sm:gap-3">
-                    <div className="bg-[#D83F3F]/30 rounded-full w-12 sm:w-16 h-12 sm:h-16" />
-                    <div className="bg-[#D83F3F]/20 rounded h-3 sm:h-4 w-20 sm:w-24" />
-                    <div className="bg-[#D83F3F]/10 rounded h-2 sm:h-3 w-16 sm:w-20 hidden sm:block" />
-                  </div>
-                ))}
-              </div>
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            {itemsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2 gap-1.5 animate-pulse">
+                  <div className="h-6 sm:h-7 w-10 bg-gray-200 rounded-md" />
+                  <div className="h-3 w-16 bg-gray-100 rounded" />
+                </div>
+              ))
+            ) : (
+              [
+                { value: items.length || "—", label: "Menu Tersedia" },
+                { value: portal?.name.split(" ")[0] ?? "—", label: "Portal" },
+                { value: "2026", label: "Tahun Aktif" },
+              ].map((stat, i) => (
+                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
+                  <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">{stat.value}</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 mt-0.5 text-center">{stat.label}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Wave Divider ────────────────────────────────────────── */}
+      <div id="content-section" className="bg-white overflow-hidden leading-none">
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,0 C360,48 1080,48 1440,0 L1440,48 L0,48 Z" fill="#D83F3F" />
+        </svg>
+      </div>
+
+      {/* ── Portal Items Section ────────────────────────────────── */}
+      <section className="bg-[#D83F3F] py-10 sm:py-14 relative overflow-hidden flex-1">
+        {/* Subtle dot texture */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        />
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+              {portal?.name}
+            </h2>
+            <p className="text-white/70 text-sm sm:text-base max-w-md mx-auto">
+              {portal?.description}
+            </p>
+          </div>
+
+          {portalError && <ErrorMessage message={portalError} />}
+          {itemsError && <ErrorMessage message={itemsError} />}
+
+          {/* Skeleton */}
+          {itemsLoading && !itemsError && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto animate-pulse">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-white/10 rounded-2xl p-5 h-36 flex flex-col items-center justify-center gap-3">
+                  <div className="bg-white/20 rounded-xl w-12 h-12" />
+                  <div className="bg-white/20 rounded h-3 w-20" />
+                  <div className="bg-white/10 rounded h-2.5 w-16" />
+                </div>
+              ))}
             </div>
-          ) : (
-            <>
-              <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-[#111111] text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{portal?.name}</h2>
-                <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto px-2">{portal?.description}</p>
-              </div>
+          )}
 
-              {portalError && <ErrorMessage message={portalError} />}
-              {itemsError && <ErrorMessage message={itemsError} />}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
-                {items.map((item) => {
+          {/* Item cards — putih solid, ikon merah (selaras dengan homepage) */}
+          {!itemsLoading && !itemsError && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
+              {items.length > 0 ? (
+                items.map((item) => {
                   const Icon = getIconComponent(item.icon);
                   return (
                     <Link
                       key={item.id}
                       href={item.link}
-                      className="group bg-[#D83F3F]/90 hover:bg-[#D83F3F] rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-3 sm:gap-4 transition-all hover:scale-105 hover:shadow-2xl border border-[#D83F3F]"
+                      className="group bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 flex flex-col items-center gap-3 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 border border-white/80"
                     >
-                      <div className="bg-white/20 p-3 sm:p-4 rounded-full group-hover:bg-white/30 transition-all shrink-0">
-                        <Icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                      <div
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                        style={{ background: "rgba(216,63,63,0.1)" }}
+                      >
+                        <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#D83F3F]" />
                       </div>
                       <div className="text-center min-w-0 w-full">
-                        <h3 className="text-white text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 leading-tight break-words">{item.name}</h3>
-                        <p className="text-white/80 text-xs leading-relaxed hidden sm:block line-clamp-2">{item.description}</p>
+                        <h3 className="text-[#111111] text-xs sm:text-sm font-bold leading-tight break-words line-clamp-2">
+                          {item.name}
+                        </h3>
+                        <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed mt-1 hidden sm:block line-clamp-2">
+                          {item.description}
+                        </p>
                       </div>
                     </Link>
                   );
-                })}
-                {items.length === 0 && (
-                  <p className="col-span-2 sm:col-span-3 lg:col-span-4 text-center text-gray-500 py-8 text-sm sm:text-base">
-                    Belum ada items untuk portal ini
+                })
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-white/70 text-sm sm:text-base">
+                    Belum ada menu untuk portal ini
                   </p>
-                )}
-              </div>
-            </>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </section>
+
+      {/* ── Wave Divider (bawah) ────────────────────────────────── */}
+      <div className="overflow-hidden leading-none" style={{ background: "rgb(249,250,251)" }}>
+        <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
+          <path d="M0,48 C360,0 1080,0 1440,48 L1440,0 L0,0 Z" fill="#D83F3F" />
+        </svg>
+      </div>
 
       <Footer />
     </div>
