@@ -134,9 +134,6 @@ export default function AdminServicesPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <Package className="w-5 h-5 text-emerald-600" />
-          </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">BPS Services</h1>
             <p className="text-sm text-gray-500">Kelola layanan digital BPS yang tampil di beranda</p>
@@ -145,18 +142,6 @@ export default function AdminServicesPage() {
         <Button onClick={() => openDialog()} className="gap-2 bg-[#D83F3F] hover:bg-[#c03535] text-white shrink-0">
           <Plus className="w-4 h-4" /> Tambah
         </Button>
-      </div>
-
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <p className="text-2xl font-bold text-gray-900">{services.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Total Service</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
-          <p className="text-2xl font-bold text-emerald-600">{services.filter(s => s.isActive).length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Aktif</p>
-        </div>
       </div>
 
       {/* List */}

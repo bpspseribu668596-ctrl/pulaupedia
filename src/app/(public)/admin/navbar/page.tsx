@@ -111,9 +111,6 @@ export default function AdminNavbarPage() {
       {/* Page header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-            <Layout className="w-5 h-5 text-violet-600" />
-          </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Navbar Settings</h1>
             <p className="text-sm text-gray-500">Konfigurasi logo dan nama brand di navigation bar</p>

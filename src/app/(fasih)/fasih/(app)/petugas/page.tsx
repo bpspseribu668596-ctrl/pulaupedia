@@ -378,12 +378,12 @@ export default function FasihPetugasPage() {
         <div
           className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg transition-all ${
             saveMessage.type === "success"
-              ? "border-orange-200 bg-white text-gray-800"
+              ? "border-emerald-200 bg-white text-emerald-700"
               : "border-red-200 bg-white text-red-700"
           }`}
         >
           {saveMessage.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "#F9882B" }} />
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
           ) : (
             <AlertCircle className="h-4 w-4 shrink-0" />
           )}
@@ -451,22 +451,41 @@ export default function FasihPetugasPage() {
       {!isLoading && (
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Pencacah",   value: pencacah.length,   icon: Users },
-            { label: "Pengawas",   value: pengawas.length,   icon: ShieldCheck },
-            { label: "Akun Login", value: fasihUsers.length, icon: KeyRound },
+            {
+              label: "Pencacah",
+              value: pencacah.length,
+              icon: Users,
+              iconBg: "bg-orange-100",
+              iconColor: "text-[#F9882B]",
+              border: "border-orange-100",
+            },
+            {
+              label: "Pengawas",
+              value: pengawas.length,
+              icon: ShieldCheck,
+              iconBg: "bg-blue-100",
+              iconColor: "text-blue-600",
+              border: "border-blue-100",
+            },
+            {
+              label: "Akun Login",
+              value: fasihUsers.length,
+              icon: KeyRound,
+              iconBg: "bg-violet-100",
+              iconColor: "text-violet-600",
+              border: "border-violet-100",
+            },
           ].map((s) => {
             const Icon = s.icon;
             return (
               <div
                 key={s.label}
-                className="group bg-white rounded-2xl border p-4 flex items-center gap-3 hover:shadow-md transition-all duration-200"
-                style={{ borderColor: "#F9882B22" }}
+                className={`group bg-white rounded-2xl border ${s.border} p-4 flex items-center gap-3 hover:shadow-md transition-all duration-200`}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110"
-                  style={{ backgroundColor: "#F9882B1A" }}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.iconBg} transition-transform duration-200 group-hover:scale-110`}
                 >
-                  <Icon className="w-5 h-5" style={{ color: "#F9882B" }} />
+                  <Icon className={`w-5 h-5 ${s.iconColor}`} />
                 </div>
                 <div>
                   <p className="text-2xl font-bold tabular-nums text-gray-900">
@@ -586,7 +605,6 @@ export default function FasihPetugasPage() {
                         <TableHead className="font-semibold text-gray-600">Nama</TableHead>
                         <TableHead className="font-semibold text-gray-600">Username</TableHead>
                         <TableHead className="font-semibold text-gray-600">Role</TableHead>
-                        <TableHead className="font-semibold text-gray-600">Terhubung ke</TableHead>
                         <TableHead className="font-semibold text-gray-600">Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -634,28 +652,11 @@ export default function FasihPetugasPage() {
                                   {u.role}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-sm text-gray-500">
-                                {linkedOfficer ? (
-                                  <span className="flex items-center gap-1.5">
-                                    {linkedOfficer.name}
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs ml-1 border-gray-200"
-                                    >
-                                      {linkedOfficer.officer_role}
-                                    </Badge>
-                                  </span>
-                                ) : (
-                                  <span className="italic text-gray-300">
-                                    Tidak terhubung
-                                  </span>
-                                )}
-                              </TableCell>
                               <TableCell>
                                 {u.is_active ? (
                                   <Badge
                                     variant="outline"
-                                    className="border-orange-200 bg-orange-50 text-[#F9882B]"
+                                    className="text-emerald-700 border-emerald-200 bg-emerald-50"
                                   >
                                     Aktif
                                   </Badge>

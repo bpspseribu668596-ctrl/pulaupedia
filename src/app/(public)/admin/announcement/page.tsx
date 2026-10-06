@@ -141,9 +141,6 @@ export default function AdminAnnouncementPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-orange-600" />
-          </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Announcement</h1>
             <p className="text-sm text-gray-500">Kelola pengumuman yang tampil di halaman utama</p>

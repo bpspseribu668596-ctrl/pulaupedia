@@ -21,6 +21,11 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           <SidebarToggle />
           <div className="h-5 w-px bg-gray-200" />
           <span className="text-sm font-medium text-gray-700">Admin CMS</span>
+          {/* Orange accent strip */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-0.5"
+            style={{ backgroundColor: "#D83F3F", opacity: 0.6 }}
+          />
         </header>
 
         {/* Page content */}
