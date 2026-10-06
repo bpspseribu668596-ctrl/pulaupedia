@@ -2,13 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Table,
   TableBody,
   TableCell,
@@ -26,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import {
   AlertCircle,
@@ -38,6 +31,8 @@ import {
   AlertTriangle,
   Info,
   Download,
+  FileUp,
+  Clock,
 } from "lucide-react";
 
 async function downloadTemplate() {
@@ -47,9 +42,9 @@ async function downloadTemplate() {
     return;
   }
   const blob = await res.blob();
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
   const disposition = res.headers.get("Content-Disposition") ?? "";
   const match = disposition.match(/filename="?([^"]+)"?/);
   a.download = match?.[1] ?? "template_fasih.csv";
@@ -79,40 +74,49 @@ interface ImportError {
 
 const STATUS_META: Record<
   ImportRecord["status"],
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: React.ReactNode;
+    badgeClass: string;
+  }
 > = {
   processing: {
     label: "Sedang Diproses",
     variant: "secondary",
     icon: <RefreshCw className="h-3 w-3 animate-spin" />,
+    badgeClass: "bg-blue-50 text-blue-700 border-blue-200",
   },
   completed: {
     label: "Selesai",
     variant: "default",
     icon: <CheckCircle2 className="h-3 w-3" />,
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   completed_with_errors: {
     label: "Selesai (ada error)",
     variant: "outline",
-    icon: <AlertTriangle className="h-3 w-3 text-orange-500" />,
+    icon: <AlertTriangle className="h-3 w-3" />,
+    badgeClass: "bg-orange-50 text-orange-700 border-orange-200",
   },
   failed: {
     label: "Gagal",
     variant: "destructive",
     icon: <XCircle className="h-3 w-3" />,
+    badgeClass: "bg-red-50 text-red-700 border-red-200",
   },
 };
 
 export default function FasihImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [imports, setImports]   = useState<ImportRecord[]>([]);
+  const [imports, setImports] = useState<ImportRecord[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging]     = useState(false);
-  const [isUploading, setIsUploading]   = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
     message: string;
@@ -122,8 +126,8 @@ export default function FasihImportPage() {
   } | null>(null);
 
   // Error detail dialog
-  const [errorDialogId, setErrorDialogId]     = useState<string | null>(null);
-  const [errorDetails, setErrorDetails]       = useState<ImportError[]>([]);
+  const [errorDialogId, setErrorDialogId] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<ImportError[]>([]);
   const [isLoadingErrors, setIsLoadingErrors] = useState(false);
 
   const fetchImports = useCallback(async () => {
@@ -139,14 +143,16 @@ export default function FasihImportPage() {
     }
   }, []);
 
-  useEffect(() => { fetchImports(); }, [fetchImports]);
+  useEffect(() => {
+    fetchImports();
+  }, [fetchImports]);
 
-  // ── Drag & Drop ────────────────────────────────────────────────────────────
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f && (f.name.endsWith(".csv") || f.name.endsWith(".xlsx"))) setSelectedFile(f);
+    if (f && (f.name.endsWith(".csv") || f.name.endsWith(".xlsx")))
+      setSelectedFile(f);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +160,6 @@ export default function FasihImportPage() {
     if (f) setSelectedFile(f);
   };
 
-  // ── Upload ─────────────────────────────────────────────────────────────────
   const handleUpload = async () => {
     if (!selectedFile) return;
     setIsUploading(true);
@@ -163,37 +168,38 @@ export default function FasihImportPage() {
     try {
       const fd = new FormData();
       fd.append("file", selectedFile);
-
-      const res  = await fetch("/api/fasih/import", { method: "POST", body: fd });
+      const res = await fetch("/api/fasih/import", { method: "POST", body: fd });
       const data = await res.json();
 
       if (!res.ok) {
         setUploadResult({ success: false, message: data.error ?? "Upload gagal" });
       } else {
         setUploadResult({
-          success:     true,
-          message:     `Import selesai — ${data.successRows} baris berhasil, ${data.failedRows} baris gagal.`,
+          success: true,
+          message: `Import selesai — ${data.successRows} baris berhasil, ${data.failedRows} baris gagal.`,
           successRows: data.successRows,
-          failedRows:  data.failedRows,
-          importId:    data.importId,
+          failedRows: data.failedRows,
+          importId: data.importId,
         });
         setSelectedFile(null);
         if (fileRef.current) fileRef.current.value = "";
         fetchImports();
       }
     } catch {
-      setUploadResult({ success: false, message: "Terjadi kesalahan saat upload" });
+      setUploadResult({
+        success: false,
+        message: "Terjadi kesalahan saat upload",
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
-  // ── Error detail ───────────────────────────────────────────────────────────
   const openErrorDetail = async (id: string) => {
     setErrorDialogId(id);
     setIsLoadingErrors(true);
     try {
-      const res  = await fetch(`/api/fasih/import/${id}/errors`);
+      const res = await fetch(`/api/fasih/import/${id}/errors`);
       const data = await res.json();
       setErrorDetails(data.errors ?? []);
     } catch {
@@ -203,330 +209,492 @@ export default function FasihImportPage() {
     }
   };
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleString("id-ID", {
-      day:    "2-digit",
-      month:  "short",
-      year:   "numeric",
-      hour:   "2-digit",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
       minute: "2-digit",
     });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Import Data</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Upload file CSV untuk memperbarui data assignment dan status wilayah
+    <div className="space-y-8">
+      {/* Page header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          Import Data
+        </h1>
+        <p className="text-sm text-gray-500">
+          Upload file CSV atau XLSX untuk memperbarui data assignment dan status wilayah
         </p>
       </div>
 
-      {/* ── Format panduan ────────────────────────────────────────────────── */}
-      <Card className="border-dashed">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-medium">Format CSV/XLSX yang Didukung</CardTitle>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-xs shrink-0"
-              onClick={() => void downloadTemplate()}
-            >
-              <Download className="h-3.5 w-3.5" />
-              Download Template
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Format lama */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Format A (lengkap):</p>
-            <div className="overflow-x-auto">
-              <code className="text-xs text-muted-foreground whitespace-nowrap">
-                username, name, regionCode, islandName, regionName, totalRegion,
-                approved, draft, open, submitted, rejected, editedAdmin, revoked,
-                submittedRespondent, editedSupervisor
-              </code>
-            </div>
-          </div>
-          {/* Format baru */}
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Format B (dari sistem sumber):</p>
-            <div className="overflow-x-auto">
-              <code className="text-xs text-muted-foreground whitespace-nowrap">
-                userId, username, email, roleName, totalPetugas, regionCode, totalRegion, statusBreakdown
-              </code>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Kolom <code className="bg-muted px-1 rounded">statusBreakdown</code> dibaca otomatis,
-              contoh: <code className="bg-muted px-1 rounded">SUBMITTED BY Pencacah:11 | DRAFT:6 | APPROVED BY Pengawas:1</code>
-            </p>
-          </div>
-          <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-            <li>Format file: CSV (.csv) atau XLSX (.xlsx)</li>
-            <li>Header tidak peka huruf besar/kecil dan spasi</li>
-            <li>
-              <code className="bg-muted px-1 rounded">regionCode</code> diperlakukan
-              sebagai teks (gunakan tanda kutip jika dimulai angka 0)
-            </li>
-            <li>
-              Import bersifat <strong>idempotent</strong> — data yang sudah ada
-              akan diperbarui, bukan digandakan
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column — upload + format guide */}
+        <div className="lg:col-span-2 space-y-5">
 
-      {/* ── Upload area ───────────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Upload File CSV/XLSX</CardTitle>
-          <CardDescription>Format: .csv atau .xlsx · Maks. 10 MB</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Drag & Drop zone */}
-          <div
-            className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 text-center transition-colors cursor-pointer
-              ${isDragging ? "border-emerald-500 bg-emerald-50" : "border-muted-foreground/25 hover:border-muted-foreground/50"}`}
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="h-8 w-8 text-muted-foreground mb-3" />
-            {selectedFile ? (
-              <div className="space-y-1">
-                <p className="font-medium text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-emerald-600" />
-                  {selectedFile.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
+          {/* Upload card */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Upload File
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Format: .csv atau .xlsx · Maks. 10 MB
                 </p>
               </div>
-            ) : (
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Drag & drop file CSV di sini</p>
-                <p className="text-xs text-muted-foreground">atau klik untuk memilih file</p>
-              </div>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv,.xlsx"
-              className="sr-only"
-              onChange={handleFileChange}
-            />
-          </div>
-
-          {/* Upload result */}
-          {uploadResult && (
-            <Alert variant={uploadResult.success ? "default" : "destructive"}>
-              {uploadResult.success
-                ? <CheckCircle2 className="h-4 w-4" />
-                : <AlertCircle className="h-4 w-4" />}
-              <AlertTitle>{uploadResult.success ? "Import Berhasil" : "Import Gagal"}</AlertTitle>
-              <AlertDescription className="space-y-1">
-                <p>{uploadResult.message}</p>
-                {uploadResult.failedRows != null && uploadResult.failedRows > 0 && uploadResult.importId && (
-                  <button
-                    className="underline text-sm"
-                    onClick={() => openErrorDetail(uploadResult.importId!)}
-                  >
-                    Lihat detail error ({uploadResult.failedRows} baris)
-                  </button>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Upload progress */}
-          {isUploading && (
-            <div className="space-y-2">
-              <Progress value={undefined} className="h-2 animate-pulse" />
-              <p className="text-xs text-muted-foreground text-center">Sedang memproses…</p>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <Button
-              onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
-              className="flex-1 sm:flex-none"
-            >
-              {isUploading ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Memproses…
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Mulai Import
-                </>
-              )}
-            </Button>
-            {selectedFile && !isUploading && (
               <Button
                 variant="outline"
-                onClick={() => {
-                  setSelectedFile(null);
-                  setUploadResult(null);
-                  if (fileRef.current) fileRef.current.value = "";
-                }}
+                size="sm"
+                className="h-8 gap-1.5 text-xs border-gray-200 hover:bg-gray-50 shrink-0"
+                onClick={() => void downloadTemplate()}
               >
-                Batal
+                <Download className="h-3.5 w-3.5" />
+                Template
               </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Riwayat Import ────────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-base">Riwayat Import</CardTitle>
-            <CardDescription>50 import terakhir</CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" onClick={fetchImports} disabled={isLoadingList}>
-            <RefreshCw className={`h-4 w-4 ${isLoadingList ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {listError && (
-            <div className="p-4">
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{listError}</AlertDescription>
-              </Alert>
             </div>
-          )}
 
-          {isLoadingList ? (
-            <div className="p-6 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">Nama File</TableHead>
-                    <TableHead className="text-center">Total</TableHead>
-                    <TableHead className="text-center text-emerald-700">Berhasil</TableHead>
-                    <TableHead className="text-center text-red-700">Gagal</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="min-w-[160px]">Waktu</TableHead>
-                    <TableHead className="w-24">Detail</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {imports.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                        Belum ada riwayat import
-                      </TableCell>
-                    </TableRow>
+            <div className="p-5 space-y-4">
+              {/* Drop zone */}
+              <div
+                className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-all cursor-pointer select-none
+                  ${
+                    isDragging
+                      ? "border-[#F9882B] bg-orange-50"
+                      : selectedFile
+                      ? "border-emerald-300 bg-emerald-50"
+                      : "border-gray-200 hover:border-[#F9882B]/50 hover:bg-orange-50/30"
+                  }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => fileRef.current?.click()}
+              >
+                {selectedFile ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-gray-900">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {(selectedFile.size / 1024).toFixed(1)} KB — siap diupload
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: "#F9882B1A" }}
+                    >
+                      <FileUp className="h-6 w-6" style={{ color: "#F9882B" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        Drag & drop file di sini
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        atau{" "}
+                        <span
+                          className="font-semibold underline underline-offset-2"
+                          style={{ color: "#F9882B" }}
+                        >
+                          klik untuk memilih file
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,.xlsx"
+                  className="sr-only"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Upload result */}
+              {uploadResult && (
+                <Alert
+                  variant={uploadResult.success ? "default" : "destructive"}
+                  className={
+                    uploadResult.success
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : ""
+                  }
+                >
+                  {uploadResult.success ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   ) : (
-                    imports.map((imp) => {
-                      const meta = STATUS_META[imp.status];
-                      return (
-                        <TableRow key={imp.id}>
-                          <TableCell className="font-medium text-sm">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <span className="truncate max-w-[200px]">{imp.file_name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums">{imp.total_rows}</TableCell>
-                          <TableCell className="text-center tabular-nums text-emerald-700 font-medium">
-                            {imp.success_rows}
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums text-red-700">
-                            {imp.failed_rows > 0 ? imp.failed_rows : <span className="text-muted-foreground/40">—</span>}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={meta.variant} className="gap-1">
-                              {meta.icon}
-                              {meta.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {fmtDate(imp.created_at)}
-                          </TableCell>
-                          <TableCell>
-                            {imp.failed_rows > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-xs h-7"
-                                onClick={() => openErrorDetail(imp.id)}
-                              >
-                                Error
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                    <AlertCircle className="h-4 w-4" />
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  <AlertDescription className="space-y-1">
+                    <p className="font-medium">
+                      {uploadResult.success ? "Import Berhasil" : "Import Gagal"}
+                    </p>
+                    <p className="text-sm">{uploadResult.message}</p>
+                    {uploadResult.failedRows != null &&
+                      uploadResult.failedRows > 0 &&
+                      uploadResult.importId && (
+                        <button
+                          className="text-sm underline underline-offset-2 font-medium"
+                          onClick={() => openErrorDetail(uploadResult.importId!)}
+                        >
+                          Lihat detail error ({uploadResult.failedRows} baris)
+                        </button>
+                      )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-      {/* ── Error detail dialog ───────────────────────────────────────────── */}
-      <Dialog open={!!errorDialogId} onOpenChange={(o: boolean) => { if (!o) setErrorDialogId(null); }}>
+              {/* Progress */}
+              {isUploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Sedang memproses file…</span>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  </div>
+                  <Progress value={undefined} className="h-2 animate-pulse" />
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isUploading}
+                  className="flex-1 sm:flex-none text-white font-semibold"
+                  style={
+                    selectedFile && !isUploading
+                      ? { backgroundColor: "#F9882B" }
+                      : {}
+                  }
+                >
+                  {isUploading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Memproses…
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Mulai Import
+                    </>
+                  )}
+                </Button>
+                {selectedFile && !isUploading && (
+                  <Button
+                    variant="outline"
+                    className="border-gray-200"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setUploadResult(null);
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  >
+                    Batal
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right column — format guide */}
+        <div className="space-y-5">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "#F9882B1A" }}
+              >
+                <Info className="h-3.5 w-3.5" style={{ color: "#F9882B" }} />
+              </div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                Format yang Didukung
+              </h2>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Format A */}
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1.5">
+                  Format A (lengkap):
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
+                  <code className="text-xs text-gray-500 whitespace-nowrap leading-relaxed">
+                    username, name, regionCode,<br />
+                    islandName, regionName,<br />
+                    totalRegion, approved,<br />
+                    draft, open, submitted,<br />
+                    rejected, editedAdmin,<br />
+                    revoked, submittedRespondent,<br />
+                    editedSupervisor
+                  </code>
+                </div>
+              </div>
+
+              {/* Format B */}
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1.5">
+                  Format B (dari sistem sumber):
+                </p>
+                <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
+                  <code className="text-xs text-gray-500 whitespace-nowrap leading-relaxed">
+                    userId, username, email,<br />
+                    roleName, totalPetugas,<br />
+                    regionCode, totalRegion,<br />
+                    statusBreakdown
+                  </code>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                  Kolom{" "}
+                  <code className="bg-gray-100 px-1 rounded text-gray-600">
+                    statusBreakdown
+                  </code>{" "}
+                  dibaca otomatis. Contoh:{" "}
+                  <code className="bg-gray-100 px-1 rounded text-gray-600">
+                    SUBMITTED:11 | DRAFT:6
+                  </code>
+                </p>
+              </div>
+
+              {/* Rules */}
+              <div className="space-y-1.5 pt-1 border-t border-gray-100">
+                {[
+                  "Format: .csv atau .xlsx",
+                  "Header tidak peka huruf besar/kecil",
+                  "regionCode diperlakukan sebagai teks",
+                  "Import bersifat idempotent — data yang ada akan diperbarui",
+                ].map((rule, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-500 leading-snug">{rule}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Import history */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "#F9882B1A" }}
+            >
+              <Clock className="h-3.5 w-3.5" style={{ color: "#F9882B" }} />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                Riwayat Import
+              </h2>
+              <p className="text-xs text-gray-400">50 import terakhir</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchImports}
+            disabled={isLoadingList}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+          >
+            <RefreshCw
+              className={`h-4 w-4 text-gray-500 ${isLoadingList ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </div>
+
+        {listError && (
+          <div className="p-5">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{listError}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {isLoadingList ? (
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
+                  <TableHead className="font-semibold text-gray-600 min-w-[200px]">
+                    Nama File
+                  </TableHead>
+                  <TableHead className="font-semibold text-gray-600 text-center">
+                    Total
+                  </TableHead>
+                  <TableHead className="font-semibold text-emerald-700 text-center">
+                    Berhasil
+                  </TableHead>
+                  <TableHead className="font-semibold text-red-600 text-center">
+                    Gagal
+                  </TableHead>
+                  <TableHead className="font-semibold text-gray-600">
+                    Status
+                  </TableHead>
+                  <TableHead className="font-semibold text-gray-600 min-w-[150px]">
+                    Waktu
+                  </TableHead>
+                  <TableHead className="w-24 font-semibold text-gray-600">
+                    Detail
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {imports.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-gray-400 py-14 text-sm"
+                    >
+                      Belum ada riwayat import
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  imports.map((imp) => {
+                    const meta = STATUS_META[imp.status];
+                    return (
+                      <TableRow
+                        key={imp.id}
+                        className="hover:bg-orange-50/20 transition-colors"
+                      >
+                        <TableCell className="font-medium text-sm text-gray-900">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-gray-300 shrink-0" />
+                            <span className="truncate max-w-[200px]">
+                              {imp.file_name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums text-gray-700">
+                          {imp.total_rows}
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums">
+                          <span className="font-semibold text-emerald-600">
+                            {imp.success_rows}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums">
+                          {imp.failed_rows > 0 ? (
+                            <span className="font-semibold text-red-600">
+                              {imp.failed_rows}
+                            </span>
+                          ) : (
+                            <span className="text-gray-200">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${meta.badgeClass}`}
+                          >
+                            {meta.icon}
+                            {meta.label}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-400">
+                          {fmtDate(imp.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          {imp.failed_rows > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                              onClick={() => openErrorDetail(imp.id)}
+                            >
+                              Lihat Error
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* Error detail dialog */}
+      <Dialog
+        open={!!errorDialogId}
+        onOpenChange={(o: boolean) => {
+          if (!o) setErrorDialogId(null);
+        }}
+      >
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Detail Error Import</DialogTitle>
-            <DialogDescription>Daftar baris yang gagal diproses</DialogDescription>
+            <DialogTitle className="text-lg">Detail Error Import</DialogTitle>
+            <DialogDescription>
+              Daftar baris yang gagal diproses
+            </DialogDescription>
           </DialogHeader>
 
           {isLoadingErrors ? (
             <div className="space-y-3 py-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
+                <Skeleton key={i} className="h-10 w-full rounded-lg" />
               ))}
             </div>
           ) : errorDetails.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 text-sm">Tidak ada detail error</p>
+            <p className="text-center text-gray-400 py-10 text-sm">
+              Tidak ada detail error
+            </p>
           ) : (
             <div className="overflow-y-auto flex-1">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-20">Baris</TableHead>
-                    <TableHead className="w-40">Tipe Error</TableHead>
-                    <TableHead>Pesan Error</TableHead>
+                  <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
+                    <TableHead className="w-20 font-semibold text-gray-600">
+                      Baris
+                    </TableHead>
+                    <TableHead className="w-40 font-semibold text-gray-600">
+                      Tipe Error
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-600">
+                      Pesan Error
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {errorDetails.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="tabular-nums">{e.row_number}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs text-red-600 border-red-200">
-                          {e.error_type}
-                        </Badge>
+                    <TableRow key={e.id} className="hover:bg-red-50/20">
+                      <TableCell className="tabular-nums font-mono text-sm text-gray-600">
+                        {e.row_number}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                          {e.error_type}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
                         {e.error_message}
                         {e.raw_data && (
-                          <details className="mt-1">
-                            <summary className="text-xs cursor-pointer text-muted-foreground/60">
+                          <details className="mt-1.5">
+                            <summary className="text-xs cursor-pointer text-gray-400 hover:text-gray-600">
                               Lihat data mentah
                             </summary>
-                            <pre className="text-xs mt-1 bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap break-all">
+                            <pre className="text-xs mt-1.5 bg-gray-50 border border-gray-100 p-2.5 rounded-lg overflow-x-auto whitespace-pre-wrap break-all text-gray-500">
                               {JSON.stringify(e.raw_data, null, 2)}
                             </pre>
                           </details>
