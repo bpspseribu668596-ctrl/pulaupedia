@@ -28,7 +28,7 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterConfig = async () => {
       try {
-        const response = await fetch('/api/footer');
+        const response = await fetch('/api/public/footer');
         if (response.ok) {
           setFooterConfig(await response.json());
         } else {

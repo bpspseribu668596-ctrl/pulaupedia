@@ -34,7 +34,7 @@ export default function PortalSidebar() {
   useEffect(() => {
     const fetchPortalAndItems = async () => {
       try {
-        const portalsRes = await fetch('/api/portals?all=true');
+        const portalsRes = await fetch('/api/public/portals?all=true');
         if (!portalsRes.ok) throw new Error('Failed to fetch portals');
 
         const portalsData = await portalsRes.json();
@@ -47,7 +47,7 @@ export default function PortalSidebar() {
 
         setPortal(currentPortal);
 
-        const itemsRes = await fetch(`/api/portals/${currentPortal.id}/items`);
+        const itemsRes = await fetch(`/api/public/portals/${currentPortal.id}/items`);
         if (itemsRes.ok) {
           const itemsData = await itemsRes.json();
           setMenuItems(itemsData.map((item: any) => ({

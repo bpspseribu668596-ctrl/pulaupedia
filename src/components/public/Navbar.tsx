@@ -57,8 +57,8 @@ export default function Navbar({ isScrolled }: NavbarProps) {
     const fetchData = async () => {
       try {
         const [navbarRes, portalsRes] = await Promise.all([
-          fetch('/api/navbar'),
-          fetch('/api/portals'),
+          fetch('/api/public/navbar'),
+          fetch('/api/public/portals'),
         ]);
         if (navbarRes.ok) setNavbarConfig(await navbarRes.json());
         if (portalsRes.ok) setPortalMenuItems(await portalsRes.json());

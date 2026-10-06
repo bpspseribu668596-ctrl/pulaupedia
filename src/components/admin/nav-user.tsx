@@ -44,7 +44,7 @@ export function NavUser({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await fetch('/api/auth/logout', {
+      await fetch('/api/public/auth/logout', {
         method: 'POST',
       });
       

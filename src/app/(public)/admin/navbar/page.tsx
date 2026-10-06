@@ -35,7 +35,7 @@ export default function AdminNavbarPage() {
 
   const fetchNavbarConfig = async () => {
     try {
-      const res = await fetch('/api/navbar');
+      const res = await fetch('/api/public/navbar');
       if (res.ok) setNavbarData(await res.json());
     } catch (e) {
       console.error(e);
@@ -77,13 +77,13 @@ export default function AdminNavbarPage() {
       if (selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/navbar', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/navbar', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload failed');
         const result = await uploadRes.json();
         logo = result.path;
       }
 
-      const res = await fetch('/api/navbar', {
+      const res = await fetch('/api/public/navbar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, logo }),
@@ -106,7 +106,7 @@ export default function AdminNavbarPage() {
     if (!confirm('Reset ke default?')) return;
     setIsSaving(true);
     try {
-      await fetch('/api/navbar', { method: 'DELETE' });
+      await fetch('/api/public/navbar', { method: 'DELETE' });
       setSaveMessage("Navbar direset ke default!");
       fetchNavbarConfig();
       setTimeout(() => setSaveMessage(""), 3000);

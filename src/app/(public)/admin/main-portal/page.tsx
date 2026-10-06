@@ -110,13 +110,13 @@ export default function AdminMainPortalPage() {
 
   const fetchPortals = async () => {
     try {
-      const response = await fetch('/api/portals?all=true');
+      const response = await fetch('/api/public/portals?all=true');
       if (response.ok) {
         const data = await response.json();
         const portalsWithItems = await Promise.all(
           data.map(async (portal: Portal) => {
             try {
-              const itemsRes = await fetch(`/api/portals/${portal.id}/items?all=true`);
+              const itemsRes = await fetch(`/api/public/portals/${portal.id}/items?all=true`);
               const items = itemsRes.ok ? await itemsRes.json() : [];
               return { ...portal, items };
             } catch {
@@ -237,7 +237,7 @@ export default function AdminMainPortalPage() {
       if (iconMode === 'image' && selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/portals', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/portals', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload gagal');
         const result = await uploadRes.json();
         iconImage = result.url;
@@ -249,7 +249,7 @@ export default function AdminMainPortalPage() {
       }
 
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/portals/${editingId}` : '/api/portals';
+      const url = editingId ? `/api/public/portals/${editingId}` : '/api/public/portals';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -284,8 +284,8 @@ export default function AdminMainPortalPage() {
     try {
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId
-        ? `/api/portals/${selectedPortalId}/items/${editingId}`
-        : `/api/portals/${selectedPortalId}/items`;
+        ? `/api/public/portals/${selectedPortalId}/items/${editingId}`
+        : `/api/public/portals/${selectedPortalId}/items`;
 
       const response = await fetch(url, {
         method,
@@ -310,7 +310,7 @@ export default function AdminMainPortalPage() {
     if (!confirm('Apakah Anda yakin ingin menghapus portal ini beserta semua itemnya?')) return;
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/portals/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/public/portals/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete portal');
       setSaveMessage("Portal berhasil dihapus!");
       fetchPortals();
@@ -326,7 +326,7 @@ export default function AdminMainPortalPage() {
     if (!confirm('Apakah Anda yakin ingin menghapus item ini?')) return;
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/portals/${portalId}/items/${itemId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/public/portals/${portalId}/items/${itemId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to delete item');
       setSaveMessage("Item berhasil dihapus!");
       fetchPortals();

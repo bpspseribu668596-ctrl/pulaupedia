@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Home, ArrowLeft, Search } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/public/Navbar";
+import Footer from "@/components/public/Footer";
 
 export default function NotFound() {
   const [isScrolled, setIsScrolled] = useState(false);

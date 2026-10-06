@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, FileText, ExternalLink, ChevronRight, House } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import PortalSidebar from "@/components/PortalSidebar";
-import { ErrorMessage } from "@/components/ErrorMessage";
+import Navbar from "@/components/public/Navbar";
+import Footer from "@/components/public/Footer";
+import PortalSidebar from "@/components/public/PortalSidebar";
+import { ErrorMessage } from "@/components/public/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -86,8 +86,8 @@ export default function ItemDetailPage() {
     const fetchItemData = async () => {
       try {
         const [portalsRes, headerRes] = await Promise.all([
-          fetch('/api/portals?all=true'),
-          fetch('/api/header'),
+          fetch('/api/public/portals?all=true'),
+          fetch('/api/public/header'),
         ]);
 
         if (headerRes.ok) {
@@ -114,7 +114,7 @@ export default function ItemDetailPage() {
 
         setPortal(matchedPortal);
 
-        const itemsRes = await fetch(`/api/portals/${matchedPortal.id}/items`);
+        const itemsRes = await fetch(`/api/public/portals/${matchedPortal.id}/items`);
         if (!itemsRes.ok) {
           setItemError(ERROR_MESSAGES.ITEMS_UNAVAILABLE);
           setFetchStatus("notfound");

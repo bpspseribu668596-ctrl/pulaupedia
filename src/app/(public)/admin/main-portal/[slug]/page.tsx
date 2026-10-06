@@ -60,7 +60,7 @@ export default function PortalSlugPage() {
   const fetchPortalData = async () => {
     try {
       // Fetch all portals to find the one matching slug
-      const portalsRes = await fetch('/api/portals?all=true');
+      const portalsRes = await fetch('/api/public/portals?all=true');
       if (portalsRes.ok) {
         const portals = await portalsRes.json();
         const foundPortal = portals.find((p: Portal) => p.href === `/${slug}` || p.href.includes(slug));
@@ -69,7 +69,7 @@ export default function PortalSlugPage() {
           setPortal(foundPortal);
           
           // Fetch items for this portal
-          const itemsRes = await fetch(`/api/portals/${foundPortal.id}/items?all=true`);
+          const itemsRes = await fetch(`/api/public/portals/${foundPortal.id}/items?all=true`);
           if (itemsRes.ok) {
             const itemsData = await itemsRes.json();
             setItems(itemsData);
@@ -135,8 +135,8 @@ export default function PortalSlugPage() {
     try {
       const method = editingItem ? 'PUT' : 'POST';
       const url = editingItem 
-        ? `/api/portals/${portal.id}/items/${editingItem.id}`
-        : `/api/portals/${portal.id}/items`;
+        ? `/api/public/portals/${portal.id}/items/${editingItem.id}`
+        : `/api/public/portals/${portal.id}/items`;
       
       const response = await fetch(url, {
         method: method,
@@ -164,7 +164,7 @@ export default function PortalSlugPage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/portals/${portal.id}/items/${itemId}`, { 
+      const response = await fetch(`/api/public/portals/${portal.id}/items/${itemId}`, { 
         method: 'DELETE' 
       });
       

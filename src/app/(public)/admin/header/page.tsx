@@ -36,7 +36,7 @@ export default function AdminHeaderPage() {
 
   const fetchHeaderData = async () => {
     try {
-      const res = await fetch('/api/header');
+      const res = await fetch('/api/public/header');
       if (res.ok) setHeaderData(await res.json());
     } catch (e) {
       console.error(e);
@@ -83,13 +83,13 @@ export default function AdminHeaderPage() {
       if (selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/header', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/header', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload failed');
         const result = await uploadRes.json();
         backgroundImage = result.path;
       }
 
-      const res = await fetch('/api/header', {
+      const res = await fetch('/api/public/header', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, backgroundImage }),
@@ -112,7 +112,7 @@ export default function AdminHeaderPage() {
     if (!confirm('Reset ke default?')) return;
     setIsSaving(true);
     try {
-      await fetch('/api/header', { method: 'DELETE' });
+      await fetch('/api/public/header', { method: 'DELETE' });
       setSaveMessage("Header direset ke default!");
       fetchHeaderData();
       setTimeout(() => setSaveMessage(""), 3000);

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { ErrorMessage } from "@/components/ErrorMessage";
+import Navbar from "@/components/public/Navbar";
+import Footer from "@/components/public/Footer";
+import { ErrorMessage } from "@/components/public/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -87,8 +87,8 @@ export default function DynamicPortalPage() {
     const fetchPortalData = async () => {
       try {
         const [portalsRes, headerRes] = await Promise.all([
-          fetch('/api/portals?all=true'),
-          fetch('/api/header'),
+          fetch('/api/public/portals?all=true'),
+          fetch('/api/public/header'),
         ]);
 
         if (headerRes.ok) {
@@ -121,7 +121,7 @@ export default function DynamicPortalPage() {
         setPortal(currentPortal);
         setIsLoading(false);
 
-        const itemsRes = await fetch(`/api/portals/${currentPortal.id}/items`);
+        const itemsRes = await fetch(`/api/public/portals/${currentPortal.id}/items`);
         if (itemsRes.ok) {
           setItems(await itemsRes.json());
         } else {

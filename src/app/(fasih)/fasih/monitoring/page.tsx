@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/public/Navbar";
+import Footer from "@/components/public/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {

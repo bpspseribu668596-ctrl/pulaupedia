@@ -33,7 +33,7 @@ export default function AdminAnnouncementPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await fetch('/api/announcements?all=true');
+      const res = await fetch('/api/public/announcements?all=true');
       if (res.ok) setAnnouncements(await res.json());
     } catch (e) {
       console.error(e);
@@ -91,14 +91,14 @@ export default function AdminAnnouncementPage() {
       if (selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/announcements', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/announcements', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload failed');
         const uploadResult = await uploadRes.json();
         imageUrl = uploadResult.path;
       }
 
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/announcements/${editingId}` : '/api/announcements';
+      const url = editingId ? `/api/public/announcements/${editingId}` : '/api/public/announcements';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -122,7 +122,7 @@ export default function AdminAnnouncementPage() {
     if (!confirm('Hapus announcement ini?')) return;
     setIsSaving(true);
     try {
-      await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
+      await fetch(`/api/public/announcements/${id}`, { method: 'DELETE' });
       setSaveMessage("Announcement berhasil dihapus!");
       fetchAnnouncements();
       setTimeout(() => setSaveMessage(""), 3000);

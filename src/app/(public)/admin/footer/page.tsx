@@ -40,7 +40,7 @@ export default function AdminFooterPage() {
 
   const fetchFooterConfig = async () => {
     try {
-      const res = await fetch('/api/footer');
+      const res = await fetch('/api/public/footer');
       if (res.ok) setFooterData(await res.json());
     } catch (e) {
       console.error(e);
@@ -87,13 +87,13 @@ export default function AdminFooterPage() {
       if (selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/footer', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/footer', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload failed');
         const result = await uploadRes.json();
         logo = result.path;
       }
 
-      const res = await fetch('/api/footer', {
+      const res = await fetch('/api/public/footer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, logo }),
@@ -116,7 +116,7 @@ export default function AdminFooterPage() {
     if (!confirm('Reset ke default?')) return;
     setIsSaving(true);
     try {
-      await fetch('/api/footer', { method: 'DELETE' });
+      await fetch('/api/public/footer', { method: 'DELETE' });
       setSaveMessage("Footer direset ke default!");
       fetchFooterConfig();
       setTimeout(() => setSaveMessage(""), 3000);

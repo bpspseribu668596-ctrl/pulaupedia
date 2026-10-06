@@ -14,9 +14,9 @@ import {
   Megaphone,
   X,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { ErrorMessage } from "@/components/ErrorMessage";
+import Navbar from "@/components/public/Navbar";
+import Footer from "@/components/public/Footer";
+import { ErrorMessage } from "@/components/public/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
 
@@ -54,7 +54,7 @@ export default function Home() {
   useEffect(() => {
     const fetchHeaderData = async () => {
       try {
-        const response = await fetch('/api/header');
+        const response = await fetch('/api/public/header');
         if (response.ok) {
           setHeaderData(await response.json());
         } else {
@@ -69,7 +69,7 @@ export default function Home() {
 
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/services?all=true');
+        const response = await fetch('/api/public/services?all=true');
         if (response.ok) {
           const data = await response.json();
           setServiceCategories(data.filter((s: any) => s.type === 'service'));
@@ -85,7 +85,7 @@ export default function Home() {
 
     const fetchMainPortal = async () => {
       try {
-        const response = await fetch('/api/portals');
+        const response = await fetch('/api/public/portals');
         if (response.ok) {
           setMainMenuItems(await response.json());
         } else {
@@ -383,7 +383,7 @@ function AnnouncementModalComponent() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const response = await fetch('/api/announcements');
+        const response = await fetch('/api/public/announcements');
         if (response.ok) setAnnouncements(await response.json());
       } catch {
         console.error('Error fetching announcements');

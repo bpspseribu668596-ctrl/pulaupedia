@@ -35,7 +35,7 @@ export default function AdminServicesPage() {
 
   const fetchServices = async () => {
     try {
-      const res = await fetch('/api/services?all=true');
+      const res = await fetch('/api/public/services?all=true');
       if (res.ok) {
         const data = await res.json();
         setServices(data.filter((s: Service) => s.type === 'service'));
@@ -95,7 +95,7 @@ export default function AdminServicesPage() {
       if (selectedFile) {
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const uploadRes = await fetch('/api/uploads/services', { method: 'POST', body: fd });
+        const uploadRes = await fetch('/api/public/uploads/services', { method: 'POST', body: fd });
         if (!uploadRes.ok) throw new Error('Upload failed');
         const result = await uploadRes.json();
         logo = result.path;
@@ -108,7 +108,7 @@ export default function AdminServicesPage() {
       }
 
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/services/${editingId}` : '/api/services';
+      const url = editingId ? `/api/public/services/${editingId}` : '/api/public/services';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -132,7 +132,7 @@ export default function AdminServicesPage() {
     if (!confirm('Hapus service ini?')) return;
     setIsSaving(true);
     try {
-      await fetch(`/api/services/${id}`, { method: 'DELETE' });
+      await fetch(`/api/public/services/${id}`, { method: 'DELETE' });
       setSaveMessage("Service berhasil dihapus!");
       fetchServices();
       setTimeout(() => setSaveMessage(""), 3000);
