@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
-import { getFasihOfficerById, writeFasihActivityLog } from "@/lib/fasih-db";
+import { validateFasihSession } from "@/lib/fasih/auth";
+import { getFasihOfficerById, writeFasihActivityLog } from "@/lib/fasih/db";
 import pool from "@/lib/db";
 
 export async function PUT(

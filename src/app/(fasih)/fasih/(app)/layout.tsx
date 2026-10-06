@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { validateFasihSession } from "@/lib/fasih-auth";
+import { validateFasihSession } from "@/lib/fasih/auth";
 import { FasihSidebar } from "@/components/fasih/sidebar";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";

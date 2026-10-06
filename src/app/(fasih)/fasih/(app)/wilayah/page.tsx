@@ -45,7 +45,7 @@ import {
   ArrowDown,
   Settings,
 } from "lucide-react";
-import type { AssignmentRow, FasihOfficer } from "@/lib/fasih-db";
+import type { AssignmentRow, FasihOfficer } from "@/lib/fasih/db";
 
 interface WilayahResponse {
   assignments: AssignmentRow[];

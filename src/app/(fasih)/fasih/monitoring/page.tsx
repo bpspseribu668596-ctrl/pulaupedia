@@ -40,7 +40,7 @@ import {
   ArrowDown,
   SlidersHorizontal,
 } from "lucide-react";
-import type { AssignmentRow, FasihOfficer, DashboardStats } from "@/lib/fasih-db";
+import type { AssignmentRow, FasihOfficer, DashboardStats } from "@/lib/fasih/db";
 
 interface MonitoringResponse {
   assignments: AssignmentRow[];

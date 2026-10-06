@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
-import { createAndStoreFasihSession } from "@/lib/fasih-auth";
-import { writeFasihActivityLog } from "@/lib/fasih-db";
+import { createAndStoreFasihSession } from "@/lib/fasih/auth";
+import { writeFasihActivityLog } from "@/lib/fasih/db";
 
 export async function POST(request: NextRequest) {
   try {

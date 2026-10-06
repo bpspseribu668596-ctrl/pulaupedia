@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
+import { validateFasihSession } from "@/lib/fasih/auth";
 
 export async function GET() {
   try {

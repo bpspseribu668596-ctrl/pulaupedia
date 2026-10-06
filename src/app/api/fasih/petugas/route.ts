@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
-import { getFasihOfficers } from "@/lib/fasih-db";
+import { validateFasihSession } from "@/lib/fasih/auth";
+import { getFasihOfficers } from "@/lib/fasih/db";
 import pool from "@/lib/db";
-import { writeFasihActivityLog } from "@/lib/fasih-db";
+import { writeFasihActivityLog } from "@/lib/fasih/db";
 
 export async function GET() {
   try {

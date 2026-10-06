@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { validateFasihSession, logoutFasih } from "@/lib/fasih-auth";
-import { writeFasihActivityLog } from "@/lib/fasih-db";
+import { validateFasihSession, logoutFasih } from "@/lib/fasih/auth";
+import { writeFasihActivityLog } from "@/lib/fasih/db";
 
 export async function POST() {
   try {

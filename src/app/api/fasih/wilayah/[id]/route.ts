@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
-import { writeFasihActivityLog } from "@/lib/fasih-db";
+import { validateFasihSession } from "@/lib/fasih/auth";
+import { writeFasihActivityLog } from "@/lib/fasih/db";
 import pool from "@/lib/db";
 
 // ─── PUT: update status angka + total_assignments ────────────────────────────

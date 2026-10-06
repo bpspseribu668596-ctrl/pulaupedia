@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
+import { validateFasihSession } from "@/lib/fasih/auth";
 import pool from "@/lib/db";
 import { Workbook } from "exceljs";
 

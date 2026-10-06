@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { FASIH_SESSION_COOKIE } from '@/lib/fasih-constants';
+import { FASIH_SESSION_COOKIE } from '@/lib/fasih/constants';
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;

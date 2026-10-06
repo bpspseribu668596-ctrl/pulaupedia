@@ -19,7 +19,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import type { DashboardStats } from "@/lib/fasih-db";
+import type { DashboardStats } from "@/lib/fasih/db";
 
 interface DashboardData {
   stats: DashboardStats;

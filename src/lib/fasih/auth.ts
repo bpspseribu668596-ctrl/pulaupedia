@@ -6,11 +6,11 @@ import {
   createFasihSession,
   deleteFasihSession,
   type FasihUser,
-} from '@/lib/fasih-db';
+} from '@/lib/fasih/db';
 import {
   FASIH_SESSION_COOKIE,
   SESSION_DURATION_HOURS,
-} from '@/lib/fasih-constants';
+} from '@/lib/fasih/constants';
 
 // ─── Token generation ─────────────────────────────────────────────────────────
 

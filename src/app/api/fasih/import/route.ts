@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
-import { getFasihImports, writeFasihActivityLog } from "@/lib/fasih-db";
+import { validateFasihSession } from "@/lib/fasih/auth";
+import { getFasihImports, writeFasihActivityLog } from "@/lib/fasih/db";
 import pool from "@/lib/db";
 import { Workbook } from "exceljs";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getFasihAssignments, getDistinctIslands, getFasihOfficers, getFasihDashboardStats } from "@/lib/fasih-db";
+import { getFasihAssignments, getDistinctIslands, getFasihOfficers, getFasihDashboardStats } from "@/lib/fasih/db";
 
 // ─── GET: public — no auth required ──────────────────────────────────────────
 export async function GET(request: NextRequest) {

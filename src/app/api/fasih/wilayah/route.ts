@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateFasihSession } from "@/lib/fasih-auth";
-import { getFasihAssignments, getDistinctIslands, getFasihOfficers } from "@/lib/fasih-db";
+import { validateFasihSession } from "@/lib/fasih/auth";
+import { getFasihAssignments, getDistinctIslands, getFasihOfficers } from "@/lib/fasih/db";
 
 export async function GET(request: NextRequest) {
   try {
