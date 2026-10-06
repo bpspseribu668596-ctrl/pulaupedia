@@ -330,7 +330,7 @@ export default function FasihMonitoringPage() {
               ))
             ) : (
               [
-                { value: data?.total.toLocaleString("id-ID") ?? "—", label: "Total Assignment" },
+                { value: data?.total.toLocaleString("id-ID") ?? "—", label: "Total Assigned" },
                 { value: data?.islands.length ?? "—",                label: "Pulau" },
                 { value: data?.pencacahList.length ?? "—",           label: "Pencacah Aktif" },
               ].map((stat, i) => (
