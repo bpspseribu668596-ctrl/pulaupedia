@@ -33,6 +33,8 @@ import {
   Download,
   FileUp,
   Clock,
+  Copy,
+  ClipboardCheck,
 } from "lucide-react";
 
 async function downloadTemplate() {
@@ -125,6 +127,18 @@ export default function FasihImportPage() {
     importId?: string;
   } | null>(null);
 
+  // Progress polling state
+  const [progressImportId, setProgressImportId] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{
+    processed: number;
+    total: number;
+    success: number;
+    failed: number;
+    done: boolean;
+    status: string;
+  } | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Error detail dialog
   const [errorDialogId, setErrorDialogId] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<ImportError[]>([]);
@@ -146,6 +160,55 @@ export default function FasihImportPage() {
   useEffect(() => {
     fetchImports();
   }, [fetchImports]);
+
+  // ── Polling progress ──────────────────────────────────────────────────────
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback((importId: string) => {
+    setProgressImportId(importId);
+    setProgress({ processed: 0, total: 0, success: 0, failed: 0, done: false, status: "processing" });
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/fasih/import/${importId}/progress`);
+        if (!res.ok) { stopPolling(); return; }
+        const data = await res.json();
+
+        setProgress({
+          processed: data.processed,
+          total:     data.total,
+          success:   data.success,
+          failed:    data.failed,
+          done:      data.done,
+          status:    data.status,
+        });
+
+        if (data.done) {
+          stopPolling();
+          setIsUploading(false);
+          setProgressImportId(null);
+          setUploadResult({
+            success: data.status !== "failed",
+            message: `Import selesai — ${data.success} baris berhasil, ${data.failed} baris gagal.`,
+            successRows: data.success,
+            failedRows:  data.failed,
+            importId,
+          });
+          fetchImports();
+        }
+      } catch {
+        stopPolling();
+      }
+    }, 1000);
+  }, [stopPolling, fetchImports]);
+
+  // Bersihkan interval saat unmount
+  useEffect(() => () => stopPolling(), [stopPolling]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -411,78 +474,7 @@ export default function FasihImportPage() {
 
         {/* Right column — format guide */}
         <div className="space-y-5">
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: "#F9882B1A" }}
-              >
-                <Info className="h-3.5 w-3.5" style={{ color: "#F9882B" }} />
-              </div>
-              <h2 className="text-sm font-semibold text-gray-900">
-                Format yang Didukung
-              </h2>
-            </div>
-            <div className="p-5 space-y-4">
-              {/* Format A */}
-              <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1.5">
-                  Format A (lengkap):
-                </p>
-                <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
-                  <code className="text-xs text-gray-500 whitespace-nowrap leading-relaxed">
-                    username, name, regionCode,<br />
-                    islandName, regionName,<br />
-                    totalRegion, approved,<br />
-                    draft, open, submitted,<br />
-                    rejected, editedAdmin,<br />
-                    revoked, submittedRespondent,<br />
-                    editedSupervisor
-                  </code>
-                </div>
-              </div>
-
-              {/* Format B */}
-              <div>
-                <p className="text-xs font-semibold text-gray-600 mb-1.5">
-                  Format B (dari sistem sumber):
-                </p>
-                <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
-                  <code className="text-xs text-gray-500 whitespace-nowrap leading-relaxed">
-                    userId, username, email,<br />
-                    roleName, totalPetugas,<br />
-                    regionCode, totalRegion,<br />
-                    statusBreakdown
-                  </code>
-                </div>
-                <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                  Kolom{" "}
-                  <code className="bg-gray-100 px-1 rounded text-gray-600">
-                    statusBreakdown
-                  </code>{" "}
-                  dibaca otomatis. Contoh:{" "}
-                  <code className="bg-gray-100 px-1 rounded text-gray-600">
-                    SUBMITTED:11 | DRAFT:6
-                  </code>
-                </p>
-              </div>
-
-              {/* Rules */}
-              <div className="space-y-1.5 pt-1 border-t border-gray-100">
-                {[
-                  "Format: .csv atau .xlsx",
-                  "Header tidak peka huruf besar/kecil",
-                  "regionCode diperlakukan sebagai teks",
-                  "Import bersifat idempotent — data yang ada akan diperbarui",
-                ].map((rule, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-gray-500 leading-snug">{rule}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <FormatGuide />
         </div>
       </div>
 
@@ -708,6 +700,147 @@ export default function FasihImportPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ─── Format Guide Component ───────────────────────────────────────────────────
+
+const FORMAT_A_HEADERS = [
+  "username", "nama", "regionCode", "islandName", "regionName",
+  "totalRegion", "APPROVED BY Pengawas", "DRAFT", "OPEN",
+  "SUBMITTED BY Pencacah", "REJECTED BY Pengawas",
+  "EDITED BY Admin Kabupaten", "REVOKED BY Pengawas",
+  "SUBMITTED RESPONDENT", "EDITED BY Pengawas",
+];
+
+const FORMAT_B_HEADERS = [
+  "userId", "username", "email", "roleName",
+  "totalPetugas", "regionCode", "totalRegion", "statusBreakdown",
+];
+
+function CopyHeaderButton({ headers, label }: { headers: string[]; label: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    // Tab-separated — paste ke Excel/Sheets langsung jadi satu baris, tiap header di kolom tersendiri
+    const text = headers.join("\t");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Fallback untuk browser yang tidak support clipboard API
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+        copied
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-[#F9882B]/10 hover:text-[#F9882B] hover:border-[#F9882B]/30"
+      }`}
+    >
+      {copied ? (
+        <ClipboardCheck className="h-3.5 w-3.5" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+      {copied ? "Tersalin!" : label}
+    </button>
+  );
+}
+
+function FormatGuide() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ backgroundColor: "#F9882B1A" }}
+        >
+          <Info className="h-3.5 w-3.5" style={{ color: "#F9882B" }} />
+        </div>
+        <h2 className="text-sm font-semibold text-gray-900">
+          Format yang Didukung
+        </h2>
+      </div>
+      <div className="p-5 space-y-5">
+
+        {/* Format A */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-700">
+              Format A — Lengkap
+            </p>
+            <CopyHeaderButton headers={FORMAT_A_HEADERS} label="Salin Header" />
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
+            <div className="flex gap-1.5 flex-wrap">
+              {FORMAT_A_HEADERS.map((h) => (
+                <code key={h} className="text-[10px] bg-white border border-gray-200 text-gray-600 px-1.5 py-0.5 rounded whitespace-nowrap">
+                  {h}
+                </code>
+              ))}
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
+            Klik "Salin Header" → buka Excel/Sheets → klik sel <strong>A1</strong> → Paste.
+            Header langsung tersebar ke tiap kolom.
+          </p>
+        </div>
+
+        {/* Format B */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-700">
+              Format B — Dari Sistem Sumber
+            </p>
+            <CopyHeaderButton headers={FORMAT_B_HEADERS} label="Salin Header" />
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
+            <div className="flex gap-1.5 flex-wrap">
+              {FORMAT_B_HEADERS.map((h) => (
+                <code key={h} className="text-[10px] bg-white border border-gray-200 text-gray-600 px-1.5 py-0.5 rounded whitespace-nowrap">
+                  {h}
+                </code>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+            Kolom <code className="bg-gray-100 px-1 rounded text-gray-600">statusBreakdown</code> diisi seperti:{" "}
+            <code className="bg-gray-100 px-1 rounded text-gray-600">OPEN:10 | SUBMITTED BY Pencacah:5</code>
+          </p>
+        </div>
+
+        {/* Rules */}
+        <div className="space-y-1.5 pt-1 border-t border-gray-100">
+          {[
+            "Format file: .csv atau .xlsx",
+            "Nama header tidak peka huruf besar/kecil",
+            "regionCode diperlakukan sebagai teks",
+            "islandName dan regionName boleh kosong",
+            "Import bersifat idempotent — data yang ada akan diperbarui",
+          ].map((rule, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-500 leading-snug">{rule}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

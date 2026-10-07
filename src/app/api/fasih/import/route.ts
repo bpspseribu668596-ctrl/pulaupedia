@@ -18,13 +18,12 @@ export async function GET() {
   }
 }
 
-// ─── Expected CSV/Excel columns — FORMAT LAMA (order-independent, trimmed) ───
+// ─── Expected CSV/Excel columns — FORMAT LAMA ────────────────────────────────
+// islandname & regionname OPSIONAL — bisa tidak ada di file, nilainya kosong
 const REQUIRED_HEADERS_OLD = [
   "username",
   "name",
   "regioncode",
-  "islandname",
-  "regionname",
   "totalregion",
   "approved",
   "draft",
@@ -48,10 +47,80 @@ const REQUIRED_HEADERS_NEW = [
 ];
 
 function normalizeHeader(h: string): string {
-  return h.toLowerCase().replace(/[\s_\-\/]/g, "").replace(/[^a-z0-9]/g, "");
+  // Lowercase, strip semua non-alphanumeric
+  return h.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-// Map normalised header → DB field name (format lama)
+// Canonical mapping: berbagai variasi header → key standar
+const HEADER_ALIASES: Record<string, string> = {
+  // name / nama
+  "name":                     "name",
+  "nama":                     "name",
+  "namalengkap":              "name",
+  // username
+  "username":                 "username",
+  "email":                    "email",
+  // regioncode
+  "regioncode":               "regioncode",
+  "kodewilayah":              "regioncode",
+  "kode":                     "regioncode",
+  // islandname
+  "islandname":               "islandname",
+  "namapulau":                "islandname",
+  "pulau":                    "islandname",
+  // regionname
+  "regionname":               "regionname",
+  "namawilayah":              "regionname",
+  "wilayah":                  "regionname",
+  // totalregion
+  "totalregion":              "totalregion",
+  "total":                    "totalregion",
+  // status — semua variasi → key pendek
+  "approved":                 "approved",
+  "approvedbypengawas":       "approved",
+  "approvedpengawas":         "approved",
+  "apv":                      "approved",
+  "draft":                    "draft",
+  "drf":                      "draft",
+  "open":                     "open",
+  "opn":                      "open",
+  "submitted":                "submitted",
+  "submittedbypencacah":      "submitted",
+  "submittedpencacah":        "submitted",
+  "subp":                     "submitted",
+  "rejected":                 "rejected",
+  "rejectedbypengawas":       "rejected",
+  "rejectedpengawas":         "rejected",
+  "rejp":                     "rejected",
+  "editedadmin":              "editedadmin",
+  "editedbyadminkabupaten":   "editedadmin",
+  "editedbyadmin":            "editedadmin",
+  "editedadminkab":           "editedadmin",
+  "edak":                     "editedadmin",
+  "revoked":                  "revoked",
+  "revokedbypengawas":        "revoked",
+  "revokedpengawas":          "revoked",
+  "rvkp":                     "revoked",
+  "submittedrespondent":      "submittedrespondent",
+  "submittedrespondents":     "submittedrespondent",
+  "subr":                     "submittedrespondent",
+  "editedsupervisor":         "editedsupervisor",
+  "editedbypengawas":         "editedsupervisor",
+  "editedpengawas":           "editedsupervisor",
+  "edp":                      "editedsupervisor",
+  // format baru
+  "userid":                   "userid",
+  "rolename":                 "rolename",
+  "totalpetugas":             "totalpetugas",
+  "statusbreakdown":          "statusbreakdown",
+};
+
+function canonicalizeHeader(raw: string): string {
+  const norm = normalizeHeader(raw);
+  return HEADER_ALIASES[norm] ?? norm;
+}
+
+// Map canonical header → DB field name (format lama)
 const HEADER_MAP_OLD: Record<string, string> = {
   username:             "username",
   name:                 "name",
@@ -70,7 +139,7 @@ const HEADER_MAP_OLD: Record<string, string> = {
   editedsupervisor:     "editedSupervisor",
 };
 
-// Map normalised header → DB field name (format baru)
+// Map canonical header → DB field name (format baru)
 const HEADER_MAP_NEW: Record<string, string> = {
   userid:          "userId",
   username:        "username",
@@ -167,10 +236,21 @@ interface RowError {
   rawData: Record<string, string>;
 }
 
-// Parse CSV text — handles quoted fields, CRLF and LF
+// Parse CSV/TSV text — handles quoted fields, CRLF, LF, tab or comma separator
 function parseCSV(text: string): string[][] {
-  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const lines = normalized.split("\n");
+
+  // Detect separator from first line: tab takes priority over comma
+  const firstLine = lines[0] ?? "";
+  const separator = firstLine.includes("\t") ? "\t" : ",";
+
   return lines.map((line) => {
+    // For tab-separated, no quoting needed — split directly
+    if (separator === "\t") {
+      return line.split("\t").map((c) => c.trim());
+    }
+    // Comma-separated with quote handling
     const cols: string[] = [];
     let cur = "";
     let inQuote = false;
@@ -191,20 +271,40 @@ function parseCSV(text: string): string[][] {
   });
 }
 
-// Parse XLSX file
-async function parseXLSX(data: any): Promise<string[][]> {
+// Parse XLSX file — handle semua tipe cell ExcelJS
+async function parseXLSX(data: ArrayBuffer): Promise<string[][]> {
   const workbook = new Workbook();
   await workbook.xlsx.load(data);
   const worksheet = workbook.worksheets[0];
 
   const rows: string[][] = [];
   worksheet.eachRow({ includeEmpty: false }, (row) => {
-    const values: string[] = row.values as any[];
-    rows.push(
-      values.slice(1).map((v) =>
-        v === null || v === undefined ? "" : String(v).trim()
-      )
-    );
+    const values = row.values as (unknown)[];
+    // row.values adalah 1-based array, index 0 selalu null
+    const cells = values.slice(1).map((v) => {
+      if (v === null || v === undefined) return "";
+      // Rich text object: { richText: [{text: '...'}] }
+      if (typeof v === "object" && v !== null) {
+        const obj = v as Record<string, unknown>;
+        // Rich text
+        if (Array.isArray(obj.richText)) {
+          return (obj.richText as Array<{ text?: unknown }>)
+            .map((r) => String(r.text ?? ""))
+            .join("")
+            .trim();
+        }
+        // Hyperlink: { text: '...', hyperlink: '...' }
+        if (obj.text !== undefined) return String(obj.text).trim();
+        // Formula result
+        if (obj.result !== undefined) return String(obj.result).trim();
+        // Date object
+        if (v instanceof Date) return v.toISOString();
+        // Fallback
+        return String(v).trim();
+      }
+      return String(v).trim();
+    });
+    rows.push(cells);
   });
 
   return rows;
@@ -249,11 +349,10 @@ export async function POST(request: NextRequest) {
 
     // ── Header detection & validation ──────────────────────────────────────
     const rawHeaders = rows[0];
-    const normHeaders = rawHeaders.map(normalizeHeader);
+    const normHeaders = rawHeaders.map(canonicalizeHeader);
 
     const format = detectFormat(normHeaders);
     if (!format) {
-      // Coba tebak format mana yang paling dekat untuk error message yang berguna
       const missingOld = REQUIRED_HEADERS_OLD.filter((h) => !normHeaders.includes(h));
       const missingNew = REQUIRED_HEADERS_NEW.filter((h) => !normHeaders.includes(h));
       const missing = missingOld.length <= missingNew.length ? missingOld : missingNew;
@@ -303,10 +402,9 @@ export async function POST(request: NextRequest) {
 
       if (format === "old") {
         // ── Format lama — validasi lengkap ──────────────────────────────
-        if (!raw.name?.trim())       errors.push("name tidak boleh kosong");
+        if (!raw.name?.trim() && !raw.username?.trim()) errors.push("nama/username tidak boleh keduanya kosong");
         if (!raw.regionCode?.trim()) errors.push("regionCode tidak boleh kosong");
-        if (!raw.islandName?.trim()) errors.push("islandName tidak boleh kosong");
-        if (!raw.regionName?.trim()) errors.push("regionName tidak boleh kosong");
+        // islandName & regionName opsional — boleh kosong
 
         const intFields = ["totalRegion","approved","draft","open","submitted",
                            "rejected","editedAdmin","revoked","submittedRespondent","editedSupervisor"];
@@ -324,11 +422,11 @@ export async function POST(request: NextRequest) {
 
         parsed.push({
           rowNumber:           rowNum,
-          username:            raw.username?.trim() ?? "",
-          name:                raw.name.trim(),
-          regionCode:          raw.regionCode.trim(),
-          islandName:          raw.islandName.trim(),
-          regionName:          raw.regionName.trim(),
+          username:            (raw.username ?? "").trim(),
+          name:                (raw.name ?? raw.username ?? "").trim(),
+          regionCode:          (raw.regionCode ?? "").trim(),
+          islandName:          (raw.islandName ?? "").trim(),
+          regionName:          (raw.regionName ?? "").trim(),
           totalRegion:         intValues.totalRegion,
           approved:            intValues.approved,
           draft:               intValues.draft,
@@ -382,6 +480,7 @@ export async function POST(request: NextRequest) {
 
     // ── DB upsert (idempotent, keyed on pencacah username + region_code) ──
     let successCount = 0;
+    const PROGRESS_BATCH = 10; // update DB setiap N baris
 
     for (const row of parsed) {
       try {
@@ -439,7 +538,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // 2. Upsert region — keyed on region_code (no unique constraint, use SELECT+INSERT)
+        // 2. Upsert region — keyed on region_code
         const existingRegion = await pool.query(
           `SELECT id FROM public.fasih_regions WHERE region_code = $1`,
           [row.regionCode]
@@ -447,17 +546,14 @@ export async function POST(request: NextRequest) {
         let regionId: string;
         if (existingRegion.rows.length > 0) {
           regionId = existingRegion.rows[0].id;
-          // Only overwrite island_name / region_name if the incoming values are non-empty
-          if (row.islandName || row.regionName) {
-            await pool.query(
-              `UPDATE public.fasih_regions
-                 SET island_name = CASE WHEN $1 <> '' THEN $1 ELSE island_name END,
-                     region_name = CASE WHEN $2 <> '' THEN $2 ELSE region_name END,
-                     updated_at  = now()
-               WHERE id = $3`,
-              [row.islandName, row.regionName, regionId]
-            );
-          }
+          await pool.query(
+            `UPDATE public.fasih_regions
+               SET island_name = CASE WHEN $1 <> '' THEN $1 ELSE island_name END,
+                   region_name = CASE WHEN $2 <> '' THEN $2 ELSE region_name END,
+                   updated_at  = now()
+             WHERE id = $3`,
+            [row.islandName, row.regionName, regionId]
+          );
         } else {
           const ins = await pool.query(
             `INSERT INTO public.fasih_regions (region_code, island_name, region_name)
@@ -509,6 +605,16 @@ export async function POST(request: NextRequest) {
 
         await pool.query("COMMIT");
         successCount++;
+
+        // Update progress ke DB setiap PROGRESS_BATCH baris sukses
+        if (successCount % PROGRESS_BATCH === 0) {
+          await pool.query(
+            `UPDATE public.fasih_imports
+             SET success_rows = $1, failed_rows = $2
+             WHERE id = $3`,
+            [successCount, rowErrors.length, importId]
+          ).catch(() => null); // non-blocking — jangan sampai gagal proses
+        }
       } catch (rowErr) {
         await pool.query("ROLLBACK");
         rowErrors.push({
@@ -517,6 +623,16 @@ export async function POST(request: NextRequest) {
           errorMessage: rowErr instanceof Error ? rowErr.message : "Database error",
           rawData: { name: row.name, regionCode: row.regionCode },
         });
+
+        // Update progress juga saat ada error
+        if ((successCount + rowErrors.length) % PROGRESS_BATCH === 0) {
+          await pool.query(
+            `UPDATE public.fasih_imports
+             SET success_rows = $1, failed_rows = $2
+             WHERE id = $3`,
+            [successCount, rowErrors.length, importId]
+          ).catch(() => null);
+        }
       }
     }
 
