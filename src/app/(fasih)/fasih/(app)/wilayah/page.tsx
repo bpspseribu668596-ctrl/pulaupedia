@@ -272,7 +272,7 @@ export default function FasihWilayahPage() {
       {/* Page header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          Wilayah
+          Wilayah Ditugaskan
         </h1>
         <p className="text-sm text-gray-500">
           Data assignment wilayah dan status per Pencacah

@@ -54,32 +54,32 @@ interface MonitoringResponse {
 }
 
 const STATUS_META = [
-  { key: "approved" as keyof AssignmentRow,             label: "Approved",              shortLabel: "Apv",  infoLabel: "Approved",                icon: CheckCircle2, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  { key: "open" as keyof AssignmentRow,                 label: "Open",                  shortLabel: "Opn",  infoLabel: "Open",                    icon: FolderOpen,   color: "bg-blue-50 text-blue-700 border-blue-200" },
-  { key: "draft" as keyof AssignmentRow,                label: "Draft",                 shortLabel: "Drf",  infoLabel: "Draft",                   icon: FileText,     color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  { key: "submitted" as keyof AssignmentRow,            label: "Submitted (Pencacah)",  shortLabel: "SubP", infoLabel: "Submitted (Pencacah)",    icon: Send,         color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  { key: "submitted_respondent" as keyof AssignmentRow, label: "Submitted (Resp.)",     shortLabel: "SubR", infoLabel: "Submitted (Respondent)",  icon: UserCheck,    color: "bg-purple-50 text-purple-700 border-purple-200" },
-  { key: "edited_admin" as keyof AssignmentRow,         label: "Edited (Admin)",        shortLabel: "EdAK", infoLabel: "Edited (Admin Kab.)",     icon: Edit,         color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
-  { key: "edited_supervisor" as keyof AssignmentRow,    label: "Edited (Pengawas)",     shortLabel: "EdP",  infoLabel: "Edited (Pengawas)",       icon: Edit,         color: "bg-teal-50 text-teal-700 border-teal-200" },
-  { key: "rejected" as keyof AssignmentRow,             label: "Rejected",              shortLabel: "RejP", infoLabel: "Rejected (Pengawas)",     icon: XCircle,      color: "bg-red-50 text-red-700 border-red-200" },
-  { key: "revoked" as keyof AssignmentRow,              label: "Revoked",               shortLabel: "RvkP", infoLabel: "Revoked (Pengawas)",      icon: RotateCcw,    color: "bg-orange-50 text-orange-700 border-orange-200" },
+  { key: "approved" as keyof AssignmentRow, label: "Approved", shortLabel: "Apv", infoLabel: "Approved", icon: CheckCircle2, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { key: "open" as keyof AssignmentRow, label: "Open", shortLabel: "Opn", infoLabel: "Open", icon: FolderOpen, color: "bg-blue-50 text-blue-700 border-blue-200" },
+  { key: "draft" as keyof AssignmentRow, label: "Draft", shortLabel: "Drf", infoLabel: "Draft", icon: FileText, color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  { key: "submitted" as keyof AssignmentRow, label: "Submitted (Pencacah)", shortLabel: "SubP", infoLabel: "Submitted (Pencacah)", icon: Send, color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  { key: "submitted_respondent" as keyof AssignmentRow, label: "Submitted (Resp.)", shortLabel: "SubR", infoLabel: "Submitted (Respondent)", icon: UserCheck, color: "bg-purple-50 text-purple-700 border-purple-200" },
+  { key: "edited_admin" as keyof AssignmentRow, label: "Edited (Admin)", shortLabel: "EdAK", infoLabel: "Edited (Admin Kab.)", icon: Edit, color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+  { key: "edited_supervisor" as keyof AssignmentRow, label: "Edited (Pengawas)", shortLabel: "EdP", infoLabel: "Edited (Pengawas)", icon: Edit, color: "bg-teal-50 text-teal-700 border-teal-200" },
+  { key: "rejected" as keyof AssignmentRow, label: "Rejected", shortLabel: "RejP", infoLabel: "Rejected (Pengawas)", icon: XCircle, color: "bg-red-50 text-red-700 border-red-200" },
+  { key: "revoked" as keyof AssignmentRow, label: "Revoked", shortLabel: "RvkP", infoLabel: "Revoked (Pengawas)", icon: RotateCcw, color: "bg-orange-50 text-orange-700 border-orange-200" },
 ] as const;
 
 const SORT_OPTIONS = [
-  { value: "approved",             label: "Approved" },
-  { value: "open",                 label: "Open" },
-  { value: "draft",                label: "Draft" },
-  { value: "submitted",            label: "Submitted" },
+  { value: "approved", label: "Approved" },
+  { value: "open", label: "Open" },
+  { value: "draft", label: "Draft" },
+  { value: "submitted", label: "Submitted" },
   { value: "submitted_respondent", label: "Submitted (Resp.)" },
-  { value: "edited_admin",         label: "Edited (Admin)" },
-  { value: "edited_supervisor",    label: "Edited (Pengawas)" },
-  { value: "rejected",             label: "Rejected" },
-  { value: "revoked",              label: "Revoked" },
-  { value: "total_assignments",    label: "Total" },
-  { value: "region_code",          label: "Kode Wilayah" },
-  { value: "region_name",          label: "Nama Wilayah" },
-  { value: "island_name",          label: "Nama Pulau" },
-  { value: "pencacah_name",        label: "Nama Pencacah" },
+  { value: "edited_admin", label: "Edited (Admin)" },
+  { value: "edited_supervisor", label: "Edited (Pengawas)" },
+  { value: "rejected", label: "Rejected" },
+  { value: "revoked", label: "Revoked" },
+  { value: "total_assignments", label: "Total" },
+  { value: "region_code", label: "Kode Wilayah" },
+  { value: "region_name", label: "Nama Wilayah" },
+  { value: "island_name", label: "Nama Pulau" },
+  { value: "pencacah_name", label: "Nama Pencacah" },
 ] as const;
 
 type SortValue = (typeof SORT_OPTIONS)[number]["value"] | "";
@@ -275,13 +275,13 @@ export default function FasihMonitoringPage() {
                           </DialogHeader>
                           <div className="mt-2 space-y-1">
                             {s && [
-                              { label: "Approved by Pengawas",         value: s.total_approved },
-                              { label: "Edited by Admin Kabupaten",    value: s.total_edited_admin },
-                              { label: "Submitted (Pencacah)",         value: s.total_submitted },
-                              { label: "Submitted Respondent",         value: s.total_submitted_respondent },
-                              { label: "Edited by Pengawas",           value: s.total_edited_supervisor },
-                              { label: "Rejected by Pengawas",         value: s.total_rejected },
-                              { label: "Revoked by Pengawas",          value: s.total_revoked },
+                              { label: "Approved by Pengawas", value: s.total_approved },
+                              { label: "Edited by Admin Kabupaten", value: s.total_edited_admin },
+                              { label: "Submitted (Pencacah)", value: s.total_submitted },
+                              { label: "Submitted Respondent", value: s.total_submitted_respondent },
+                              { label: "Edited by Pengawas", value: s.total_edited_supervisor },
+                              { label: "Rejected by Pengawas", value: s.total_rejected },
+                              { label: "Revoked by Pengawas", value: s.total_revoked },
                             ].map((item) => {
                               const itemPct = submitted > 0 ? ((item.value / submitted) * 100).toFixed(2) : "0";
                               return (
@@ -320,26 +320,97 @@ export default function FasihMonitoringPage() {
       {/* ── Stats Bar (putih, di dalam zona putih wave) ───────── */}
       <div className="bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 divide-x divide-gray-100">
+          <div className="grid grid-cols-3">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2 gap-1.5 animate-pulse">
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center py-4 sm:py-5 px-2 gap-1.5 animate-pulse"
+                >
                   <div className="h-6 sm:h-7 w-12 bg-gray-200 rounded-md" />
                   <div className="h-3 w-20 bg-gray-100 rounded" />
                 </div>
               ))
             ) : (
               [
-                { value: data?.total.toLocaleString("id-ID") ?? "—", label: "Total Assigned" },
-                { value: data?.islands.length ?? "—",                label: "Pulau" },
-                { value: data?.pencacahList.length ?? "—",           label: "Pencacah Aktif" },
+                {
+                  value:
+                    totalDocs > 0
+                      ? totalDocs.toLocaleString("id-ID")
+                      : (data?.total.toLocaleString("id-ID") ?? "—"),
+                  label: "Total Assignment",
+                },
+                {
+                  value: data?.islands.length ?? "—",
+                  label: "Pulau",
+                },
+                {
+                  value: data?.pencacahList.length ?? "—",
+                  label: "Pencacah Aktif",
+                },
               ].map((stat, i) => (
-                <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
-                  <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">{stat.value}</span>
-                  <span className="text-[10px] sm:text-xs text-gray-500 mt-0.5 text-center">{stat.label}</span>
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center py-4 sm:py-5 px-2"
+                >
+                  <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">
+                    {stat.value}
+                  </span>
+                  <span className="text-[10px] sm:text-xs text-gray-500 mt-0.5 text-center">
+                    {stat.label}
+                  </span>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Keterangan Status Bar ─────────────────────────────── */}
+      <div className="bg-white">
+        <div className="container mx-auto px-4">
+
+          {/* Judul */}
+          <div className="pt-3 sm:pt-4 pb-2">
+            <h3 className="text-xs sm:text-sm font-semibold text-gray-700">
+              Keterangan Status Assignment
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-3">
+            {[
+              [
+                { short: "Apv", label: "Approved" },
+                { short: "Opn", label: "Open" },
+                { short: "Drf", label: "Draft" },
+              ],
+              [
+                { short: "SubP", label: "Submitted (Pencacah)" },
+                { short: "SubR", label: "Submitted (Respondent)" },
+                { short: "EdAK", label: "Edited (Admin Kab.)" },
+              ],
+              [
+                { short: "EdP", label: "Edited (Pengawas)" },
+                { short: "RejP", label: "Rejected (Pengawas)" },
+                { short: "RvkP", label: "Revoked (Pengawas)" },
+              ],
+            ].map((group, i) => (
+              <div
+                key={i}
+                className="flex flex-col justify-center py-3 sm:py-4 px-3 gap-1"
+              >
+                {group.map((s) => (
+                  <span
+                    key={s.short}
+                    className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-600"
+                  >
+                    <span className="font-bold text-gray-800">{s.short}</span>
+                    <span className="text-gray-300">—</span>
+                    <span>{s.label}</span>
+                  </span>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -419,11 +490,10 @@ export default function FasihMonitoringPage() {
                   onClick={toggleSortDir}
                   disabled={!sortBy}
                   title={sortDir === "asc" ? "Ascending" : "Descending"}
-                  className={`flex items-center justify-center h-9 w-9 rounded-md border text-sm font-medium transition-colors ${
-                    sortBy
-                      ? "bg-white hover:bg-gray-50 text-gray-700 cursor-pointer border-gray-300"
-                      : "bg-gray-50 text-gray-300 cursor-not-allowed border-gray-200"
-                  }`}
+                  className={`flex items-center justify-center h-9 w-9 rounded-md border text-sm font-medium transition-colors ${sortBy
+                    ? "bg-white hover:bg-gray-50 text-gray-700 cursor-pointer border-gray-300"
+                    : "bg-gray-50 text-gray-300 cursor-not-allowed border-gray-200"
+                    }`}
                 >
                   {sortDir === "asc" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
                 </button>
@@ -584,11 +654,10 @@ export default function FasihMonitoringPage() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
-                      p === page
-                        ? "bg-[#D83F3F] text-white shadow-sm"
-                        : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-700"
-                    }`}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${p === page
+                      ? "bg-[#D83F3F] text-white shadow-sm"
+                      : "bg-white border border-gray-200 hover:bg-gray-50 text-gray-700"
+                      }`}
                   >
                     {p}
                   </button>

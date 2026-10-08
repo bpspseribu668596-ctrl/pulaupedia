@@ -25,7 +25,7 @@ const navSections = [
     title: "Data",
     items: [
       { title: "Petugas",     url: "/fasih/petugas",   icon: Users },
-      { title: "Wilayah",     url: "/fasih/wilayah",   icon: MapPin },
+      { title: "Wilayah Ditugaskan",     url: "/fasih/wilayah",   icon: MapPin },
     ],
   },
   {

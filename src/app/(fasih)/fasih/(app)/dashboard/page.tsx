@@ -105,17 +105,49 @@ export default function FasihDashboardPage() {
 
           {/* Total assignment */}
           <div
-            className="rounded-2xl p-6 flex items-center gap-4 text-white"
+            className="rounded-2xl p-6 flex flex-col gap-4 text-white"
             style={{ background: "linear-gradient(135deg, #F9882B 0%, #e07020 100%)" }}
           >
-            <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <Users className="w-7 h-7 text-white" />
+            {/* Baris atas — icon + angka */}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Users className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Total Assignment</p>
+                <p className="text-4xl font-bold tabular-nums mt-0.5">
+                  {totalDocs.toLocaleString("id-ID")}
+                </p>
+              </div>
             </div>
+
+            {/* Keterangan status */}
             <div>
-              <p className="text-orange-100 text-sm font-medium">Total Assignment</p>
-              <p className="text-4xl font-bold tabular-nums mt-0.5">
-                {totalDocs.toLocaleString("id-ID")}
+              <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1.5">
+                Keterangan Status
               </p>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { short: "Apv",  label: "Approved" },
+                  { short: "Opn",  label: "Open" },
+                  { short: "Drf",  label: "Draft" },
+                  { short: "SubP", label: "Submitted (Pencacah)" },
+                  { short: "SubR", label: "Submitted (Respondent)" },
+                  { short: "EdAK", label: "Edited (Admin Kab.)" },
+                  { short: "EdP",  label: "Edited (Pengawas)" },
+                  { short: "RejP", label: "Rejected (Pengawas)" },
+                  { short: "RvkP", label: "Revoked (Pengawas)" },
+                ].map((s) => (
+                  <span
+                    key={s.short}
+                    className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 border border-white/20 font-medium"
+                  >
+                    <span className="font-bold">{s.short}</span>
+                    <span className="text-white/60">—</span>
+                    <span className="text-white/80">{s.label}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
