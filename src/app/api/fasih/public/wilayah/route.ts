@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getFasihAssignments, getDistinctIslands, getFasihOfficers, getFasihDashboardStats } from "@/lib/fasih/db";
+import { getFasihAssignments, getDistinctIslands, getFasihOfficers, getFasihDashboardStats, getFasihPencacahSummary } from "@/lib/fasih/db";
 
 // ─── GET: public — no auth required ──────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const sortBy     = searchParams.get("sortBy")     ?? "";
     const sortDir    = (searchParams.get("sortDir") ?? "asc") as "asc" | "desc";
 
-    const [{ rows, total, filteredStats }, islands, pencacahList, stats] = await Promise.all([
+    const [{ rows, total, filteredStats }, islands, pencacahList, stats, pencacahSummary] = await Promise.all([
       getFasihAssignments({
         search,
         island,
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       getDistinctIslands(),
       getFasihOfficers("pencacah"),
       getFasihDashboardStats(),
+      getFasihPencacahSummary(),
     ]);
 
     return NextResponse.json({
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
       pencacahList,
       stats,
       filteredStats,
+      pencacahSummary,
     });
   } catch (err) {
     console.error("[FASIH] public wilayah error:", err);

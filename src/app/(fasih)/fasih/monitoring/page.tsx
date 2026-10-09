@@ -38,9 +38,10 @@ import {
   UserCheck,
   ArrowUp,
   ArrowDown,
+  ArrowUpDown,
   SlidersHorizontal,
 } from "lucide-react";
-import type { AssignmentRow, FasihOfficer, DashboardStats } from "@/lib/fasih/db";
+import type { AssignmentRow, FasihOfficer, DashboardStats, PencacahSummary } from "@/lib/fasih/db";
 
 interface MonitoringResponse {
   assignments: AssignmentRow[];
@@ -51,6 +52,7 @@ interface MonitoringResponse {
   pencacahList: FasihOfficer[];
   stats: DashboardStats;
   filteredStats: DashboardStats;
+  pencacahSummary: PencacahSummary[];
 }
 
 const STATUS_META = [
@@ -91,6 +93,7 @@ export default function FasihMonitoringPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [tableCollapsed, setTableCollapsed] = useState(false);
 
   const [search, setSearch] = useState("");
   const [island, setIsland] = useState("ALL");
@@ -156,6 +159,49 @@ export default function FasihMonitoringPage() {
   };
 
   const toggleSortDir = () => setSortDir((d) => d === "asc" ? "desc" : "asc");
+
+  // ── Progress per pencacah ─────────────────────────────────────────────────
+  const [pencacahSortKey, setPencacahSortKey] = useState<"name" | "total" | "sudah" | "belum" | "pctBelum" | "pctSudah">("pctBelum");
+  const [pencacahSortDir, setPencacahSortDir] = useState<"asc" | "desc">("desc");
+
+  function calcProgress(p: PencacahSummary) {
+    const total =
+      p.total_approved + p.total_draft + p.total_open + p.total_submitted +
+      p.total_submitted_respondent + p.total_rejected + p.total_edited_admin +
+      p.total_revoked + p.total_edited_supervisor;
+    const sudah = p.total_approved + p.total_submitted;
+    const belum = total - sudah;
+    const pctSudah = total > 0 ? Math.round((sudah / total) * 100) : 0;
+    const pctBelum = total > 0 ? 100 - pctSudah : 0;
+    return { total, sudah, belum, pctSudah, pctBelum };
+  }
+
+  const sortedPencacah = data?.pencacahSummary
+    ? [...data.pencacahSummary].sort((a, b) => {
+        const pa = calcProgress(a);
+        const pb = calcProgress(b);
+        let valA: number | string;
+        let valB: number | string;
+        switch (pencacahSortKey) {
+          case "name":     valA = a.pencacah_name; valB = b.pencacah_name; break;
+          case "total":    valA = pa.total;        valB = pb.total;        break;
+          case "sudah":    valA = pa.sudah;        valB = pb.sudah;        break;
+          case "belum":    valA = pa.belum;        valB = pb.belum;        break;
+          case "pctSudah": valA = pa.pctSudah;     valB = pb.pctSudah;     break;
+          default:         valA = pa.pctBelum;     valB = pb.pctBelum;
+        }
+        if (typeof valA === "string" && typeof valB === "string")
+          return pencacahSortDir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return pencacahSortDir === "asc"
+          ? (valA as number) - (valB as number)
+          : (valB as number) - (valA as number);
+      })
+    : [];
+
+  const handlePencacahSort = (key: typeof pencacahSortKey) => {
+    if (pencacahSortKey === key) setPencacahSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setPencacahSortKey(key); setPencacahSortDir("desc"); }
+  };
 
   // Derived stats dari filteredStats
   const s = data?.filteredStats;
@@ -399,6 +445,7 @@ export default function FasihMonitoringPage() {
                 key={i}
                 className="flex flex-col justify-center py-3 sm:py-4 px-3 gap-1"
               >
+              
                 {group.map((s) => (
                   <span
                     key={s.short}
@@ -582,6 +629,153 @@ export default function FasihMonitoringPage() {
           </div>
         )}
 
+        {/* ── Tabel Progress per Pencacah ── */}
+        {(isLoading || (sortedPencacah.length > 0)) && (
+          <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-[#2a2a2a]">
+
+            {/* Header — klik untuk toggle, style dark */}
+            <button
+              onClick={() => setTableCollapsed((v) => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-7 h-7 rounded-lg bg-[#F9882B]/20 flex items-center justify-center shrink-0">
+                  <Users className="h-3.5 w-3.5 text-[#F9882B]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Progress per Pencacah</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Sudah = Approved + Submitted · Belum = status lainnya
+                    {!isLoading && sortedPencacah.length > 0 && (
+                      <span className="ml-2 text-white/25">· {sortedPencacah.length} pencacah</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 text-white/30 shrink-0 transition-transform duration-200 ${
+                  tableCollapsed ? "" : "rotate-90"
+                }`}
+              />
+            </button>
+
+            {/* Body */}
+            <div
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                tableCollapsed ? "max-h-0" : "max-h-[2000px]"
+              }`}
+            >
+              <div className="border-t border-white/10">
+                {isLoading ? (
+                  <div className="p-4 space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-10 rounded-lg bg-white/5 animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left px-4 py-3 text-[11px] font-semibold text-white/40 w-8">#</th>
+                          <th className="text-left px-4 py-3 text-[11px] font-semibold text-white/40 min-w-[160px]">
+                            <button onClick={() => handlePencacahSort("name")} className="flex items-center gap-1.5 hover:text-white/70 transition-colors">
+                              Pencacah <SortIcon2 k="name" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="text-right px-4 py-3 text-[11px] font-semibold text-white/40">
+                            <button onClick={() => handlePencacahSort("total")} className="flex items-center gap-1.5 ml-auto hover:text-white/70 transition-colors">
+                              Total <SortIcon2 k="total" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="text-right px-4 py-3 text-[11px] font-semibold text-emerald-400/70">
+                            <button onClick={() => handlePencacahSort("sudah")} className="flex items-center gap-1.5 ml-auto hover:text-emerald-400 transition-colors">
+                              Sudah <SortIcon2 k="sudah" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="text-right px-4 py-3 text-[11px] font-semibold text-red-400/70">
+                            <button onClick={() => handlePencacahSort("belum")} className="flex items-center gap-1.5 ml-auto hover:text-red-400 transition-colors">
+                              Belum <SortIcon2 k="belum" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="text-right px-4 py-3 text-[11px] font-semibold text-white/40 min-w-[100px]">
+                            <button onClick={() => handlePencacahSort("pctSudah")} className="flex items-center gap-1.5 ml-auto hover:text-white/70 transition-colors">
+                              % Sudah <SortIcon2 k="pctSudah" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="text-right px-4 py-3 text-[11px] font-semibold text-white/40 min-w-[100px]">
+                            <button onClick={() => handlePencacahSort("pctBelum")} className="flex items-center gap-1.5 ml-auto hover:text-white/70 transition-colors">
+                              % Belum <SortIcon2 k="pctBelum" sk={pencacahSortKey} sd={pencacahSortDir} />
+                            </button>
+                          </th>
+                          <th className="px-4 py-3 text-[11px] font-semibold text-white/40 min-w-[100px]">
+                            Progress
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedPencacah.map((p, idx) => {
+                          const { total, sudah, belum, pctSudah, pctBelum } = calcProgress(p);
+                          return (
+                            <tr
+                              key={p.pencacah_id}
+                              className="border-b border-white/5 hover:bg-white/5 transition-colors last:border-0"
+                            >
+                              <td className="px-4 py-3 text-xs text-white/20 tabular-nums">{idx + 1}</td>
+                              <td className="px-4 py-3 font-medium text-white/80">{p.pencacah_name}</td>
+                              <td className="px-4 py-3 text-right tabular-nums text-white/60 font-semibold">
+                                {total.toLocaleString("id-ID")}
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums">
+                                <span className="font-semibold text-emerald-400">
+                                  {sudah.toLocaleString("id-ID")}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums">
+                                <span className={`font-semibold ${belum > 0 ? "text-red-400" : "text-white/20"}`}>
+                                  {belum > 0 ? belum.toLocaleString("id-ID") : "—"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums">
+                                <span className="text-xs font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded-full">
+                                  {pctSudah}%
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right tabular-nums">
+                                {pctBelum > 0 ? (
+                                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                                    pctBelum >= 50
+                                      ? "text-red-400 bg-red-400/10 border-red-400/20"
+                                      : pctBelum >= 25
+                                      ? "text-orange-400 bg-orange-400/10 border-orange-400/20"
+                                      : "text-white/40 bg-white/5 border-white/10"
+                                  }`}>
+                                    {pctBelum}%
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-white/20">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="h-2 rounded-full bg-white/10 overflow-hidden min-w-[80px]">
+                                  <div
+                                    className="h-full rounded-full bg-emerald-400 transition-all duration-500"
+                                    style={{ width: `${pctSudah}%` }}
+                                  />
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: pageSize }).map((_, i) => (
@@ -680,6 +874,23 @@ export default function FasihMonitoringPage() {
       <Footer />
     </div>
   );
+}
+
+// ─────────────────────────────────────────────
+// Sort Icon helper untuk tabel pencacah
+// ─────────────────────────────────────────────
+
+function SortIcon2({
+  k, sk, sd,
+}: {
+  k: string;
+  sk: string;
+  sd: "asc" | "desc";
+}) {
+  if (sk !== k) return <ArrowUpDown className="h-3 w-3 opacity-30" />;
+  return sd === "asc"
+    ? <ArrowUp className="h-3 w-3 text-[#F9882B]" />
+    : <ArrowDown className="h-3 w-3 text-[#F9882B]" />;
 }
 
 // ─────────────────────────────────────────────

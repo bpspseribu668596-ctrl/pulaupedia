@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { validateFasihSession } from "@/lib/fasih/auth";
-import { getFasihDashboardStats } from "@/lib/fasih/db";
+import { getFasihDashboardStats, getFasihPencacahSummary } from "@/lib/fasih/db";
 
 export async function GET() {
   try {
@@ -9,9 +9,12 @@ export async function GET() {
       return NextResponse.json({ error: "Tidak terautentikasi" }, { status: 401 });
     }
 
-    const stats = await getFasihDashboardStats();
+    const [stats, pencacahSummary] = await Promise.all([
+      getFasihDashboardStats(),
+      getFasihPencacahSummary(),
+    ]);
 
-    return NextResponse.json({ stats });
+    return NextResponse.json({ stats, pencacahSummary });
   } catch (err) {
     console.error("[FASIH] dashboard error:", err);
     return NextResponse.json(
