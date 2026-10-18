@@ -194,8 +194,8 @@ export default function Home() {
               ) : (
                 [
                   { value: mainMenuItems.length || "—", label: "Portal Aktif" },
+                  { value: "BPS Kep. Seribu", label: "Instansi" },
                   { value: serviceCategories.length || "—", label: "Layanan Digital" },
-                  { value: "2026", label: "Tahun Aktif" },
                 ].map((stat, i) => (
                   <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
                     <span className="text-xl sm:text-2xl font-bold text-[#D83F3F]">{stat.value}</span>
