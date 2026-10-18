@@ -121,25 +121,24 @@ export default function AdminMainPortalPage() {
 
       // Auto-select: dari URL param dulu, kalau tidak ada baru pilih pertama
       if (withItems.length > 0) {
-        let matchedPortal: PortalWithItems | undefined;
+        let matchedPortal: PortalWithItems = withItems[0];
 
         if (portalParam) {
-          matchedPortal = withItems.find(
+          const found = withItems.find(
             (p) => p.href === `/${portalParam}` || p.href === portalParam
           );
-          setSelectedPortalId(matchedPortal?.id ?? withItems[0].id ?? null);
-          if (!matchedPortal) matchedPortal = withItems[0];
-        } else if (!selectedPortalId) {
-          matchedPortal = withItems[0];
-          setSelectedPortalId(matchedPortal.id ?? null);
-        } else {
-          matchedPortal = withItems.find((p) => p.id === selectedPortalId);
+          if (found) matchedPortal = found;
+        } else if (selectedPortalId) {
+          const found = withItems.find((p) => p.id === selectedPortalId);
+          if (found) matchedPortal = found;
         }
 
+        setSelectedPortalId(matchedPortal.id ?? null);
+
         // Auto-open dialog edit item kalau ada ?item= di URL
-        if (itemParam && matchedPortal?.items) {
+        if (itemParam) {
           const itemId = parseInt(itemParam, 10);
-          const matchedItem = matchedPortal.items.find((i) => i.id === itemId);
+          const matchedItem = matchedPortal.items?.find((i) => i.id === itemId);
           if (matchedItem) {
             setItemForm({ ...matchedItem });
             setDocTitle(""); setDocLink("");
