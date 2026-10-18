@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,7 +77,7 @@ const emptyItem: PortalItem = {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function AdminMainPortalPage() {
+function AdminMainPortalContent() {
   const searchParams = useSearchParams();
   const portalParam = searchParams.get("portal");
   const itemParam = searchParams.get("item"); // id item dari URL
@@ -688,5 +688,15 @@ export default function AdminMainPortalPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Wrapper dengan Suspense — diperlukan karena useSearchParams() ────────────
+
+export default function AdminMainPortalPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminMainPortalContent />
+    </Suspense>
   );
 }
