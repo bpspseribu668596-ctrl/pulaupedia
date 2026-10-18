@@ -13,12 +13,14 @@ import {
   ChevronDown,
   Megaphone,
   X,
+  Settings,
 } from "lucide-react";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import { ErrorMessage } from "@/components/public/ErrorMessage";
 import { ERROR_MESSAGES } from "@/lib/error-messages";
 import Link from "next/link";
+import { useAdminSession } from "@/hooks/use-admin-session";
 
 interface HeaderData {
   id?: number;
@@ -37,6 +39,7 @@ interface MainPortal {
 }
 
 export default function Home() {
+  const { isAdmin } = useAdminSession();
   const [headerData, setHeaderData] = useState<HeaderData | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -369,6 +372,19 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Admin shortcut — selalu muncul, login dulu kalau belum */}
+      <Link
+        href={isAdmin ? "/admin/main-portal" : "/login"}
+        className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-2xl text-white text-xs font-semibold shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+        style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #333333 100%)" }}
+      >
+        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white/15 group-hover:bg-white/25 transition-colors shrink-0">
+          <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform duration-300" />
+        </span>
+        <span>Kelola Portal</span>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isAdmin ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
+      </Link>
 
       <Footer />
     </div>

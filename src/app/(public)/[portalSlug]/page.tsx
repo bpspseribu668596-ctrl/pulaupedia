@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Settings } from "lucide-react";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import { ErrorMessage } from "@/components/public/ErrorMessage";
@@ -13,6 +13,7 @@ import {
   BookOpen, Archive, FileText, Package, Laptop, DollarSign,
   BarChart3, Award, FileSpreadsheet, Megaphone, ShoppingCart, Users,
 } from "lucide-react";
+import { useAdminSession } from "@/hooks/use-admin-session";
 
 interface Portal {
   id: number;
@@ -40,6 +41,7 @@ interface HeaderData {
 export default function DynamicPortalPage() {
   const params = useParams();
   const portalSlug = params.portalSlug as string;
+  const { isAdmin } = useAdminSession();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -318,6 +320,23 @@ export default function DynamicPortalPage() {
           <path d="M0,48 C360,0 1080,0 1440,48 L1440,0 L0,0 Z" fill="#D83F3F" />
         </svg>
       </div>
+
+      {/* Admin shortcut — selalu muncul, login dulu kalau belum */}
+      <Link
+        href={isAdmin && portal
+          ? `/admin/main-portal?portal=${encodeURIComponent(portal.href.replace(/^\//, ""))}`
+          : "/login"}
+        className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-2xl text-white text-xs font-semibold shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+        style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #333333 100%)" }}
+      >
+        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-white/15 group-hover:bg-white/25 transition-colors shrink-0">
+          <Settings className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform duration-300" />
+        </span>
+        <span>
+          {portal ? `Kelola ${portal.name}` : "Kelola Portal"}
+        </span>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isAdmin ? "bg-emerald-400 animate-pulse" : "bg-gray-400"}`} />
+      </Link>
 
       <Footer />
     </div>

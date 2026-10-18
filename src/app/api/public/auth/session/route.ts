@@ -5,26 +5,17 @@ export async function GET(request: NextRequest) {
     const sessionCookie = request.cookies.get('admin-session');
 
     if (!sessionCookie) {
-      return NextResponse.json(
-        { authenticated: false },
-        { status: 401 }
-      );
+      // Selalu return 200 agar fetch di client tidak perlu handle non-2xx
+      return NextResponse.json({ authenticated: false });
     }
 
     const session = JSON.parse(sessionCookie.value);
 
-    return NextResponse.json(
-      { 
-        authenticated: true,
-        user: session
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Error checking session:', error);
-    return NextResponse.json(
-      { authenticated: false },
-      { status: 401 }
-    );
+    return NextResponse.json({
+      authenticated: true,
+      user: session,
+    });
+  } catch {
+    return NextResponse.json({ authenticated: false });
   }
 }
