@@ -64,7 +64,7 @@ const getIcon = (name: string) =>
 
 const makeSlug = (t: string) =>
   t.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
-
+``
 const emptyPortal: Portal = {
   name: "", description: "", icon: "BookOpen", iconImage: null,
   href: "", sortOrder: 0, isActive: true,
