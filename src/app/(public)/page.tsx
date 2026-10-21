@@ -474,15 +474,15 @@ function AnnouncementModalComponent() {
         {/* Modal Body */}
         <div className="flex-1 flex flex-col items-center p-4 sm:p-6 text-center bg-gradient-to-b from-gray-50 to-white overflow-y-auto">
           {/* Image with arrows */}
-          <div className="relative w-full aspect-[4/3] sm:aspect-[4/5] rounded-lg overflow-hidden mb-3 sm:mb-4">
+          <div className="relative w-full rounded-lg overflow-hidden mb-3 sm:mb-4 bg-gray-100 flex items-center justify-center min-h-[160px]">
             {currentAnnouncement.image?.startsWith('http') ? (
               <img
                 src={currentAnnouncement.image}
                 alt={currentAnnouncement.title}
-                className="w-full h-full object-cover"
+                className="w-full h-auto max-h-[60vh] object-contain"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+              <div className="w-full h-40 flex items-center justify-center bg-gray-100">
                 <span className="text-gray-400 text-sm">Tidak ada gambar</span>
               </div>
             )}
@@ -511,14 +511,11 @@ function AnnouncementModalComponent() {
             )}
           </div>
 
-          {/* Teks */}
+          {/* Teks — hanya judul, tidak ada konten/deskripsi */}
           <div className="flex-1 flex flex-col justify-center w-full">
-            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-1 sm:mb-2 line-clamp-2">
+            <h3 className="text-sm sm:text-base font-bold text-gray-800 line-clamp-2">
               {currentAnnouncement.title}
             </h3>
-            <p className="text-xs text-gray-600 leading-relaxed line-clamp-3 sm:line-clamp-4">
-              {currentAnnouncement.content}
-            </p>
           </div>
 
           {/* Dots */}

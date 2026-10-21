@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Plus, Trash2, Edit2, X, Save, Bell, ImageIcon,
@@ -14,7 +13,7 @@ import {
 interface Announcement {
   id?: number;
   title: string;
-  content: string;
+  content: string; // tetap ada di interface karena API masih pakai, tapi tidak ditampilkan
   image?: string;
   isActive: boolean;
   createdAt?: string;
@@ -79,7 +78,7 @@ export default function AdminAnnouncementPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.content) { showToast("Judul dan konten harus diisi", "error"); return; }
+    if (!formData.title) { showToast("Judul harus diisi", "error"); return; }
     setIsSaving(true);
     try {
       let imageUrl = formData.image ?? "";
@@ -95,25 +94,26 @@ export default function AdminAnnouncementPage() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, image: imageUrl }),
+        // content dikosongkan — tidak dipakai tapi field tetap dikirim agar kompatibel dengan API
+        body: JSON.stringify({ ...formData, content: "", image: imageUrl }),
       });
       if (!res.ok) throw new Error();
-      showToast(editingId ? "Announcement berhasil diperbarui" : "Announcement berhasil ditambahkan", "success");
+      showToast(editingId ? "Pengumuman berhasil diperbarui" : "Pengumuman berhasil ditambahkan", "success");
       closeDialog();
       fetchAnnouncements();
     } catch {
-      showToast("Gagal menyimpan announcement", "error");
+      showToast("Gagal menyimpan pengumuman", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus announcement ini?')) return;
+    if (!confirm('Hapus pengumuman ini?')) return;
     setIsSaving(true);
     try {
       await fetch(`/api/public/announcements/${id}`, { method: 'DELETE' });
-      showToast("Announcement berhasil dihapus", "success");
+      showToast("Pengumuman berhasil dihapus", "success");
       fetchAnnouncements();
     } catch {
       showToast("Gagal menghapus", "error");
@@ -126,7 +126,7 @@ export default function AdminAnnouncementPage() {
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all animate-in slide-in-from-top-2 ${
+        <div className={`fixed top-4 right-4 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in slide-in-from-top-2 ${
           toast.type === "success"
             ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
             : "bg-red-50 border border-red-200 text-red-800"
@@ -140,11 +140,9 @@ export default function AdminAnnouncementPage() {
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Announcement</h1>
-            <p className="text-sm text-gray-500">Kelola pengumuman yang tampil di halaman utama</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Announcement</h1>
+          <p className="text-sm text-gray-500 mt-1">Kelola pengumuman yang tampil di halaman utama</p>
         </div>
         <Button onClick={() => openDialog()} className="gap-2 bg-[#D83F3F] hover:bg-[#c03535] text-white shrink-0">
           <Plus className="w-4 h-4" /> Tambah
@@ -155,7 +153,7 @@ export default function AdminAnnouncementPage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <p className="text-2xl font-bold text-gray-900">{announcements.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Total Announcement</p>
+          <p className="text-xs text-gray-500 mt-0.5">Total Pengumuman</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <p className="text-2xl font-bold text-emerald-600">{announcements.filter(a => a.isActive).length}</p>
@@ -171,8 +169,7 @@ export default function AdminAnnouncementPage() {
               <div className="h-44 bg-gray-100 rounded-t-2xl" />
               <div className="p-4 space-y-2">
                 <div className="h-4 bg-gray-100 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-full" />
-                <div className="h-3 bg-gray-100 rounded w-2/3" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -182,7 +179,7 @@ export default function AdminAnnouncementPage() {
           <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
             <Bell className="w-6 h-6 text-gray-300" />
           </div>
-          <p className="text-sm font-medium text-gray-500">Belum ada announcement</p>
+          <p className="text-sm font-medium text-gray-500">Belum ada pengumuman</p>
           <Button variant="outline" size="sm" onClick={() => openDialog()} className="gap-1.5">
             <Plus className="w-3.5 h-3.5" /> Buat Pertama
           </Button>
@@ -190,11 +187,14 @@ export default function AdminAnnouncementPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {announcements.map((a) => (
-            <div key={a.id} className="group bg-white rounded-2xl border border-gray-100 hover:border-[#D83F3F]/20 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
+            <div key={a.id}
+              className="group bg-white rounded-2xl border border-gray-100 hover:border-[#D83F3F]/20 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden">
+
               {/* Image */}
               <div className="w-full h-44 bg-gray-50 overflow-hidden relative">
                 {a.image?.startsWith('http') ? (
-                  <img src={a.image} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <img src={a.image} alt={a.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-gray-200" />
@@ -202,30 +202,35 @@ export default function AdminAnnouncementPage() {
                 )}
                 {/* Active badge */}
                 <div className="absolute top-2 right-2">
-                  <Badge className={a.isActive ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-500 border-gray-200"}>
+                  <Badge className={a.isActive
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                    : "bg-gray-100 text-gray-500 border-gray-200"}>
                     {a.isActive ? "Aktif" : "Nonaktif"}
                   </Badge>
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Content — hanya judul + tanggal */}
               <div className="flex-1 p-4 flex flex-col gap-2">
                 <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">{a.title}</h3>
-                <p className="text-xs text-gray-500 line-clamp-3 flex-1">{a.content}</p>
                 {a.createdAt && (
-                  <div className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-1">
+                  <div className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-auto">
                     <Calendar className="w-3 h-3" />
-                    {new Date(a.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {new Date(a.createdAt).toLocaleDateString('id-ID', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                    })}
                   </div>
                 )}
               </div>
 
               {/* Actions */}
               <div className="px-4 pb-4 flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => openDialog(a)} className="flex-1 gap-1.5 text-xs h-8">
+                <Button size="sm" variant="outline" onClick={() => openDialog(a)}
+                  className="flex-1 gap-1.5 text-xs h-8">
                   <Edit2 className="w-3 h-3" /> Edit
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleDelete(a.id ?? 0)} disabled={isSaving}
+                <Button size="sm" variant="outline"
+                  onClick={() => handleDelete(a.id ?? 0)} disabled={isSaving}
                   className="flex-1 gap-1.5 text-xs h-8 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300">
                   <Trash2 className="w-3 h-3" /> Hapus
                 </Button>
@@ -237,27 +242,36 @@ export default function AdminAnnouncementPage() {
 
       {/* Dialog */}
       {showDialog && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) closeDialog(); }}
+        >
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
             {/* Dialog header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
                   <Bell className="w-4 h-4 text-orange-600" />
                 </div>
                 <h2 className="text-base font-semibold text-gray-900">
-                  {editingId ? "Edit Announcement" : "Tambah Announcement"}
+                  {editingId ? "Edit Pengumuman" : "Tambah Pengumuman"}
                 </h2>
               </div>
-              <button onClick={closeDialog} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+              <button onClick={closeDialog}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Dialog body */}
+            {/* Dialog body — hanya judul + gambar */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+              {/* Judul */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Judul</Label>
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Judul <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -266,19 +280,13 @@ export default function AdminAnnouncementPage() {
                 />
               </div>
 
+              {/* Gambar */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Konten</Label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Isi pengumuman..."
-                  className="min-h-[120px] resize-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Gambar (Opsional)</Label>
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#D83F3F]/40 hover:bg-red-50/30 transition-colors">
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  Gambar
+                  <span className="ml-1 text-xs text-gray-400 font-normal normal-case">(opsional)</span>
+                </Label>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#D83F3F]/40 hover:bg-red-50/20 transition-colors">
                   <Upload className="w-5 h-5 text-gray-300 mb-1" />
                   <span className="text-xs text-gray-400">Klik untuk pilih gambar</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -287,8 +295,12 @@ export default function AdminAnnouncementPage() {
                   <div className="relative mt-2 rounded-xl overflow-hidden border border-gray-100">
                     <img src={previewUrl} alt="Preview" className="w-full h-40 object-cover" />
                     <button
-                      onClick={() => { setSelectedFile(null); setPreviewUrl(null); setFormData(f => ({ ...f, image: "" })); }}
-                      className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                        setFormData(f => ({ ...f, image: "" }));
+                      }}
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -303,9 +315,12 @@ export default function AdminAnnouncementPage() {
             </div>
 
             {/* Dialog footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
-              <Button variant="outline" onClick={closeDialog} className="flex-1 h-10">Batal</Button>
-              <Button onClick={handleSave} disabled={isSaving} className="flex-1 h-10 gap-2 bg-[#D83F3F] hover:bg-[#c03535] text-white">
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 shrink-0">
+              <Button variant="outline" onClick={closeDialog} className="flex-1 h-10 cursor-pointer">
+                Batal
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving}
+                className="flex-1 h-10 gap-2 bg-[#D83F3F] hover:bg-[#c03535] text-white cursor-pointer">
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {isSaving ? "Menyimpan..." : editingId ? "Simpan Perubahan" : "Tambahkan"}
               </Button>
