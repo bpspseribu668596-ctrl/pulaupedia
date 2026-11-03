@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -149,13 +150,16 @@ const STATUS_COLS: {
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-export default function FasihWilayahPage() {
+// Inner component — pakai useSearchParams, dibungkus Suspense di export default
+function FasihWilayahContent() {
+  const searchParams = useSearchParams();
+
   const [data, setData] = useState<WilayahResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
-  const [search, setSearch] = useState("");
+  // Filters — init search langsung dari URL query param
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [island, setIsland] = useState("ALL");
   const [pencacahId, setPencacahId] = useState("ALL");
   const [page, setPage] = useState(1);
@@ -173,8 +177,8 @@ export default function FasihWilayahPage() {
     return cols;
   });
 
-  // Debounced search
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Debounced search — init sama dengan search agar langsung aktif
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get("search") ?? "");
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
@@ -567,5 +571,25 @@ export default function FasihWilayahPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function FasihWilayahPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-8">
+        <div className="flex flex-col gap-1">
+          <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-gray-100 rounded animate-pulse mt-1" />
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-10 w-full bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+    }>
+      <FasihWilayahContent />
+    </Suspense>
   );
 }

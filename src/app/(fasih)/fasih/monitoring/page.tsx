@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import { Input } from "@/components/ui/input";
@@ -89,19 +90,22 @@ type SortValue = (typeof SORT_OPTIONS)[number]["value"] | "";
 const PAGE_SIZES = [12, 24, 48];
 
 export default function FasihMonitoringPage() {
+  const searchParams = useSearchParams();
+  const assignmentSectionRef = useRef<HTMLDivElement>(null);
+
   const [data, setData] = useState<MonitoringResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [tableCollapsed, setTableCollapsed] = useState(false);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [island, setIsland] = useState("ALL");
   const [sortBy, setSortBy] = useState<SortValue>("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get("search") ?? "");
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
@@ -201,6 +205,18 @@ export default function FasihMonitoringPage() {
   const handlePencacahSort = (key: typeof pencacahSortKey) => {
     if (pencacahSortKey === key) setPencacahSortDir((d) => d === "asc" ? "desc" : "asc");
     else { setPencacahSortKey(key); setPencacahSortDir("desc"); }
+  };
+
+  // Klik row pencacah → filter assignment by nama, scroll ke section
+  const handlePencacahClick = (pencacahName: string) => {
+    setSearch(pencacahName);
+    setSortBy("pencacah_name");
+    setSortDir("asc");
+    setPage(1);
+    // Scroll ke section tabel assignment setelah state update
+    setTimeout(() => {
+      assignmentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   // Derived stats dari filteredStats
@@ -719,10 +735,17 @@ export default function FasihMonitoringPage() {
                           return (
                             <tr
                               key={p.pencacah_id}
-                              className="border-b border-white/5 hover:bg-white/5 transition-colors last:border-0"
+                              onClick={() => handlePencacahClick(p.pencacah_name)}
+                              className="group border-b border-white/5 hover:bg-white/10 transition-colors last:border-0 cursor-pointer"
+                              title={`Filter assignment ${p.pencacah_name}`}
                             >
                               <td className="px-4 py-3 text-xs text-white/20 tabular-nums">{idx + 1}</td>
-                              <td className="px-4 py-3 font-medium text-white/80">{p.pencacah_name}</td>
+                              <td className="px-4 py-3 font-medium text-white/80">
+                                <span className="flex items-center gap-1.5">
+                                  {p.pencacah_name}
+                                  <ChevronRight className="h-3 w-3 text-[#F9882B]/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                </span>
+                              </td>
                               <td className="px-4 py-3 text-right tabular-nums text-white/60 font-semibold">
                                 {total.toLocaleString("id-ID")}
                               </td>
@@ -775,6 +798,9 @@ export default function FasihMonitoringPage() {
             </div>
           </div>
         )}
+
+        {/* ── Anchor scroll target untuk section assignment ── */}
+        <div ref={assignmentSectionRef} />
 
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

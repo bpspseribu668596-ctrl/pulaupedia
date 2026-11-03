@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -62,6 +63,7 @@ type SortKey = "name" | "total" | "sudah" | "belum" | "pctBelum" | "pctSudah";
 type SortDir = "asc" | "desc";
 
 export default function FasihDashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -387,10 +389,17 @@ export default function FasihDashboardPage() {
                       return (
                         <tr
                           key={p.pencacah_id}
-                          className="border-b border-gray-50 hover:bg-orange-50/20 transition-colors last:border-0"
+                          onClick={() => router.push(`/fasih/wilayah?search=${encodeURIComponent(p.pencacah_name)}`)}
+                          className="group border-b border-gray-50 hover:bg-orange-50/40 transition-colors last:border-0 cursor-pointer"
+                          title={`Lihat wilayah ${p.pencacah_name}`}
                         >
                           <td className="px-4 py-3 text-xs text-gray-300 tabular-nums">{idx + 1}</td>
-                          <td className="px-4 py-3 font-medium text-gray-900">{p.pencacah_name}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">
+                            <span className="flex items-center gap-1.5 group-hover:text-[#F9882B]">
+                              {p.pencacah_name}
+                              <ChevronRight className="h-3 w-3 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-right tabular-nums text-gray-700 font-semibold">
                             {total.toLocaleString("id-ID")}
                           </td>
