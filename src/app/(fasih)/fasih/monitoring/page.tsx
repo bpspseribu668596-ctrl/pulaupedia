@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
@@ -89,7 +89,7 @@ type SortValue = (typeof SORT_OPTIONS)[number]["value"] | "";
 
 const PAGE_SIZES = [12, 24, 48];
 
-export default function FasihMonitoringPage() {
+function FasihMonitoringContent() {
   const searchParams = useSearchParams();
   const assignmentSectionRef = useRef<HTMLDivElement>(null);
 
@@ -899,6 +899,18 @@ export default function FasihMonitoringPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Wrapper dengan Suspense — wajib karena useSearchParams()
+// ─────────────────────────────────────────────
+
+export default function FasihMonitoringPage() {
+  return (
+    <Suspense fallback={null}>
+      <FasihMonitoringContent />
+    </Suspense>
   );
 }
 
