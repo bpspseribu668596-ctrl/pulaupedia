@@ -2,17 +2,14 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
-  Save, AlertCircle, CheckCircle2, Loader2,
+  AlertCircle, CheckCircle2,
   BookOpen, Archive, FileText, Package, Laptop, DollarSign, BarChart3,
   Award, FileSpreadsheet, Megaphone, ShoppingCart, Users, ChevronLeft,
-  Link2, Plus, X, ExternalLink, Edit2, Check, ChevronDown, Settings,
+  Plus, X, ExternalLink, Edit2, Check, ChevronDown, Settings,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,13 +65,12 @@ const getItemSlug = (link: string) =>
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AdminEditItemPage({
+export default function AdminItemDocumentsPage({
   params,
 }: {
   params: Promise<{ portalSlug: string; itemSlug: string }>;
 }) {
   const { portalSlug, itemSlug } = use(params);
-  const router = useRouter();
 
   const [portal, setPortal] = useState<Portal | null>(null);
   const [item, setItem] = useState<PortalItem | null>(null);
@@ -83,10 +79,8 @@ export default function AdminEditItemPage({
   const [isVisible, setIsVisible] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-  const [form, setForm] = useState<Omit<PortalItem, "id" | "portalId"> & { id?: number }>({
-    name: "", description: "", icon: "FileSpreadsheet",
-    link: "", sortOrder: 0, isActive: true, documents: [],
-  });
+  // State dokumen — tersimpan di form.documents, di-submit bareng PUT item
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [docTitle, setDocTitle] = useState("");
   const [docLink, setDocLink] = useState("");
 
@@ -125,12 +119,7 @@ export default function AdminEditItemPage({
       if (!matchedItem) { setFetchStatus("notfound"); return; }
 
       setItem(matchedItem);
-      setForm({
-        id: matchedItem.id, name: matchedItem.name,
-        description: matchedItem.description, icon: matchedItem.icon,
-        link: matchedItem.link, sortOrder: matchedItem.sortOrder,
-        isActive: matchedItem.isActive, documents: matchedItem.documents ?? [],
-      });
+      setDocuments(matchedItem.documents ?? []);
       setFetchStatus("found");
     } catch (e) {
       console.error(e); setFetchStatus("notfound");
@@ -149,15 +138,15 @@ export default function AdminEditItemPage({
 
   const addDoc = () => {
     if (!docTitle || !docLink) return;
-    setForm((f) => ({ ...f, documents: [...(f.documents ?? []), { title: docTitle, link: docLink }] }));
+    setDocuments((d) => [...d, { title: docTitle, link: docLink }]);
     setDocTitle(""); setDocLink("");
   };
 
   const removeDoc = (index: number) =>
-    setForm((f) => ({ ...f, documents: f.documents?.filter((_, i) => i !== index) }));
+    setDocuments((d) => d.filter((_, i) => i !== index));
 
   const startEditDoc = (index: number) => {
-    const doc = form.documents?.[index];
+    const doc = documents[index];
     if (!doc) return;
     setEditingDocIndex(index); setEditDocTitle(doc.title); setEditDocLink(doc.link);
   };
@@ -168,43 +157,37 @@ export default function AdminEditItemPage({
 
   const confirmEditDoc = (index: number) => {
     if (!editDocTitle || !editDocLink) return;
-    setForm((f) => ({
-      ...f,
-      documents: f.documents?.map((doc, i) =>
-        i === index ? { title: editDocTitle, link: editDocLink } : doc
-      ),
-    }));
+    setDocuments((d) => d.map((doc, i) =>
+      i === index ? { title: editDocTitle, link: editDocLink } : doc
+    ));
     cancelEditDoc();
   };
 
-  const scrollToEdit = () =>
-    document.getElementById("edit-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // ── Save dokumen (PUT item dengan dokumen yang diperbarui) ────────────────
 
-  // ── Save ──────────────────────────────────────────────────────────────────
-
-  const handleSave = async () => {
-    if (!form.name || !form.description || !form.link || !form.icon) {
-      showToast("Semua field wajib harus diisi", "error"); return;
-    }
+  const handleSaveDocs = async () => {
     if (!portal || !item) return;
     setIsSaving(true);
     try {
       const res = await fetch(`/api/public/portals/${portal.id}/items/${item.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...item, documents }),
       });
       if (!res.ok) throw new Error();
-      showToast("Item berhasil disimpan", "success");
-      setTimeout(() => router.push(`/admin/main-portal/${portalSlug}`), 1000);
-    } catch { showToast("Gagal menyimpan item", "error"); }
+      showToast("Dokumen berhasil disimpan", "success");
+      await fetchData();
+    } catch { showToast("Gagal menyimpan dokumen", "error"); }
     finally { setIsSaving(false); }
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   const isLoading = fetchStatus === "loading";
-  const ItemIcon = getIcon(form.icon);
+  const ItemIcon = item ? getIcon(item.icon) : FileSpreadsheet;
+
+  // Apakah ada perubahan dokumen yang belum disimpan
+  const hasChanges = JSON.stringify(documents) !== JSON.stringify(item?.documents ?? []);
 
   return (
     <div className="min-h-screen flex flex-col -m-6 md:-m-8">
@@ -254,7 +237,6 @@ export default function AdminEditItemPage({
         {/* Content */}
         <div className="relative z-10 w-full px-6 md:px-8 pt-12 pb-10">
           <div className={`text-center transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-            {/* Item icon */}
             {!isLoading && (
               <div className="flex justify-center mb-3">
                 <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
@@ -271,7 +253,6 @@ export default function AdminEditItemPage({
             <p className="text-white/80 text-sm sm:text-base max-w-xl mx-auto drop-shadow-lg px-2">
               {isLoading ? "" : item?.description}
             </p>
-            {/* Link ke halaman publik */}
             {!isLoading && item && (
               <a
                 href={item.link}
@@ -285,9 +266,8 @@ export default function AdminEditItemPage({
           </div>
         </div>
 
-        {/* Scroll down */}
         <button
-          onClick={scrollToEdit}
+          onClick={() => document.getElementById("docs-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
           className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 animate-bounce cursor-pointer hover:scale-110 transition-transform"
         >
           <ChevronDown className="text-white w-7 h-7 drop-shadow-lg" />
@@ -307,8 +287,8 @@ export default function AdminEditItemPage({
               ))
             ) : (
               [
-                { value: form.documents?.length || "—", label: "Dokumen" },
-                { value: form.isActive ? "Aktif" : "Non-aktif", label: "Status" },
+                { value: documents.length || "—", label: "Dokumen" },
+                { value: item?.isActive ? "Aktif" : "Non-aktif", label: "Status" },
                 { value: portal?.name ?? "—", label: "Portal" },
               ].map((s, i) => (
                 <div key={i} className="flex flex-col items-center justify-center py-4 sm:py-5 px-2">
@@ -322,14 +302,14 @@ export default function AdminEditItemPage({
       </div>
 
       {/* ── Wave Divider ────────────────────────────────────────── */}
-      <div className="bg-white overflow-hidden leading-none shrink-0">
+      <div id="docs-section" className="bg-white overflow-hidden leading-none shrink-0">
         <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
           <path d="M0,0 C360,48 1080,48 1440,0 L1440,48 L0,48 Z" fill="#D83F3F" />
         </svg>
       </div>
 
-      {/* ── Dokumen Section — mirip [itemSlug] publik ─────────────── */}
-      <section className="bg-[#D83F3F] py-10 sm:py-14 relative overflow-hidden">
+      {/* ── Dokumen Section ──────────────────────────────────────── */}
+      <section className="bg-[#D83F3F] py-10 sm:py-14 relative overflow-hidden flex-1">
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.04]"
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
@@ -353,16 +333,13 @@ export default function AdminEditItemPage({
             </div>
           ) : (
             <>
-              {/* Daftar dokumen — mirip tampilan publik + tombol aksi */}
-              {(form.documents?.length ?? 0) > 0 ? (
+              {/* Daftar dokumen */}
+              {documents.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4 mb-6">
-                  {form.documents!.map((doc, i) =>
+                  {documents.map((doc, i) =>
                     editingDocIndex === i ? (
                       /* ── Mode edit inline ── */
-                      <div
-                        key={i}
-                        className="bg-white rounded-2xl p-4 border-2 border-blue-300 space-y-3"
-                      >
+                      <div key={i} className="bg-white rounded-2xl p-4 border-2 border-blue-300 space-y-3">
                         <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
                           Edit Dokumen #{i + 1}
                         </p>
@@ -396,7 +373,7 @@ export default function AdminEditItemPage({
                         </div>
                       </div>
                     ) : (
-                      /* ── Tampilan normal — mirip publik + overlay aksi ── */
+                      /* ── Tampilan normal ── */
                       <div
                         key={i}
                         className="group flex items-center justify-between bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 transition-all duration-200 hover:shadow-xl border border-white/80 gap-3"
@@ -423,7 +400,7 @@ export default function AdminEditItemPage({
                           </div>
                         </div>
 
-                        {/* Aksi — edit + hapus + link */}
+                        {/* Aksi */}
                         <div className="flex items-center gap-1.5 shrink-0">
                           <a
                             href={doc.link}
@@ -464,7 +441,7 @@ export default function AdminEditItemPage({
               )}
 
               {/* Form tambah dokumen */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 space-y-3">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 space-y-3 mb-6">
                 <p className="text-white/80 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5" /> Tambah Dokumen
                 </p>
@@ -491,160 +468,52 @@ export default function AdminEditItemPage({
                   <Plus className="w-3.5 h-3.5" /> Tambahkan Dokumen
                 </button>
               </div>
+
+              {/* Tombol Simpan Dokumen — hanya muncul kalau ada perubahan */}
+              {hasChanges && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setDocuments(item?.documents ?? []); cancelEditDoc(); }}
+                    className="flex-1 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" /> Batalkan
+                  </button>
+                  <button
+                    onClick={handleSaveDocs}
+                    disabled={isSaving}
+                    className="flex-1 h-10 rounded-xl bg-white hover:bg-gray-50 text-[#D83F3F] text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer shadow-sm"
+                  >
+                    {isSaving
+                      ? <span className="w-4 h-4 border-2 border-[#D83F3F]/30 border-t-[#D83F3F] rounded-full animate-spin" />
+                      : <CheckCircle2 className="w-4 h-4" />
+                    }
+                    {isSaving ? "Menyimpan..." : "Simpan Dokumen"}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       </section>
 
-      {/* ── Wave Divider tengah ───────────────────────────────────── */}
-      <div className="overflow-hidden leading-none shrink-0 bg-gray-50">
+      {/* ── Wave Divider (bawah) ─────────────────────────────────── */}
+      <div className="overflow-hidden leading-none shrink-0" style={{ background: "rgb(249,250,251)" }}>
         <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" className="block w-full" preserveAspectRatio="none" style={{ height: "48px" }}>
           <path d="M0,48 C360,0 1080,0 1440,48 L1440,0 L0,0 Z" fill="#D83F3F" />
         </svg>
       </div>
 
-      {/* ── Admin Edit Panel ─────────────────────────────────────── */}
-      <section id="edit-panel" className="bg-gray-50 py-10 sm:py-14">
-        <div className="px-6 md:px-8 max-w-3xl mx-auto space-y-6">
-
-          {/* Panel header */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#333333] flex items-center justify-center shrink-0">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Panel Edit</h2>
-              <p className="text-xs text-gray-400">Ubah data item dan simpan perubahan</p>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4 animate-pulse">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-10 bg-gray-100 rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#D83F3F]/10 flex items-center justify-center">
-                  <ItemIcon className="w-4 h-4 text-[#D83F3F]" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-700">Detail Item</h3>
-                {/* Status pill */}
-                <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                  form.isActive
-                    ? "text-emerald-600 bg-emerald-50 border-emerald-200"
-                    : "text-amber-600 bg-amber-50 border-amber-200"
-                }`}>
-                  {form.isActive ? "Aktif" : "Non-aktif"}
-                </span>
-              </div>
-
-              <div className="px-6 py-6 space-y-5">
-
-                {/* Nama + Link */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Nama Item</Label>
-                    <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Bigram" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Link</Label>
-                    <Input value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} placeholder="/portal-umum/bigram" />
-                  </div>
-                </div>
-
-                {/* Deskripsi */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Deskripsi</Label>
-                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Deskripsi item..." className="min-h-[80px] resize-none" />
-                </div>
-
-                {/* Icon picker */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Icon</Label>
-                  <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
-                    {iconOptions.map(({ value, label, Icon }) => (
-                      <button key={value} type="button" onClick={() => setForm({ ...form, icon: value })} title={label}
-                        className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
-                          form.icon === value ? "border-[#D83F3F] bg-red-50" : "border-gray-100 hover:border-gray-300 bg-white"
-                        }`}>
-                        <Icon className="w-4 h-4 text-gray-600" />
-                        <span className="text-[8px] text-gray-400">{label.slice(0, 6)}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort order + Status */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Sort Order</Label>
-                    <Input type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Status</Label>
-                    <div className="flex gap-2 pt-1">
-                      {([true, false] as const).map((val) => (
-                        <button key={String(val)} type="button" onClick={() => setForm({ ...form, isActive: val })}
-                          className={`flex-1 h-9 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
-                            form.isActive === val
-                              ? val ? "bg-emerald-500 text-white border-emerald-500" : "bg-amber-500 text-white border-amber-500"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                          }`}>
-                          {val ? "Aktif" : "Non-aktif"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Dokumen ringkasan di panel */}
-          {!isLoading && (
-            <div className="bg-white rounded-2xl border border-gray-100 px-6 py-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                  <Link2 className="w-4 h-4 text-gray-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Dokumen</p>
-                  <p className="text-xs text-gray-400">{form.documents?.length ?? 0} terlampir — kelola di atas</p>
-                </div>
-              </div>
-              <button
-                onClick={() => document.getElementById("items-section") ? window.scrollTo({ top: 0, behavior: "smooth" }) : null}
-                className="text-xs font-semibold text-[#D83F3F] hover:underline cursor-pointer"
-              >
-                Ke bagian dokumen ↑
-              </button>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          {!isLoading && (
-            <div className="flex gap-3 pb-8">
-              <Link
-                href={`/admin/main-portal/${portalSlug}`}
-                className="flex-1 h-11 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-white transition-colors flex items-center justify-center"
-              >
-                Batal
-              </Link>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex-1 h-11 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer shadow-md"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
-              </button>
-            </div>
-          )}
+      {/* ── Footer area kecil dengan link kembali ────────────────── */}
+      <div className="bg-gray-50 py-6 shrink-0">
+        <div className="px-6 md:px-8 max-w-3xl mx-auto">
+          <Link
+            href={`/admin/main-portal/${portalSlug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#D83F3F] transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" /> Kembali ke {portal?.name ?? portalSlug}
+          </Link>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
