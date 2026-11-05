@@ -9,6 +9,7 @@ import {
   FileText, Edit2, RotateCcw, X, Save, Upload, Plus, Trash2,
   AlertCircle, CheckCircle2, Loader2, Eye, Phone, Link2, MapPin,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface FooterConfig {
   id?: number;
@@ -37,6 +38,8 @@ export default function AdminFooterPage() {
   const [formData, setFormData] = useState<FooterConfig>(defaultData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => { fetchFooterConfig(); }, []);
 
@@ -95,23 +98,40 @@ export default function AdminFooterPage() {
     finally { setIsSaving(false); }
   };
 
-  const handleReset = async () => {
-    if (!confirm('Reset footer ke default?')) return;
-    setIsSaving(true);
-    try {
-      await fetch('/api/public/footer', { method: 'DELETE' });
-      showToast("Footer direset ke default", "success");
-      fetchFooterConfig();
-    } catch { showToast("Gagal reset", "error"); }
-    finally { setIsSaving(false); }
+  const handleReset = () => {
+    setConfirmState({
+      title: "Reset Footer",
+      message: "Yakin ingin mereset footer ke default?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await fetch('/api/public/footer', { method: 'DELETE' });
+          showToast("Footer direset ke default", "success");
+          fetchFooterConfig();
+        } catch { showToast("Gagal reset", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   const addAddress = () => setFormData(p => ({ ...p, companyAddress: [...p.companyAddress, ''] }));
-  const removeAddress = (i: number) => setFormData(p => ({ ...p, companyAddress: p.companyAddress.filter((_, idx) => idx !== i) }));
+  const removeAddress = (i: number) => {
+    setConfirmState({
+      title: "Hapus Alamat",
+      message: "Yakin ingin menghapus baris alamat ini?",
+      onConfirm: () => setFormData(p => ({ ...p, companyAddress: p.companyAddress.filter((_, idx) => idx !== i) })),
+    });
+  };
   const updateAddress = (i: number, v: string) => setFormData(p => ({ ...p, companyAddress: p.companyAddress.map((a, idx) => idx === i ? v : a) }));
 
   const addContact = () => setFormData(p => ({ ...p, contacts: [...p.contacts, { label: '', value: '' }] }));
-  const removeContact = (i: number) => setFormData(p => ({ ...p, contacts: p.contacts.filter((_, idx) => idx !== i) }));
+  const removeContact = (i: number) => {
+    setConfirmState({
+      title: "Hapus Kontak",
+      message: "Yakin ingin menghapus baris kontak ini?",
+      onConfirm: () => setFormData(p => ({ ...p, contacts: p.contacts.filter((_, idx) => idx !== i) })),
+    });
+  };
   const updateContact = (i: number, f: 'label' | 'value', v: string) => setFormData(p => ({ ...p, contacts: p.contacts.map((c, idx) => idx === i ? { ...c, [f]: v } : c) }));
 
   const addLink = () => setFormData(p => ({ ...p, links: [...p.links, { label: '', url: '' }] }));
@@ -324,6 +344,15 @@ export default function AdminFooterPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

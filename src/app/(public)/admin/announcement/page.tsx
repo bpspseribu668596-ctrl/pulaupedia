@@ -9,6 +9,7 @@ import {
   Plus, Trash2, Edit2, X, Save, Bell, ImageIcon,
   Calendar, AlertCircle, CheckCircle2, Upload, Loader2,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface Announcement {
   id?: number;
@@ -30,6 +31,8 @@ export default function AdminAnnouncementPage() {
   const [formData, setFormData] = useState<Announcement>({ title: "", content: "", image: "", isActive: true });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => { fetchAnnouncements(); }, []);
 
@@ -108,18 +111,20 @@ export default function AdminAnnouncementPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Hapus pengumuman ini?')) return;
-    setIsSaving(true);
-    try {
-      await fetch(`/api/public/announcements/${id}`, { method: 'DELETE' });
-      showToast("Pengumuman berhasil dihapus", "success");
-      fetchAnnouncements();
-    } catch {
-      showToast("Gagal menghapus", "error");
-    } finally {
-      setIsSaving(false);
-    }
+  const handleDelete = (id: number) => {
+    setConfirmState({
+      title: "Hapus Pengumuman",
+      message: "Yakin ingin menghapus pengumuman ini?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await fetch(`/api/public/announcements/${id}`, { method: 'DELETE' });
+          showToast("Pengumuman berhasil dihapus", "success");
+          fetchAnnouncements();
+        } catch { showToast("Gagal menghapus", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   return (
@@ -328,6 +333,15 @@ export default function AdminAnnouncementPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

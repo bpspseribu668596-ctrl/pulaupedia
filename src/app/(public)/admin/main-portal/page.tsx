@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,9 @@ export default function AdminMainPortalPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Portal, "id"> & { id?: number }>(emptyPortal);
+
+  // Confirm dialog state
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; name: string } | null>(null);
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -152,8 +156,14 @@ export default function AdminMainPortalPage() {
     finally { setIsSaving(false); }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Hapus portal ini beserta semua item-nya?")) return;
+  const handleDelete = (id: number, name: string) => {
+    setConfirmDelete({ id, name });
+  };
+
+  const doDelete = async () => {
+    if (!confirmDelete) return;
+    const { id } = confirmDelete;
+    setConfirmDelete(null);
     setIsSaving(true);
     try {
       const res = await fetch(`/api/public/portals/${id}`, { method: "DELETE" });
@@ -204,7 +214,7 @@ export default function AdminMainPortalPage() {
           </div>
           <button
             onClick={openAdd}
-            className="shrink-0 flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            className="shrink-0 flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Tambah Portal
           </button>
@@ -307,7 +317,7 @@ export default function AdminMainPortalPage() {
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={(e) => { e.preventDefault(); handleDelete(portal.id); }}
+                        onClick={(e) => { e.preventDefault(); handleDelete(portal.id, portal.name); }}
                         disabled={isSaving}
                         className="w-7 h-7 rounded-lg bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
                         title="Hapus portal"
@@ -489,6 +499,17 @@ export default function AdminMainPortalPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Hapus Portal"
+        message={`Yakin ingin menghapus portal "${confirmDelete?.name}" beserta semua itemnya? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Ya, Hapus"
+        cancelText="Tidak"
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

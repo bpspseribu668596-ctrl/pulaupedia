@@ -9,6 +9,7 @@ import {
   Package, Plus, Trash2, Edit2, X, Save, Upload,
   AlertCircle, CheckCircle2, Loader2, ExternalLink, ImageIcon,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface Service {
   id?: number;
@@ -35,6 +36,8 @@ export default function AdminServicesPage() {
   const [formData, setFormData] = useState<Service>(emptyForm);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => { fetchServices(); }, []);
 
@@ -108,15 +111,20 @@ export default function AdminServicesPage() {
     finally { setIsSaving(false); }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Hapus service ini?')) return;
-    setIsSaving(true);
-    try {
-      await fetch(`/api/public/services/${id}`, { method: 'DELETE' });
-      showToast("Service berhasil dihapus", "success");
-      fetchServices();
-    } catch { showToast("Gagal menghapus", "error"); }
-    finally { setIsSaving(false); }
+  const handleDelete = (id: number) => {
+    setConfirmState({
+      title: "Hapus Service",
+      message: "Yakin ingin menghapus service ini?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await fetch(`/api/public/services/${id}`, { method: 'DELETE' });
+          showToast("Service berhasil dihapus", "success");
+          fetchServices();
+        } catch { showToast("Gagal menghapus", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   return (
@@ -279,6 +287,15 @@ export default function AdminServicesPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

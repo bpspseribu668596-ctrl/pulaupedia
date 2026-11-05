@@ -8,6 +8,7 @@ import {
   Layout, Edit2, RotateCcw, X, Save, Upload,
   AlertCircle, CheckCircle2, Loader2, Eye,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface NavbarConfig {
   id?: number;
@@ -28,6 +29,8 @@ export default function AdminNavbarPage() {
   const [formData, setFormData] = useState<NavbarConfig>(defaultData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => { fetchNavbarConfig(); }, []);
 
@@ -85,15 +88,20 @@ export default function AdminNavbarPage() {
     finally { setIsSaving(false); }
   };
 
-  const handleReset = async () => {
-    if (!confirm('Reset navbar ke default?')) return;
-    setIsSaving(true);
-    try {
-      await fetch('/api/public/navbar', { method: 'DELETE' });
-      showToast("Navbar direset ke default", "success");
-      fetchNavbarConfig();
-    } catch { showToast("Gagal reset", "error"); }
-    finally { setIsSaving(false); }
+  const handleReset = () => {
+    setConfirmState({
+      title: "Reset Navbar",
+      message: "Yakin ingin mereset navbar ke default?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await fetch('/api/public/navbar', { method: 'DELETE' });
+          showToast("Navbar direset ke default", "success");
+          fetchNavbarConfig();
+        } catch { showToast("Gagal reset", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   return (
@@ -227,6 +235,15 @@ export default function AdminNavbarPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

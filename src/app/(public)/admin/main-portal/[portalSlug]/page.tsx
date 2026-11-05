@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,9 @@ export default function AdminPortalItemsPage({
   const [editForm, setEditForm] = useState<Omit<PortalItem, "id" | "portalId"> & { id?: number }>(emptyItem);
   const [editDocTitle, setEditDocTitle] = useState("");
   const [editDocLink, setEditDocLink] = useState("");
+
+  // Confirm dialog
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -217,16 +221,21 @@ export default function AdminPortalItemsPage({
     finally { setIsSaving(false); }
   };
 
-  const handleDelete = async (itemId: number) => {
-    if (!confirm("Hapus item ini?")) return;
-    if (!portal) return;
-    setIsSaving(true);
-    try {
-      const res = await fetch(`/api/public/portals/${portal.id}/items/${itemId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      showToast("Item berhasil dihapus", "success"); await fetchData();
-    } catch { showToast("Gagal menghapus item", "error"); }
-    finally { setIsSaving(false); }
+  const handleDelete = (itemId: number) => {
+    setConfirmState({
+      title: "Hapus Item",
+      message: "Yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.",
+      onConfirm: async () => {
+        if (!portal) return;
+        setIsSaving(true);
+        try {
+          const res = await fetch(`/api/public/portals/${portal.id}/items/${itemId}`, { method: "DELETE" });
+          if (!res.ok) throw new Error();
+          showToast("Item berhasil dihapus", "success"); await fetchData();
+        } catch { showToast("Gagal menghapus item", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   const handleEditSave = async () => {
@@ -290,7 +299,7 @@ export default function AdminPortalItemsPage({
           </span>
         </div>
 
-        {/* Admin mode badge */}
+        {/* Admin mode badge — pojok kanan atas */}
         <div className="absolute top-4 right-6 md:right-8 z-20">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#D83F3F] bg-[#D83F3F]/15 border border-[#D83F3F]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
             <Settings className="w-3 h-3" /> Mode Admin
@@ -329,6 +338,16 @@ export default function AdminPortalItemsPage({
               </a>
             )}
           </div>
+
+          {/* Tambah Item — tengah kanan, sejajar dengan konten */}
+          {!isLoading && (
+            <button
+              onClick={openAdd}
+              className="absolute top-1/2 right-6 md:right-8 -translate-y-1/2 z-20 shrink-0 flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Tambah Item
+            </button>
+          )}
         </div>
 
         {/* Scroll down arrow */}
@@ -501,19 +520,6 @@ export default function AdminPortalItemsPage({
                   );
                 })}
 
-                {/* Card tambah item */}
-                <button
-                  onClick={openAdd}
-                  disabled={isLoading}
-                  className="group bg-white/10 hover:bg-white/20 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/30 hover:border-white/60 transition-all duration-200 cursor-pointer min-h-[160px]"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Plus className="w-6 h-6 text-white/60" />
-                  </div>
-                  <p className="text-white/70 text-xs font-semibold group-hover:text-white transition-colors">
-                    Tambah Item
-                  </p>
-                </button>
               </div>
             </>
           )}
@@ -585,38 +591,6 @@ export default function AdminPortalItemsPage({
                       <span className="text-[8px] text-gray-400">{label.slice(0, 6)}</span>
                     </button>
                   ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
-                  <Link2 className="w-3.5 h-3.5" /> Dokumen
-                </Label>
-                {(form.documents?.length ?? 0) > 0 ? (
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {form.documents!.map((doc, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-gray-800 truncate">{doc.title}</p>
-                          <p className="text-[10px] text-gray-400 truncate">{doc.link}</p>
-                        </div>
-                        <button onClick={() => removeDoc(i)} className="w-6 h-6 rounded-md border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-xl">Belum ada dokumen</p>
-                )}
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-2">
-                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tambah Dokumen</p>
-                  <Input value={docTitle} onChange={(e) => setDocTitle(e.target.value)} placeholder="Judul dokumen" className="h-9 text-sm bg-white" />
-                  <Input value={docLink} onChange={(e) => setDocLink(e.target.value)} placeholder="https://..." className="h-9 text-sm bg-white" />
-                  <button type="button" onClick={addDoc} disabled={!docTitle || !docLink}
-                    className="w-full h-8 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer">
-                    <Plus className="w-3.5 h-3.5" /> Tambah Dokumen
-                  </button>
                 </div>
               </div>
 
@@ -718,38 +692,6 @@ export default function AdminPortalItemsPage({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
-                  <Link2 className="w-3.5 h-3.5" /> Dokumen
-                </Label>
-                {(editForm.documents?.length ?? 0) > 0 ? (
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {editForm.documents!.map((doc, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-gray-800 truncate">{doc.title}</p>
-                          <p className="text-[10px] text-gray-400 truncate">{doc.link}</p>
-                        </div>
-                        <button onClick={() => removeEditDoc(i)} className="w-6 h-6 rounded-md border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-xl">Belum ada dokumen</p>
-                )}
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-2">
-                  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Tambah Dokumen</p>
-                  <Input value={editDocTitle} onChange={(e) => setEditDocTitle(e.target.value)} placeholder="Judul dokumen" className="h-9 text-sm bg-white" />
-                  <Input value={editDocLink} onChange={(e) => setEditDocLink(e.target.value)} placeholder="https://..." className="h-9 text-sm bg-white" />
-                  <button type="button" onClick={addEditDoc} disabled={!editDocTitle || !editDocLink}
-                    className="w-full h-8 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer">
-                    <Plus className="w-3.5 h-3.5" /> Tambah Dokumen
-                  </button>
-                </div>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Sort Order</Label>
@@ -784,6 +726,15 @@ export default function AdminPortalItemsPage({
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

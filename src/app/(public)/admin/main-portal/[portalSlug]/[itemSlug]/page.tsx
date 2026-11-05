@@ -6,10 +6,13 @@ import {
   AlertCircle, CheckCircle2,
   BookOpen, Archive, FileText, Package, Laptop, DollarSign, BarChart3,
   Award, FileSpreadsheet, Megaphone, ShoppingCart, Users, ChevronLeft,
-  Plus, X, ExternalLink, Edit2, Check, ChevronDown, Settings,
+  Plus, X, ExternalLink, Edit2, Check, ChevronDown, Settings, Save,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import PortalSidebar from "@/components/public/PortalSidebar";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,15 +82,22 @@ export default function AdminItemDocumentsPage({
   const [isVisible, setIsVisible] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-  // State dokumen — tersimpan di form.documents, di-submit bareng PUT item
+  // State dokumen
   const [documents, setDocuments] = useState<Document[]>([]);
   const [docTitle, setDocTitle] = useState("");
   const [docLink, setDocLink] = useState("");
 
-  // Edit inline dokumen
-  const [editingDocIndex, setEditingDocIndex] = useState<number | null>(null);
+  // Dialog tambah dokumen
+  const [showAddDocDialog, setShowAddDocDialog] = useState(false);
+
+  // Dialog edit dokumen
+  const [showEditDocDialog, setShowEditDocDialog] = useState(false);
+  const [editDocIndex, setEditDocIndex] = useState<number | null>(null);
   const [editDocTitle, setEditDocTitle] = useState("");
   const [editDocLink, setEditDocLink] = useState("");
+
+  // Confirm dialog
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -134,60 +144,73 @@ export default function AdminItemDocumentsPage({
 
   if (fetchStatus === "notfound") notFound();
 
-  // ── Dokumen helpers ───────────────────────────────────────────────────────
+  // ── Dokumen helpers (auto-save ke API setiap aksi) ────────────────────────
 
-  const addDoc = () => {
-    if (!docTitle || !docLink) return;
-    setDocuments((d) => [...d, { title: docTitle, link: docLink }]);
-    setDocTitle(""); setDocLink("");
-  };
-
-  const removeDoc = (index: number) =>
-    setDocuments((d) => d.filter((_, i) => i !== index));
-
-  const startEditDoc = (index: number) => {
-    const doc = documents[index];
-    if (!doc) return;
-    setEditingDocIndex(index); setEditDocTitle(doc.title); setEditDocLink(doc.link);
-  };
-
-  const cancelEditDoc = () => {
-    setEditingDocIndex(null); setEditDocTitle(""); setEditDocLink("");
-  };
-
-  const confirmEditDoc = (index: number) => {
-    if (!editDocTitle || !editDocLink) return;
-    setDocuments((d) => d.map((doc, i) =>
-      i === index ? { title: editDocTitle, link: editDocLink } : doc
-    ));
-    cancelEditDoc();
-  };
-
-  // ── Save dokumen (PUT item dengan dokumen yang diperbarui) ────────────────
-
-  const handleSaveDocs = async () => {
+  // Helper: PUT item dengan dokumen baru, return dokumen yang disimpan
+  const saveDocuments = async (newDocs: Document[]) => {
     if (!portal || !item) return;
-    setIsSaving(true);
     try {
       const res = await fetch(`/api/public/portals/${portal.id}/items/${item.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...item, documents }),
+        body: JSON.stringify({ ...item, documents: newDocs }),
       });
       if (!res.ok) throw new Error();
       showToast("Dokumen berhasil disimpan", "success");
-      await fetchData();
-    } catch { showToast("Gagal menyimpan dokumen", "error"); }
-    finally { setIsSaving(false); }
+      // Update item supaya hasChanges reset
+      setItem({ ...item, documents: newDocs });
+    } catch {
+      showToast("Gagal menyimpan dokumen", "error");
+    }
+  };
+
+  const addDoc = async () => {
+    if (!docTitle || !docLink) return;
+    const newDocs = [...documents, { title: docTitle, link: docLink }];
+    setDocuments(newDocs);
+    setDocTitle(""); setDocLink("");
+    setShowAddDocDialog(false);
+    await saveDocuments(newDocs);
+  };
+
+  const removeDoc = (index: number) => {
+    setConfirmState({
+      title: "Hapus Dokumen",
+      message: "Yakin ingin menghapus dokumen ini?",
+      onConfirm: async () => {
+        const newDocs = documents.filter((_, i) => i !== index);
+        setDocuments(newDocs);
+        await saveDocuments(newDocs);
+      },
+    });
+  };
+
+  const startEditDoc = (index: number) => {
+    const doc = documents[index];
+    if (!doc) return;
+    setEditDocIndex(index); setEditDocTitle(doc.title); setEditDocLink(doc.link);
+    setShowEditDocDialog(true);
+  };
+
+  const cancelEditDoc = () => {
+    setShowEditDocDialog(false);
+    setEditDocIndex(null); setEditDocTitle(""); setEditDocLink("");
+  };
+
+  const confirmEditDoc = async () => {
+    if (editDocIndex === null || !editDocTitle || !editDocLink) return;
+    const newDocs = documents.map((doc, i) =>
+      i === editDocIndex ? { title: editDocTitle, link: editDocLink } : doc
+    );
+    setDocuments(newDocs);
+    cancelEditDoc();
+    await saveDocuments(newDocs);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   const isLoading = fetchStatus === "loading";
   const ItemIcon = item ? getIcon(item.icon) : FileSpreadsheet;
-
-  // Apakah ada perubahan dokumen yang belum disimpan
-  const hasChanges = JSON.stringify(documents) !== JSON.stringify(item?.documents ?? []);
 
   return (
     <div className="min-h-screen flex flex-col -m-6 md:-m-8">
@@ -227,7 +250,7 @@ export default function AdminItemDocumentsPage({
           </span>
         </div>
 
-        {/* Admin mode badge */}
+        {/* Admin mode badge — pojok kanan atas */}
         <div className="absolute top-4 right-6 md:right-8 z-20">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#D83F3F] bg-[#D83F3F]/15 border border-[#D83F3F]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
             <Settings className="w-3 h-3" /> Mode Admin
@@ -264,6 +287,16 @@ export default function AdminItemDocumentsPage({
               </a>
             )}
           </div>
+
+          {/* Tambah Dokumen — tengah kanan, sejajar dengan konten */}
+          {!isLoading && (
+            <button
+              onClick={() => setShowAddDocDialog(true)}
+              className="absolute top-1/2 right-6 md:right-8 -translate-y-1/2 z-20 shrink-0 flex items-center gap-1.5 h-10 px-5 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Tambah Dokumen
+            </button>
+          )}
         </div>
 
         <button
@@ -315,7 +348,13 @@ export default function AdminItemDocumentsPage({
           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
         />
 
-        <div className="px-6 md:px-8 relative z-10 max-w-3xl mx-auto">
+        <div className="px-6 md:px-8 relative z-10 max-w-5xl mx-auto">
+
+          {/* Layout: sidebar kiri, konten kanan */}
+          <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
+            <PortalSidebar />
+
+            <div className="flex-1 min-w-0">
 
           {/* Section heading */}
           <div className="mb-6 sm:mb-8">
@@ -336,99 +375,61 @@ export default function AdminItemDocumentsPage({
               {/* Daftar dokumen */}
               {documents.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4 mb-6">
-                  {documents.map((doc, i) =>
-                    editingDocIndex === i ? (
-                      /* ── Mode edit inline ── */
-                      <div key={i} className="bg-white rounded-2xl p-4 border-2 border-blue-300 space-y-3">
-                        <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
-                          Edit Dokumen #{i + 1}
-                        </p>
-                        <Input
-                          value={editDocTitle}
-                          onChange={(e) => setEditDocTitle(e.target.value)}
-                          placeholder="Judul dokumen"
-                          className="h-9 text-sm"
-                          autoFocus
-                        />
-                        <Input
-                          value={editDocLink}
-                          onChange={(e) => setEditDocLink(e.target.value)}
-                          placeholder="https://..."
-                          className="h-9 text-sm"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => confirmEditDoc(i)}
-                            disabled={!editDocTitle || !editDocLink}
-                            className="flex-1 h-8 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer"
-                          >
-                            <Check className="w-3.5 h-3.5" /> Simpan
-                          </button>
-                          <button
-                            onClick={cancelEditDoc}
-                            className="flex-1 h-8 rounded-xl border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <X className="w-3.5 h-3.5" /> Batal
-                          </button>
+                  {documents.map((doc, i) => (
+                    <div
+                      key={i}
+                      className="group flex items-center justify-between bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 transition-all duration-200 hover:shadow-xl border border-white/80 gap-3"
+                    >
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105"
+                          style={{ background: "rgba(216,63,63,0.1)" }}
+                        >
+                          <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#D83F3F]" />
                         </div>
-                      </div>
-                    ) : (
-                      /* ── Tampilan normal ── */
-                      <div
-                        key={i}
-                        className="group flex items-center justify-between bg-white hover:bg-gray-50 rounded-2xl p-4 sm:p-5 transition-all duration-200 hover:shadow-xl border border-white/80 gap-3"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                          <div
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105"
-                            style={{ background: "rgba(216,63,63,0.1)" }}
-                          >
-                            <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#D83F3F]" />
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="text-sm sm:text-base font-semibold text-[#111111] break-words line-clamp-1">
-                              {doc.title}
-                            </h3>
-                            <a
-                              href={doc.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-[#D83F3F] hover:underline truncate block"
-                            >
-                              {doc.link}
-                            </a>
-                          </div>
-                        </div>
-
-                        {/* Aksi */}
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="min-w-0">
+                          <h3 className="text-sm sm:text-base font-semibold text-[#111111] break-words line-clamp-1">
+                            {doc.title}
+                          </h3>
                           <a
                             href={doc.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-[#D83F3F] hover:border-[#D83F3F]/30 transition-colors"
-                            title="Buka dokumen"
+                            className="text-[11px] text-[#D83F3F] hover:underline truncate block"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            {doc.link}
                           </a>
-                          <button
-                            onClick={() => startEditDoc(i)}
-                            className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit dokumen"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => removeDoc(i)}
-                            className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Hapus dokumen"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       </div>
-                    )
-                  )}
+
+                      {/* Aksi */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <a
+                          href={doc.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-[#D83F3F] hover:border-[#D83F3F]/30 transition-colors"
+                          title="Buka dokumen"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                        <button
+                          onClick={() => startEditDoc(i)}
+                          className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit dokumen"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => removeDoc(i)}
+                          className="w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-300 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus dokumen"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 mb-6">
@@ -436,63 +437,13 @@ export default function AdminItemDocumentsPage({
                     <FileText className="h-8 w-8 text-white/30" />
                   </div>
                   <p className="text-white/70 font-semibold mb-1">Belum ada dokumen</p>
-                  <p className="text-white/40 text-sm">Tambahkan dokumen di bawah</p>
-                </div>
-              )}
-
-              {/* Form tambah dokumen */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-white/20 space-y-3 mb-6">
-                <p className="text-white/80 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <Plus className="w-3.5 h-3.5" /> Tambah Dokumen
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input
-                    value={docTitle}
-                    onChange={(e) => setDocTitle(e.target.value)}
-                    placeholder="Judul dokumen"
-                    className="h-9 text-sm bg-white/90 border-white/30 placeholder:text-gray-400"
-                  />
-                  <Input
-                    value={docLink}
-                    onChange={(e) => setDocLink(e.target.value)}
-                    placeholder="https://..."
-                    className="h-9 text-sm bg-white/90 border-white/30 placeholder:text-gray-400"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={addDoc}
-                  disabled={!docTitle || !docLink}
-                  className="w-full h-9 rounded-xl bg-white hover:bg-gray-50 text-[#D83F3F] text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 cursor-pointer shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambahkan Dokumen
-                </button>
-              </div>
-
-              {/* Tombol Simpan Dokumen — hanya muncul kalau ada perubahan */}
-              {hasChanges && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setDocuments(item?.documents ?? []); cancelEditDoc(); }}
-                    className="flex-1 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <X className="w-4 h-4" /> Batalkan
-                  </button>
-                  <button
-                    onClick={handleSaveDocs}
-                    disabled={isSaving}
-                    className="flex-1 h-10 rounded-xl bg-white hover:bg-gray-50 text-[#D83F3F] text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-60 cursor-pointer shadow-sm"
-                  >
-                    {isSaving
-                      ? <span className="w-4 h-4 border-2 border-[#D83F3F]/30 border-t-[#D83F3F] rounded-full animate-spin" />
-                      : <CheckCircle2 className="w-4 h-4" />
-                    }
-                    {isSaving ? "Menyimpan..." : "Simpan Dokumen"}
-                  </button>
+                  <p className="text-white/40 text-sm">Klik "Tambah Dokumen" di pojok kanan atas</p>
                 </div>
               )}
             </>
           )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -503,17 +454,139 @@ export default function AdminItemDocumentsPage({
         </svg>
       </div>
 
-      {/* ── Footer area kecil dengan link kembali ────────────────── */}
-      <div className="bg-gray-50 py-6 shrink-0">
-        <div className="px-6 md:px-8 max-w-3xl mx-auto">
-          <Link
-            href={`/admin/main-portal/${portalSlug}`}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#D83F3F] transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> Kembali ke {portal?.name ?? portalSlug}
-          </Link>
+      {/* ── Dialog Tambah Dokumen ──────────────────────────────────── */}
+      {showAddDocDialog && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowAddDocDialog(false); setDocTitle(""); setDocLink(""); } }}
+        >
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#D83F3F]/10 flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-[#D83F3F]" />
+                </div>
+                <h2 className="text-sm font-semibold text-gray-900">Tambah Dokumen</h2>
+              </div>
+              <button
+                onClick={() => { setShowAddDocDialog(false); setDocTitle(""); setDocLink(""); }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-5 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Judul Dokumen</label>
+                <Input
+                  value={docTitle}
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  placeholder="Judul dokumen"
+                  className="h-9 text-sm"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Link</label>
+                <Input
+                  value={docLink}
+                  onChange={(e) => setDocLink(e.target.value)}
+                  placeholder="https://..."
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => { setShowAddDocDialog(false); setDocTitle(""); setDocLink(""); }}
+                className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={addDoc}
+                disabled={!docTitle || !docLink}
+                className="flex-1 h-10 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Tambahkan
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+      {/* ── Dialog Edit Dokumen ────────────────────────────────────── */}
+      {showEditDocDialog && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) cancelEditDoc(); }}
+        >
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Edit2 className="w-4 h-4 text-blue-600" />
+                </div>
+                <h2 className="text-sm font-semibold text-gray-900">Edit Dokumen</h2>
+              </div>
+              <button
+                onClick={cancelEditDoc}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-5 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Judul Dokumen</Label>
+                <Input
+                  value={editDocTitle}
+                  onChange={(e) => setEditDocTitle(e.target.value)}
+                  placeholder="Judul dokumen"
+                  className="h-9 text-sm"
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Link</Label>
+                <Input
+                  value={editDocLink}
+                  onChange={(e) => setEditDocLink(e.target.value)}
+                  placeholder="https://..."
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={cancelEditDoc}
+                className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmEditDoc}
+                disabled={!editDocTitle || !editDocLink}
+                className="flex-1 h-10 rounded-xl bg-[#D83F3F] hover:bg-[#c03535] text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                <Save className="w-4 h-4" /> Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   Image, Edit2, RotateCcw, X, Save, Upload,
   AlertCircle, CheckCircle2, Loader2, Eye,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 interface HeaderData {
   id?: number;
@@ -33,6 +34,8 @@ export default function AdminHeaderPage() {
   const [formData, setFormData] = useState<HeaderData>(defaultData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => { fetchHeaderData(); }, []);
 
@@ -91,15 +94,20 @@ export default function AdminHeaderPage() {
     finally { setIsSaving(false); }
   };
 
-  const handleReset = async () => {
-    if (!confirm('Reset header ke default?')) return;
-    setIsSaving(true);
-    try {
-      await fetch('/api/public/header', { method: 'DELETE' });
-      showToast("Header direset ke default", "success");
-      fetchHeaderData();
-    } catch { showToast("Gagal reset", "error"); }
-    finally { setIsSaving(false); }
+  const handleReset = () => {
+    setConfirmState({
+      title: "Reset Header",
+      message: "Yakin ingin mereset header ke default?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          await fetch('/api/public/header', { method: 'DELETE' });
+          showToast("Header direset ke default", "success");
+          fetchHeaderData();
+        } catch { showToast("Gagal reset", "error"); }
+        finally { setIsSaving(false); }
+      },
+    });
   };
 
   return (
@@ -229,6 +237,15 @@ export default function AdminHeaderPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmState}
+        title={confirmState?.title ?? ""}
+        message={confirmState?.message ?? ""}
+        onConfirm={() => { confirmState?.onConfirm(); setConfirmState(null); }}
+        onCancel={() => setConfirmState(null)}
+      />
     </div>
   );
 }
