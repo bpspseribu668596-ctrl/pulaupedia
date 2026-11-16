@@ -350,7 +350,9 @@ export default function ItemDetailPage() {
       {/* Admin shortcut — selalu muncul, login dulu kalau belum */}
       <Link
         href={isAdmin && portal
-          ? `/admin/main-portal?portal=${encodeURIComponent(portal.href.replace(/^\//, ""))}${currentItem ? `&item=${currentItem.id}` : ""}`
+          ? currentItem
+            ? `/admin/main-portal/${portal.href.replace(/^\//, "")}/${currentItem.link.replace(/\?.*$/, '').replace(/\/$/, '').split('/').pop()}`
+            : `/admin/main-portal/${portal.href.replace(/^\//, "")}`
           : "/login"}
         className="fixed bottom-6 right-6 z-50 group flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-2xl text-white text-xs font-semibold shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
         style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #333333 100%)" }}

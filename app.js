@@ -60,10 +60,12 @@ app.prepare().then(() => {
       }
 
       const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: (parsed.host === 'localhost' || parsed.host === '127.0.0.1')
-          ? false
-          : { rejectUnauthorized: false },
+        user: parsed.user,
+        password: parsed.password,
+        host: parsed.host,
+        port: parsed.port,
+        database: parsed.database,
+        ssl: { rejectUnauthorized: false },
         connectionTimeoutMillis: 10000,
       });
 
