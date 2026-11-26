@@ -38,18 +38,18 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { title, content, image, isActive } = body;
+    const { title, image, isActive } = body;
 
-    if (!title || !content) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'Title and content are required' },
+        { error: 'Title is required' },
         { status: 400 }
       );
     }
 
     await pool.query(
-      'UPDATE announcements SET title = $1, content = $2, image = $3, "isActive" = $4, "updatedAt" = NOW() WHERE id = $5',
-      [title, content, image || null, isActive !== undefined ? isActive : true, id]
+      'UPDATE announcements SET title = $1, image = $2, "isActive" = $3, "updatedAt" = NOW() WHERE id = $4',
+      [title, image || null, isActive !== undefined ? isActive : true, id]
     );
 
     return NextResponse.json(

@@ -24,18 +24,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, content, image } = body;
+    const { title, image } = body;
 
-    if (!title || !content) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'Title and content are required' },
+        { error: 'Title is required' },
         { status: 400 }
       );
     }
 
     const { rows } = await pool.query(
       'INSERT INTO announcements (title, content, image, "isActive") VALUES ($1, $2, $3, TRUE) RETURNING id',
-      [title, content, image || null]
+      [title, '', image || null]
     );
 
     return NextResponse.json(
