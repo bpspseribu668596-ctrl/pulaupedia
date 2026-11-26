@@ -9,78 +9,64 @@ Portal informasi dan layanan digital BPS Kepulauan Seribu, mencakup:
 
 ## Tech Stack
 
-- [Next.js 16](https://nextjs.org/) (App Router) + React 19
-- TypeScript
+- [Next.js 16](https://nextjs.org/) (App Router) + React 19 + TypeScript
 - Tailwind CSS v4 + [shadcn/ui](https://ui.shadcn.com/)
-- PostgreSQL (`pg`)
+- PostgreSQL via `pg` pool
 - Cloudinary (upload gambar)
-- ExcelJS (export/import data)
+- ExcelJS (export/import data FASIH)
 
 ---
 
 ## Prasyarat
 
-Pastikan sudah terinstall di mesin lokal:
-
 | Tool | Versi minimum |
 |---|---|
 | Node.js | 20.x |
 | npm | 10.x |
-| PostgreSQL | 14.x |
+| PostgreSQL | 14.x (atau Supabase) |
 
 ---
 
 ## Instalasi
 
-### 1. Clone repository
+### 1. Clone & install (skip jika sudah ada source-codenya)
 
 ```bash
 git clone <url-repository>
 cd pulau-pedia3101
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Setup database
+### 2. Setup database (pilih salah satu)
 
-Buat database PostgreSQL baru, lalu jalankan kedua file SQL berikut secara berurutan:
+**Opsi A — Lokal (pgAdmin lokal)**
 
 ```bash
-# 1. Schema portal publik (users, portals, announcements, dsb.)
-psql -U <user> -d <nama_database> -f database/pulau_pedia3101_postgresql.sql
-
-# 2. Schema FASIH (officers, regions, assignments, monitoring, dsb.)
-psql -U <user> -d <nama_database> -f database/fasih_database.sql
+psql -U <user> -d <nama_database> -f "database/pulped_pgadmin4(lokal).sql"
 ```
 
-> Atau buka file SQL tersebut langsung di pgAdmin / DBeaver dan jalankan query-nya.
+Atau buka file tersebut langsung di pgAdmin dan jalankan query-nya.
 
-### 4. Setup environment variables
+**Opsi B — Supabase**
 
-Salin file contoh dan isi nilainya:
+Buka Supabase SQL Editor, lalu jalankan isi file `database/pulped_supabase(web).sql`.
+
+> **Catatan:** Jangan gunakan file `pulped_pgadmin4(lokal).sql` di Supabase SQL Editor —
+> file tersebut adalah full dump yang berisi schema internal dan tidak kompatibel.
+> File di folder `database/arsip/` adalah file lama dan tidak digunakan.
+
+### 3. Setup environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Lalu edit `.env`:
+Isi `.env` sesuai petunjuk di dalam file `.env.example`.
 
-```env
-# PostgreSQL — sesuaikan dengan credentials database yang baru dibuat
-DATABASE_URL=postgresql://<user>:<password>@localhost:5432/<nama_database>
+Untuk Supabase, gunakan **Connection Pooler** (bukan Direct Connection):
+> Project Settings → Database → Connection string → **Connection Pooler** → mode Transaction → port **6543**
 
-# Cloudinary — daftar gratis di https://cloudinary.com
-# Ambil nilai dari Dashboard → API Keys
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-```
-
-### 5. Jalankan development server
+### 4. Jalankan
 
 ```bash
 npm run dev
@@ -95,8 +81,6 @@ Aplikasi berjalan di `http://localhost:3000`.
 ```
 /                       → Landing page publik
 /[portalSlug]           → Halaman portal (e.g. /portal-umum)
-/[portalSlug]/[item]    → Detail item portal
-
 /login                  → Login gabungan (tab: Admin | FASIH)
 /admin                  → CMS Admin (butuh login)
 /fasih/dashboard        → Monitoring FASIH (butuh login)
@@ -107,70 +91,11 @@ Aplikasi berjalan di `http://localhost:3000`.
 
 ## Akun Default
 
-Setelah menjalankan SQL seed, tersedia akun awal:
-
-| Aplikasi | Username | Password | Catatan |
-|---|---|---|---|
-| Admin CMS | Lihat file `database/pulau_pedia3101_postgresql.sql` tabel `users` | — | Hash bcrypt |
-| FASIH | Lihat file `database/fasih_dataseed.sql` | — | Hash bcrypt |
-
-> Ganti password default segera setelah login pertama.
-
----
-
-## Scripts
-
-| Perintah | Fungsi |
+| Aplikasi | Sumber akun |
 |---|---|
-| `npm run dev` | Development server dengan hot-reload |
-| `npm run build` | Build untuk production |
-| `npm run start` | Jalankan hasil build production |
-| `npm run lint` | Lint seluruh kode |
+| Admin CMS | Tabel `users` di file `pulped_supabase(web).sql` |
+| FASIH | Tabel `fasih_users` di file `pulped_supabase(web).sql` |
 
----
-
-## Konfigurasi Tambahan
-
-**Akses LAN (opsional)**
-
-Untuk mengizinkan akses dari IP lokal selain `localhost`, tambahkan IP ke `next.config.ts`:
-
-```ts
-const nextConfig: NextConfig = {
-  allowedDevOrigins: ['192.168.x.x'],
-};
-```
-
-**Cloudinary upload folder**
-
-Semua gambar yang diupload disimpan ke subfolder Cloudinary sesuai jenisnya (`uploads/announcements`, `uploads/headers`, dsb.). Tidak ada konfigurasi tambahan yang dibutuhkan selain API key.
-
----
-
-## Struktur Folder Utama
-
-```
-src/
-├── app/
-│   ├── (public)/       # Halaman publik + Admin CMS
-│   ├── (fasih)/        # Aplikasi FASIH
-│   ├── (shared)/       # Halaman login
-│   └── api/            # API Routes
-│       ├── public/     # Endpoint portal publik & admin
-│       └── fasih/      # Endpoint FASIH
-├── components/
-│   ├── public/         # Komponen halaman publik
-│   ├── admin/          # Komponen admin CMS
-│   ├── fasih/          # Komponen FASIH
-│   └── ui/             # Primitif shadcn/ui
-├── lib/
-│   ├── db.ts           # Koneksi PostgreSQL (pg Pool)
-│   ├── cloudinary.ts   # Konfigurasi Cloudinary
-│   └── fasih/          # Auth & DB helpers khusus FASIH
-├── hooks/              # Custom React hooks
-└── middleware.ts       # Proteksi route /admin dan /fasih/*
-database/
-├── pulau_pedia3101_postgresql.sql  # Schema portal publik
-├── fasih_database.sql              # Schema FASIH
-└── fasih_dataseed.sql              # Data awal FASIH
-```
+akun login CMS
+user: admin
+pass: admin123
